@@ -450,6 +450,50 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(smoke_payload["agent"], "kimi-code")
             self.assertTrue(Path(smoke_payload["execution_report"]).exists())
 
+    def test_adapter_matrix_reports_supported_and_disabled_agents(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            fake_claude = tmp_path / "claude"
+            fake_kimi = tmp_path / "kimi"
+            write_fake_claude(fake_claude)
+            write_fake_kimi(fake_kimi)
+            env = {"CLAUDE_CODE_BIN": str(fake_claude), "KIMI_CODE_BIN": str(fake_kimi)}
+
+            matrix = run_mco("adapter", "matrix", env_extra=env)
+            self.assertEqual(matrix.returncode, 0, matrix.stdout + matrix.stderr)
+            payload = json.loads(matrix.stdout)
+            self.assertEqual(payload["schema"], "mco.adapter_matrix.v1.0")
+            agents = {item["agent"]: item for item in payload["agents"]}
+            self.assertTrue(agents["claude-code"]["implemented"])
+            self.assertTrue(agents["kimi-code"]["implemented"])
+            self.assertFalse(agents["mimo-code"]["implemented"])
+            self.assertEqual(agents["mimo-code"]["readiness"], "DISABLED")
+            self.assertEqual(agents["kimi-code"]["quota_status"], "unknown")
+            self.assertTrue(agents["claude-code"]["per_run_budget_cap"])
+            self.assertFalse(agents["kimi-code"]["per_run_budget_cap"])
+
+            out_json = tmp_path / "matrix.json"
+            out_html = tmp_path / "matrix.html"
+            written = run_mco(
+                "adapter",
+                "matrix",
+                "--doctor",
+                "--output",
+                str(out_json),
+                "--html",
+                str(out_html),
+                env_extra=env,
+            )
+            self.assertEqual(written.returncode, 0, written.stdout + written.stderr)
+            written_payload = json.loads(written.stdout)
+            self.assertEqual(written_payload["json"], str(out_json.resolve()))
+            self.assertEqual(written_payload["html"], str(out_html.resolve()))
+            matrix_payload = json.loads(out_json.read_text(encoding="utf-8"))
+            doctor_agents = {item["agent"]: item for item in matrix_payload["agents"]}
+            self.assertEqual(doctor_agents["claude-code"]["doctor_status"], "READY_SUPERVISED")
+            self.assertEqual(doctor_agents["kimi-code"]["doctor_status"], "READY_SUPERVISED")
+            self.assertIn("Adapter Matrix", out_html.read_text(encoding="utf-8"))
+
     def test_claude_code_adapter_records_budget_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -555,6 +599,7 @@ class WorkspaceTests(unittest.TestCase):
             ("task", "--help"),
             ("artifact", "--help"),
             ("adapter", "--help"),
+            ("adapter", "matrix", "--help"),
             ("adapter", "scaffold", "--help"),
             ("adapter", "smoke", "--help"),
             ("dispatch", "--help"),

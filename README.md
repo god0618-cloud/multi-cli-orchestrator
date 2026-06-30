@@ -26,6 +26,7 @@ mco task create "Build a mobile-first project page"
 mco orchestrate-start <task_id> --template frontend-review-loop
 mco dashboard <task_id>
 mco usage snapshot <task_id>
+mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html
 mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
 mco adapter smoke kimi-code --workspace .mco-workspace
 mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
@@ -43,6 +44,7 @@ Implemented in this v2.0 baseline:
 - `mco artifact register`
 - `mco adapter capabilities`
 - `mco adapter doctor`
+- `mco adapter matrix`
 - `mco adapter scaffold`
 - `mco adapter smoke`
 - `mco dispatch queue/list/claim/complete`
@@ -85,6 +87,7 @@ mco release check .
 | `mco artifact register` | implemented |
 | `mco adapter capabilities` | `generic-cli`, `claude-code`, `kimi-code` |
 | `mco adapter doctor` | generic, Claude Code, and Kimi Code readiness checks |
+| `mco adapter matrix` | adapter readiness, quota, smoke, and promotion-blocker matrix |
 | `mco adapter scaffold` | disabled adapter onboarding kit |
 | `mco adapter smoke` | explicit opt-in real Claude Code or Kimi Code smoke test |
 | `mco dispatch queue/list/claim/complete` | generic local queue |

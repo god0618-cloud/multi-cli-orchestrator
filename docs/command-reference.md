@@ -14,6 +14,7 @@ Command surface:
 | `mco artifact register` | Register evidence in the run ledger |
 | `mco adapter capabilities` | Show adapter capability manifest for `generic-cli`, `claude-code`, or `kimi-code` |
 | `mco adapter doctor` | Check adapter readiness against optional sandbox contract |
+| `mco adapter matrix` | Show adapter readiness, quota, smoke, and promotion blockers |
 | `mco adapter scaffold` | Create disabled adapter onboarding files |
 | `mco adapter smoke` | Run an explicit opt-in real Claude Code or Kimi Code adapter smoke test |
 | `mco dispatch queue` | Queue a dispatch for an agent |
@@ -42,6 +43,8 @@ Command surface:
 `mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05` creates a smoke-test task and runs a fixed sentinel prompt through the real Claude Code adapter. It writes a sandbox contract, dispatch, execution report, usage snapshot, dashboard, and adapter smoke result. This command is opt-in and may consume provider budget.
 
 `mco adapter smoke kimi-code --workspace .mco-workspace` creates the same smoke-test evidence bundle through the real Kimi Code adapter. This command is opt-in and may consume provider budget; it has timeout/output caps but no per-run provider budget flag.
+
+`mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html` writes a machine-readable adapter comparison plus static HTML. Without `--doctor`, the command does not probe local CLI binaries. With `--doctor`, implemented adapters are probed and disabled template adapters remain non-executable.
 
 `mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code` writes a disabled adapter manifest, sandbox contract draft, and smoke checklist. Scaffolded adapters are not executable until their gates are implemented and reviewed.
 

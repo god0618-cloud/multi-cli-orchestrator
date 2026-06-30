@@ -8,6 +8,7 @@ from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 from .adapters.doctor import doctor_adapter, manifest_for_agent
+from .adapters.matrix import build_adapter_matrix, write_adapter_matrix
 from .adapters.scaffold import scaffold_adapter
 from .adapters.smoke import smoke_claude_code, smoke_kimi_code
 from .audit.safety import audit_tree
@@ -174,6 +175,19 @@ def cmd_adapter_smoke(args: argparse.Namespace) -> int:
 def cmd_adapter_scaffold(args: argparse.Namespace) -> int:
     result = scaffold_adapter(args.agent, Path(args.output_dir).expanduser().resolve(), force=args.force)
     print(json.dumps(result, indent=2))
+    return 0
+
+
+def cmd_adapter_matrix(args: argparse.Namespace) -> int:
+    if args.output:
+        result = write_adapter_matrix(
+            Path(args.output).expanduser().resolve(),
+            Path(args.html).expanduser().resolve() if args.html else None,
+            include_doctor=args.doctor,
+        )
+        print(json.dumps(result, indent=2))
+    else:
+        print(json.dumps(build_adapter_matrix(include_doctor=args.doctor), indent=2))
     return 0
 
 
@@ -437,6 +451,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_adapter_scaffold.add_argument("--output-dir", default=".", help="directory for generated adapter onboarding files")
     p_adapter_scaffold.add_argument("--force", action="store_true", help="overwrite existing generated files")
     p_adapter_scaffold.set_defaults(func=cmd_adapter_scaffold)
+    p_adapter_matrix = adapter_sub.add_parser("matrix", help="show adapter readiness and promotion matrix")
+    p_adapter_matrix.add_argument("--doctor", action="store_true", help="probe implemented adapters and include doctor status")
+    p_adapter_matrix.add_argument("--output", help="write matrix JSON to this path")
+    p_adapter_matrix.add_argument("--html", help="also write a static HTML matrix to this path")
+    p_adapter_matrix.set_defaults(func=cmd_adapter_matrix)
 
     p_dispatch = sub.add_parser("dispatch", help="manage dispatch queue")
     dispatch_sub = p_dispatch.add_subparsers(dest="dispatch_command", required=True)

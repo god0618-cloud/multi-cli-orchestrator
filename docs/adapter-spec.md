@@ -35,6 +35,15 @@ Readiness states:
 - `READY_MANUAL`: adapter is known, but no sandbox contract was provided.
 - `BLOCKED`: manifest or sandbox contract failed.
 
+Use the adapter matrix when deciding whether a CLI may enter an orchestrated loop:
+
+```bash
+mco adapter matrix
+mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html
+```
+
+The matrix compares implemented and disabled-template adapters by readiness, non-interactive support, supervision, inbox/artifact participation, quota semantics, per-run budget-cap support, smoke-gate availability, sandbox template, and promotion blockers. `--doctor` probes implemented adapters only; disabled templates stay non-executable.
+
 `generic-cli` remains a supervised generic adapter. It does not run arbitrary shell commands.
 
 The v1.0 execution surface is intentionally narrow:

@@ -87,6 +87,13 @@
 - Shared task-local evidence contract across Claude Code and Kimi Code.
 - Honest quota semantics per adapter: budget-limited where supported, unknown where unsupported.
 
+## v2.1
+
+- Adapter matrix and readiness boss view.
+- Machine-readable comparison for implemented and disabled adapters.
+- Optional local doctor probing.
+- Promotion blockers for future adapters.
+
 ## Future
 
 - Multi-worker supervised execution.

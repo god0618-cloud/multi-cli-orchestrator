@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0
+
+- Added `mco adapter matrix` to show a machine-readable readiness and promotion matrix for known adapters.
+- Added optional `mco adapter matrix --doctor` probing for implemented adapters.
+- Added `--output` and `--html` flags so teams can publish adapter readiness as JSON and static boss-view HTML.
+- The matrix distinguishes implemented adapters from disabled templates, exposes quota semantics, smoke-gate availability, per-run budget-cap support, and promotion blockers.
+
 ## 2.0.0
 
 - Added the second supervised first-party adapter: `kimi-code`.
