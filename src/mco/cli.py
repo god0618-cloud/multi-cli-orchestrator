@@ -8,6 +8,7 @@ from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 from .adapters.doctor import doctor_adapter, manifest_for_agent
+from .adapters.scaffold import scaffold_adapter
 from .adapters.smoke import smoke_claude_code
 from .audit.safety import audit_tree
 from .config import init_workspace, read_workspace_config, resolve_workspace
@@ -161,6 +162,12 @@ def cmd_adapter_smoke(args: argparse.Namespace) -> int:
     )
     print(json.dumps(result, indent=2))
     return 0 if result["status"] == "PASS" else 1
+
+
+def cmd_adapter_scaffold(args: argparse.Namespace) -> int:
+    result = scaffold_adapter(args.agent, Path(args.output_dir).expanduser().resolve(), force=args.force)
+    print(json.dumps(result, indent=2))
+    return 0
 
 
 def cmd_dispatch_queue(args: argparse.Namespace) -> int:
@@ -406,6 +413,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_adapter_smoke.add_argument("--max-output-bytes", type=int, default=80000)
     p_adapter_smoke.add_argument("--max-budget-usd", type=float, default=0.05)
     p_adapter_smoke.set_defaults(func=cmd_adapter_smoke)
+    p_adapter_scaffold = adapter_sub.add_parser("scaffold", help="create disabled adapter onboarding files")
+    p_adapter_scaffold.add_argument("agent")
+    p_adapter_scaffold.add_argument("--output-dir", default=".", help="directory for generated adapter onboarding files")
+    p_adapter_scaffold.add_argument("--force", action="store_true", help="overwrite existing generated files")
+    p_adapter_scaffold.set_defaults(func=cmd_adapter_scaffold)
 
     p_dispatch = sub.add_parser("dispatch", help="manage dispatch queue")
     dispatch_sub = p_dispatch.add_subparsers(dest="dispatch_command", required=True)

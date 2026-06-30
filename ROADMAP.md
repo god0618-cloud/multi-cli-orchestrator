@@ -73,6 +73,13 @@
 - Fixed sentinel verification.
 - Cost-capped, opt-in adapter regression path.
 
+## v1.9
+
+- Adapter contributor scaffolding.
+- Disabled-by-default onboarding files.
+- Smoke checklist for future first-party adapters.
+- Overwrite-safe adapter kit generation.
+
 ## v2.0
 
 - Multiple first-party CLI adapters.

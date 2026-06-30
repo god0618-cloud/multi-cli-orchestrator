@@ -27,6 +27,7 @@ mco orchestrate-start <task_id> --template frontend-review-loop
 mco dashboard <task_id>
 mco usage snapshot <task_id>
 mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
+mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
@@ -41,6 +42,7 @@ Implemented in this v1.5 baseline:
 - `mco artifact register`
 - `mco adapter capabilities`
 - `mco adapter doctor`
+- `mco adapter scaffold`
 - `mco adapter smoke`
 - `mco dispatch queue/list/claim/complete`
 - `mco dispatch execute --dry-run`
@@ -81,6 +83,7 @@ mco release check .
 | `mco artifact register` | implemented |
 | `mco adapter capabilities` | `generic-cli`, `claude-code` |
 | `mco adapter doctor` | generic and Claude Code readiness checks |
+| `mco adapter scaffold` | disabled adapter onboarding kit |
 | `mco adapter smoke` | explicit opt-in real Claude Code smoke test |
 | `mco dispatch queue/list/claim/complete` | generic local queue |
 | `mco dispatch execute --dry-run` | sandbox/capability gate validation |
@@ -124,6 +127,7 @@ Useful docs:
 - No arbitrary shell execution. Generic execution only allows narrowly validated commands such as `echo ...` and print-only `python -c ...`.
 - Claude Code execution is bounded to `claude --print`, tools disabled, session persistence disabled, task-local prompt files, timeout/output limits, and an explicit budget cap.
 - Claude Code smoke testing is explicit opt-in via `mco adapter smoke claude-code`; it may consume provider budget and writes a task-local evidence bundle.
+- New adapter onboarding starts disabled via `mco adapter scaffold`; promotion requires capability, sandbox, quota, execution evidence, and smoke gates.
 - Usage snapshots are evidence-derived. They aggregate task-local execution reports and dispatch records; they do not claim provider-account quota unless that evidence exists.
 - No private local paths or business data should be committed.
 

@@ -49,6 +49,7 @@ v1.5 adds one real first-party adapter:
 ```bash
 mco adapter capabilities claude-code
 mco adapter doctor claude-code --sandbox templates/sandbox-contracts/claude-code-supervised.json
+mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco dispatch execute <task_id> <dispatch_id> \
   --agent claude-code \
   --sandbox <task-dir>/SANDBOX_CONTRACT.json \
@@ -70,5 +71,7 @@ Claude Code execution is deliberately constrained:
 - writes `artifacts/<dispatch_id>-claude-execution-report.json`
 - marks structured Claude errors, including `error_max_budget_usd`, as failed dispatches
 - provides an explicit opt-in smoke command that creates a complete evidence bundle and verifies the fixed `MCO_ADAPTER_SMOKE_OK` sentinel
+
+New adapters should start with `mco adapter scaffold <agent>`. The scaffold is deliberately disabled by default and includes a manifest, sandbox draft, and smoke checklist. Promotion requires durable evidence for capability discovery, sandbox boundaries, quota semantics, non-interactive execution, execution reports, usage snapshots, and opt-in smoke gates.
 
 Other first-party adapters for Kimi Code, Mimo Code, CodeWhale, or additional CLIs remain disabled until they provide the same capability manifest, sandbox contract, quota checks, non-interactive command contract, and evidence reporter.

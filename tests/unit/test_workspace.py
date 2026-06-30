@@ -186,6 +186,33 @@ class WorkspaceTests(unittest.TestCase):
                 check = run_mco("schema", "validate", "adapter-manifest", str(path))
                 self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
 
+    def test_adapter_scaffold_writes_disabled_onboarding_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp) / "adapter-kit"
+            scaffold = run_mco("adapter", "scaffold", "new-cli", "--output-dir", str(out_dir))
+            self.assertEqual(scaffold.returncode, 0, scaffold.stdout + scaffold.stderr)
+            payload = json.loads(scaffold.stdout)
+            self.assertEqual(payload["schema"], "mco.adapter_scaffold.v1.0")
+            self.assertEqual(payload["agent"], "new-cli")
+            manifest = out_dir / "new-cli.adapter.json"
+            sandbox = out_dir / "new-cli.sandbox.json"
+            checklist = out_dir / "new-cli-smoke-checklist.md"
+            self.assertTrue(manifest.exists())
+            self.assertTrue(sandbox.exists())
+            self.assertTrue(checklist.exists())
+
+            manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
+            self.assertFalse(manifest_payload["supervised"])
+            self.assertFalse(manifest_payload["can_run_shell"])
+            manifest_check = run_mco("schema", "validate", "adapter-manifest", str(manifest))
+            self.assertEqual(manifest_check.returncode, 0, manifest_check.stdout + manifest_check.stderr)
+            sandbox_check = run_mco("schema", "validate", "sandbox-contract", str(sandbox))
+            self.assertEqual(sandbox_check.returncode, 0, sandbox_check.stdout + sandbox_check.stderr)
+
+            blocked = run_mco("adapter", "scaffold", "new-cli", "--output-dir", str(out_dir))
+            self.assertNotEqual(blocked.returncode, 0)
+            self.assertIn("refusing to overwrite", blocked.stderr)
+
     def test_claude_code_adapter_doctor_and_supervised_execution(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -411,6 +438,7 @@ class WorkspaceTests(unittest.TestCase):
             ("task", "--help"),
             ("artifact", "--help"),
             ("adapter", "--help"),
+            ("adapter", "scaffold", "--help"),
             ("adapter", "smoke", "--help"),
             ("dispatch", "--help"),
             ("schema", "--help"),

@@ -14,6 +14,7 @@ Command surface:
 | `mco artifact register` | Register evidence in the run ledger |
 | `mco adapter capabilities` | Show adapter capability manifest for `generic-cli` or `claude-code` |
 | `mco adapter doctor` | Check adapter readiness against optional sandbox contract |
+| `mco adapter scaffold` | Create disabled adapter onboarding files |
 | `mco adapter smoke` | Run an explicit opt-in real Claude Code adapter smoke test |
 | `mco dispatch queue` | Queue a dispatch for an agent |
 | `mco dispatch list` | List task dispatches |
@@ -37,5 +38,7 @@ Command surface:
 `mco dispatch execute --agent claude-code --prompt-file <task-dir>/prompt.md --max-budget-usd 0.25` runs a supervised Claude Code prompt through `claude --print` with tools disabled, session persistence disabled, timeout/output limits, and a transcript artifact.
 
 `mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05` creates a smoke-test task and runs a fixed sentinel prompt through the real Claude Code adapter. It writes a sandbox contract, dispatch, execution report, usage snapshot, dashboard, and adapter smoke result. This command is opt-in and may consume provider budget.
+
+`mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code` writes a disabled adapter manifest, sandbox contract draft, and smoke checklist. Scaffolded adapters are not executable until their gates are implemented and reviewed.
 
 `mco usage snapshot <task_id>` writes `USAGE_SNAPSHOT.json` under the task directory and registers it in the run ledger. The snapshot aggregates only task-local dispatch records and registered execution reports.

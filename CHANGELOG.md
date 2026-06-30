@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.0
+
+- Added `mco adapter scaffold <agent>` to generate disabled adapter onboarding files.
+- Scaffold output includes adapter manifest, sandbox contract draft, and smoke checklist.
+- New adapters remain disabled by default until capability, sandbox, quota, non-interactive execution, evidence reporting, and smoke gates are proven.
+- Added overwrite protection unless `--force` is passed.
+
 ## 1.8.0
 
 - Added `mco adapter smoke claude-code` as an explicit real-adapter regression command.
