@@ -1,0 +1,40 @@
+name: Adapter request
+description: Request support for a new AI coding CLI adapter.
+title: "[Adapter]: "
+labels: ["adapter", "needs-triage"]
+body:
+  - type: input
+    id: adapter
+    attributes:
+      label: CLI name
+      description: Which CLI should be integrated?
+      placeholder: "Example: Claude Code"
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Desired mode
+      options:
+        - interactive only
+        - non-interactive supervised
+        - both
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and command contract
+      description: Include official docs or observed command behavior. Do not include credentials.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety acknowledgement
+      options:
+        - label: I am not requesting arbitrary shell execution.
+          required: true
+        - label: I understand new adapters must start disabled by default.
+          required: true
+

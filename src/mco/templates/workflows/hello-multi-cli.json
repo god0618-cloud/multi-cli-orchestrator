@@ -1,0 +1,34 @@
+{
+  "schema": "mco.workflow.v0.2",
+  "name": "hello-multi-cli",
+  "description": "Sanitized local demo workflow that initializes a task, records evidence, and renders a dashboard.",
+  "phases": [
+    {
+      "id": "plan",
+      "role": "planner",
+      "preferred_agent": "generic-cli",
+      "gates": ["loop_spec_exists"],
+      "outputs": ["plan.json"],
+      "on_pass": "evidence",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "evidence",
+      "role": "worker",
+      "preferred_agent": "generic-cli",
+      "gates": ["sandbox_contract_not_required_for_single_worker"],
+      "outputs": ["artifact"],
+      "on_pass": "close",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "close",
+      "role": "verifier",
+      "preferred_agent": "generic-cli",
+      "gates": ["run_ledger_has_events", "dashboard_exists"],
+      "outputs": ["close_report"],
+      "on_pass": "complete",
+      "on_fail": "human_review"
+    }
+  ]
+}

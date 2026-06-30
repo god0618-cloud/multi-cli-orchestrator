@@ -1,0 +1,20 @@
+{
+  "schema": "mco.adapter_manifest.v1.1",
+  "agent": "mimo-code",
+  "adapter_type": "first-party-disabled-template",
+  "interactive": true,
+  "non_interactive": false,
+  "supervised": false,
+  "can_read_inbox": false,
+  "can_write_artifacts": false,
+  "can_run_shell": false,
+  "can_use_browser": false,
+  "quota_status": "unknown",
+  "enablement_required": [
+    "adapter doctor implementation",
+    "sandbox contract",
+    "quota preflight",
+    "non-interactive command contract",
+    "evidence reporter"
+  ]
+}

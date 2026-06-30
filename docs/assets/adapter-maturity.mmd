@@ -1,0 +1,7 @@
+flowchart LR
+  Disabled["Disabled template"] --> Doctor["Adapter doctor"]
+  Doctor --> Sandbox["Sandbox contract"]
+  Sandbox --> Quota["Quota preflight"]
+  Quota --> Evidence["Evidence reporter"]
+  Evidence --> Supervised["Supervised execution"]
+

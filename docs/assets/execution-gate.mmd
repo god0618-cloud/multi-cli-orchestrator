@@ -1,0 +1,10 @@
+flowchart TD
+  Queue["Queued dispatch"] --> SandboxCheck["Sandbox contract check"]
+  SandboxCheck -->|fail| Blocked["Fail closed"]
+  SandboxCheck -->|pass| CommandCheck["Command allowlist check"]
+  CommandCheck -->|unsafe| Rejected["Reject before claim"]
+  CommandCheck -->|safe| Execute["Execute with shell=false"]
+  Execute --> Report["Execution report artifact"]
+  Report -->|exit 0| Complete["Dispatch complete"]
+  Report -->|non-zero or timeout| Failed["Dispatch failed"]
+

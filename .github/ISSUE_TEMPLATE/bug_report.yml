@@ -1,0 +1,34 @@
+name: Bug report
+description: Report a reproducible issue.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Include the exact `mco` commands and sanitized output.
+      placeholder: |
+        mco init --workspace /tmp/mco-repro
+        mco doctor --workspace /tmp/mco-repro
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Attach logs, reports, or run ledger snippets. Do not include secrets or private business data.
+

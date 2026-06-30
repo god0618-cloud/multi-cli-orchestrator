@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-cli-orchestrator"
+version = "1.2.0"
+description = "Local-first Agent OS for coordinating multiple AI coding CLIs as supervised workstations."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Multi-CLI Orchestrator Contributors" }]
+dependencies = []
+
+[project.scripts]
+mco = "mco.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+mco = ["templates/workflows/*.json", "templates/sandbox-contracts/*.json", "templates/adapters/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

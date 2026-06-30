@@ -1,0 +1,14 @@
+flowchart LR
+  User["Human owner"] --> MCO["Multi-CLI Orchestrator"]
+  MCO --> Task["Task workspace"]
+  Task --> Loop["LOOP_SPEC.json"]
+  Task --> Ledger["RUN_LEDGER.json"]
+  Task --> Dispatch["Dispatch queue"]
+  Task --> Sandbox["SANDBOX_CONTRACT.json"]
+  Dispatch --> Adapter["Adapter manifest"]
+  Adapter --> Worker["CLI workstation"]
+  Worker --> Evidence["Artifacts"]
+  Evidence --> Ledger
+  Ledger --> Replay["Run replay"]
+  Ledger --> Dashboard["Boss dashboard"]
+

@@ -1,0 +1,2 @@
+"""Adapter capability primitives."""
+

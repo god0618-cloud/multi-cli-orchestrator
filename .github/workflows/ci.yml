@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: pip install -e .
+      - name: Run tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Compile
+        run: python -m compileall -q src tests
+      - name: Demo smoke
+        run: |
+          mco demo hello-multi-cli --workspace /tmp/mco-ci-demo
+          TASK_ID="$(find /tmp/mco-ci-demo/tasks -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | head -1)"
+          mco run replay "/tmp/mco-ci-demo/tasks/$TASK_ID/RUN_LEDGER.json"
+      - name: Safe execution smoke
+        run: |
+          mco init --workspace /tmp/mco-ci-exec
+          TASK_JSON="$(mco task create "CI safe command smoke" --json --workspace /tmp/mco-ci-exec)"
+          TASK_ID="$(printf '%s\n' "$TASK_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["task_id"])')"
+          TASK_DIR="/tmp/mco-ci-exec/tasks/$TASK_ID"
+          cp templates/sandbox-contracts/single-worker.json "$TASK_DIR/SANDBOX_CONTRACT.json"
+          DISPATCH_JSON="$(mco dispatch queue "$TASK_ID" --agent generic-cli --title "Echo evidence" --instructions "Run safe echo." --workspace /tmp/mco-ci-exec)"
+          DISPATCH_ID="$(printf '%s\n' "$DISPATCH_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["dispatch_id"])')"
+          mco dispatch execute "$TASK_ID" "$DISPATCH_ID" --agent generic-cli --sandbox "$TASK_DIR/SANDBOX_CONTRACT.json" --command-json '["echo","ci-safe-exec"]' --workspace /tmp/mco-ci-exec
+          grep -q "ci-safe-exec" "$TASK_DIR/artifacts/$DISPATCH_ID-execution-report.json"
+      - name: Unsafe command smoke
+        run: |
+          mco init --workspace /tmp/mco-ci-unsafe
+          TASK_JSON="$(mco task create "CI unsafe command smoke" --json --workspace /tmp/mco-ci-unsafe)"
+          TASK_ID="$(printf '%s\n' "$TASK_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["task_id"])')"
+          TASK_DIR="/tmp/mco-ci-unsafe/tasks/$TASK_ID"
+          cp templates/sandbox-contracts/single-worker.json "$TASK_DIR/SANDBOX_CONTRACT.json"
+          DISPATCH_JSON="$(mco dispatch queue "$TASK_ID" --agent generic-cli --title "Unsafe evidence" --instructions "Try unsafe." --workspace /tmp/mco-ci-unsafe)"
+          DISPATCH_ID="$(printf '%s\n' "$DISPATCH_JSON" | python -c 'import json,sys; print(json.load(sys.stdin)["dispatch_id"])')"
+          set +e
+          mco dispatch execute "$TASK_ID" "$DISPATCH_ID" --agent generic-cli --sandbox "$TASK_DIR/SANDBOX_CONTRACT.json" --command-json '["python","-c","print(__import__(\"os\").getcwd())"]' --workspace /tmp/mco-ci-unsafe 2>/tmp/mco-ci-unsafe.err
+          STATUS=$?
+          set -e
+          test "$STATUS" -ne 0
+          grep -q "disallowed token" /tmp/mco-ci-unsafe.err
+      - name: Audit
+        run: mco audit .

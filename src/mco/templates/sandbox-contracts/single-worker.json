@@ -1,0 +1,12 @@
+{
+  "schema": "mco.sandbox_contract.v0.2",
+  "worker_id": "generic-single-worker",
+  "agent": "generic-cli",
+  "write_scope": ["task workspace only"],
+  "read_scope": ["task workspace only"],
+  "ports": [],
+  "data_boundary": "no external data",
+  "credential_policy": "no credentials",
+  "merge_owner": "local user",
+  "verification_artifacts": ["RUN_LEDGER.json", "dashboard.html"]
+}
