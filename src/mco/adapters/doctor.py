@@ -4,6 +4,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from mco.adapters.claude import claude_code_manifest, probe_claude_code
 from mco.adapters.generic import generic_cli_manifest
 from mco.schemas import validate_adapter_manifest, validate_sandbox_contract
 
@@ -22,9 +23,11 @@ class DoctorResult:
 
 
 def manifest_for_agent(agent: str) -> dict:
-    if agent != "generic-cli":
-        raise ValueError(f"unsupported adapter: {agent}")
-    return generic_cli_manifest()
+    if agent == "generic-cli":
+        return generic_cli_manifest()
+    if agent == "claude-code":
+        return claude_code_manifest()
+    raise ValueError(f"unsupported adapter: {agent}")
 
 
 def read_sandbox_contract(path: Path) -> dict:
@@ -44,6 +47,9 @@ def doctor_adapter(agent: str, sandbox_path: Path | None = None) -> DoctorResult
 
     checks.append({"name": "can_run_shell", "status": "PASS", "detail": manifest["can_run_shell"]})
 
+    if agent == "claude-code":
+        checks.extend(probe_claude_code())
+
     if sandbox_path is None:
         checks.append({"name": "sandbox_contract", "status": "WARN", "detail": "not provided"})
     else:
@@ -53,10 +59,11 @@ def doctor_adapter(agent: str, sandbox_path: Path | None = None) -> DoctorResult
                 checks.append({"name": "sandbox_agent", "status": "FAIL", "detail": sandbox["agent"]})
             else:
                 checks.append({"name": "sandbox_agent", "status": "PASS", "detail": agent})
-            if sandbox["credential_policy"] != "no credentials":
+            allowed_credential_policy = "host CLI auth only" if agent == "claude-code" else "no credentials"
+            if sandbox["credential_policy"] != allowed_credential_policy:
                 checks.append({"name": "credential_policy", "status": "FAIL", "detail": sandbox["credential_policy"]})
             else:
-                checks.append({"name": "credential_policy", "status": "PASS", "detail": "no credentials"})
+                checks.append({"name": "credential_policy", "status": "PASS", "detail": allowed_credential_policy})
         except Exception as exc:
             checks.append({"name": "sandbox_contract", "status": "FAIL", "detail": str(exc)})
 

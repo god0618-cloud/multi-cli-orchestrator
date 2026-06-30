@@ -7,14 +7,13 @@ import sys
 from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
-from .adapters.generic import generic_cli_manifest
-from .adapters.doctor import doctor_adapter
+from .adapters.doctor import doctor_adapter, manifest_for_agent
 from .audit.safety import audit_tree
 from .config import init_workspace, read_workspace_config, resolve_workspace
 from .dashboard.static import render_dashboard
 from .demo.hello import run_hello_demo
 from .dispatch.queue import claim_dispatch, complete_dispatch, list_dispatches, queue_dispatch
-from .dispatch.execute import execute_dispatch_command, execute_dispatch_dry_run
+from .dispatch.execute import execute_dispatch_claude_prompt, execute_dispatch_command, execute_dispatch_dry_run
 from .replay.ledger import append_event, register_artifact, set_workflow
 from .replay.readout import replay_ledger
 from .release.check import check_release
@@ -136,9 +135,7 @@ def cmd_artifact_register(args: argparse.Namespace) -> int:
 
 
 def cmd_adapter_capabilities(args: argparse.Namespace) -> int:
-    if args.agent != "generic-cli":
-        raise ValueError("this baseline only supports generic-cli")
-    print(json.dumps(generic_cli_manifest(), indent=2))
+    print(json.dumps(manifest_for_agent(args.agent), indent=2))
     return 0
 
 
@@ -192,6 +189,19 @@ def cmd_dispatch_execute(args: argparse.Namespace) -> int:
     sandbox_path = Path(args.sandbox).expanduser().resolve() if args.sandbox else None
     if args.dry_run:
         dispatch = execute_dispatch_dry_run(directory, args.dispatch_id, args.agent, sandbox_path)
+    elif args.agent == "claude-code":
+        if not args.prompt_file:
+            raise ValueError("--prompt-file is required for claude-code execution")
+        dispatch = execute_dispatch_claude_prompt(
+            directory,
+            args.dispatch_id,
+            args.agent,
+            sandbox_path,
+            Path(args.prompt_file),
+            timeout_seconds=args.timeout_seconds,
+            max_output_bytes=args.max_output_bytes,
+            max_budget_usd=args.max_budget_usd,
+        )
     else:
         if not args.command_json:
             raise ValueError("--command-json is required unless --dry-run is set")
@@ -356,11 +366,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_adapter = sub.add_parser("adapter", help="adapter capability utilities")
     adapter_sub = p_adapter.add_subparsers(dest="adapter_command", required=True)
     p_adapter_cap = adapter_sub.add_parser("capabilities", help="show adapter capability manifest")
-    p_adapter_cap.add_argument("agent", choices=["generic-cli"])
+    p_adapter_cap.add_argument("agent", choices=["generic-cli", "claude-code"])
     p_adapter_cap.set_defaults(func=cmd_adapter_capabilities)
 
     p_adapter_doctor = adapter_sub.add_parser("doctor", help="check adapter readiness")
-    p_adapter_doctor.add_argument("agent", choices=["generic-cli"])
+    p_adapter_doctor.add_argument("agent", choices=["generic-cli", "claude-code"])
     p_adapter_doctor.add_argument("--sandbox", help="path to SANDBOX_CONTRACT.json")
     p_adapter_doctor.set_defaults(func=cmd_adapter_doctor)
 
@@ -402,8 +412,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_dispatch_execute.add_argument("--sandbox", help="path to SANDBOX_CONTRACT.json")
     p_dispatch_execute.add_argument("--dry-run", action="store_true", help="validate gates without running an external CLI")
     p_dispatch_execute.add_argument("--command-json", help='safe command as JSON array, e.g. ["echo","hello"]')
+    p_dispatch_execute.add_argument("--prompt-file", help="task-local prompt file for first-party supervised adapters")
     p_dispatch_execute.add_argument("--timeout-seconds", type=int, default=10)
     p_dispatch_execute.add_argument("--max-output-bytes", type=int, default=20000)
+    p_dispatch_execute.add_argument("--max-budget-usd", type=float, default=0.25)
     p_dispatch_execute.add_argument("--workspace", default=".", help="workspace root")
     p_dispatch_execute.set_defaults(func=cmd_dispatch_execute)
 

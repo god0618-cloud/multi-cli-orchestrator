@@ -1,6 +1,6 @@
 # Quickstart
 
-This v1.0 baseline proves the project can initialize a clean local workspace, create an evidence-backed task, run a sanitized hello workflow, validate adapter/sandbox gates, run a narrowly allowed safe command, replay a run ledger, and render a local dashboard without relying on private machine paths.
+This baseline proves the project can initialize a clean local workspace, create an evidence-backed task, run a sanitized hello workflow, validate adapter/sandbox gates, run a narrowly allowed safe command, run one supervised Claude Code prompt when Claude Code is installed and authenticated, replay a run ledger, and render a local dashboard without relying on private machine paths.
 
 ```bash
 python -m venv .venv
@@ -50,3 +50,29 @@ mco dispatch execute "$TASK_ID" "$DISPATCH_ID" \
   --workspace .mco-workspace
 mco run replay "$TASK_DIR/RUN_LEDGER.json"
 ```
+
+Run one supervised Claude Code prompt:
+
+```bash
+TASK_ID="$(
+  mco task create "Claude adapter smoke" --json --workspace .mco-workspace \
+    | python -c 'import json,sys; print(json.load(sys.stdin)["task_id"])'
+)"
+TASK_DIR=".mco-workspace/tasks/$TASK_ID"
+cp templates/sandbox-contracts/claude-code-supervised.json "$TASK_DIR/SANDBOX_CONTRACT.json"
+printf 'Return exactly: MCO_ADAPTER_SMOKE_OK\n' > "$TASK_DIR/prompt.md"
+DISPATCH_ID="$(
+  mco dispatch queue "$TASK_ID" --agent claude-code --title "Claude smoke" --instructions "Return a fixed smoke string." --workspace .mco-workspace \
+    | python -c 'import json,sys; print(json.load(sys.stdin)["dispatch_id"])'
+)"
+mco adapter doctor claude-code --sandbox "$TASK_DIR/SANDBOX_CONTRACT.json"
+mco dispatch execute "$TASK_ID" "$DISPATCH_ID" \
+  --agent claude-code \
+  --sandbox "$TASK_DIR/SANDBOX_CONTRACT.json" \
+  --prompt-file "$TASK_DIR/prompt.md" \
+  --timeout-seconds 120 \
+  --max-budget-usd 0.25 \
+  --workspace .mco-workspace
+```
+
+This path uses the host machine's Claude Code authentication. It sends the prompt to Claude, disables tools, disables session persistence, and writes a task-local execution report.

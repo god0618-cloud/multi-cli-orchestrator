@@ -31,12 +31,23 @@ The contract protects shared resources:
 
 Parallel work without an explicit sandbox contract should fail closed.
 
-v1.0 enforcement:
+Generic enforcement:
 
 ```bash
 mco adapter doctor generic-cli --sandbox SANDBOX_CONTRACT.json
 mco dispatch execute <task_id> <dispatch_id> --agent generic-cli --sandbox SANDBOX_CONTRACT.json --dry-run
 mco dispatch execute <task_id> <dispatch_id> --agent generic-cli --sandbox SANDBOX_CONTRACT.json --command-json '["echo","hello"]'
+```
+
+Claude Code supervised enforcement:
+
+```bash
+mco adapter doctor claude-code --sandbox SANDBOX_CONTRACT.json
+mco dispatch execute <task_id> <dispatch_id> \
+  --agent claude-code \
+  --sandbox SANDBOX_CONTRACT.json \
+  --prompt-file <task-dir>/prompt.md \
+  --max-budget-usd 0.25
 ```
 
 The dry-run executor validates capability and sandbox gates, writes a dry-run evidence artifact, and records the result in `RUN_LEDGER.json`.
@@ -56,7 +67,8 @@ Fail-closed behavior:
 
 - no sandbox contract -> dispatch becomes `blocked`
 - agent mismatch -> execution fails
-- credential policy other than `no credentials` -> execution fails
+- generic credential policy other than `no credentials` -> execution fails
+- Claude Code credential policy other than `host CLI auth only` -> execution fails
 - port access in generic dry-run -> execution fails
 - write/read scope missing `task workspace only` -> execution fails
 - command outside the allowlist -> execution fails

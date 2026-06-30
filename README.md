@@ -6,7 +6,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is in v1.3 release-readiness stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter templates, and a deliberately narrow real-execution path for safe commands.
+This repository is in v1.5 supervised-adapter stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter templates, a deliberately narrow real-execution path for safe commands, and one real first-party supervised adapter for Claude Code prompt execution.
 
 ## Core Ideas
 
@@ -28,7 +28,7 @@ mco dashboard <task_id>
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
-Implemented in this v1.3 baseline:
+Implemented in this v1.5 baseline:
 
 - `mco init`
 - `mco doctor`
@@ -42,6 +42,7 @@ Implemented in this v1.3 baseline:
 - `mco dispatch queue/list/claim/complete`
 - `mco dispatch execute --dry-run`
 - `mco dispatch execute --command-json`
+- `mco dispatch execute --agent claude-code --prompt-file`
 - `mco dashboard`
 - `mco orchestrate-start`
 - `mco schema validate`
@@ -63,7 +64,7 @@ mco audit .
 mco release check .
 ```
 
-## v1.3 Command Matrix
+## v1.5 Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -75,11 +76,12 @@ mco release check .
 | `mco task status` | implemented |
 | `mco task event` | implemented |
 | `mco artifact register` | implemented |
-| `mco adapter capabilities` | generic-cli only |
-| `mco adapter doctor` | generic-cli readiness check |
+| `mco adapter capabilities` | `generic-cli`, `claude-code` |
+| `mco adapter doctor` | generic and Claude Code readiness checks |
 | `mco dispatch queue/list/claim/complete` | generic local queue |
 | `mco dispatch execute --dry-run` | sandbox/capability gate validation |
 | `mco dispatch execute --command-json` | safe command execution with sandbox, allowlist, timeout, and evidence report |
+| `mco dispatch execute --agent claude-code --prompt-file` | bounded Claude Code prompt execution with no tools, no session persistence, budget cap, timeout, and transcript artifact |
 | `mco dashboard` | implemented |
 | `mco orchestrate-start` | bounded initializer |
 | `mco schema validate` | implemented |
@@ -89,7 +91,7 @@ mco release check .
 | `mco run replay` | implemented |
 | `mco release check` | implemented |
 | arbitrary shell execution | intentionally not implemented |
-| first-party CLI adapters | not implemented |
+| first-party CLI adapters | Claude Code implemented; Kimi/Mimo/CodeWhale still disabled |
 | run replay UI | not implemented |
 
 ## Repository Layout
@@ -114,7 +116,8 @@ Useful docs:
 - No default writes outside the configured workspace.
 - No default writes to native CLI memory, stable knowledge bases, or profile files.
 - No destructive action without an explicit future gate.
-- No arbitrary shell execution. v1.0 only allows narrowly validated commands such as `echo ...` and print-only `python -c ...`.
+- No arbitrary shell execution. Generic execution only allows narrowly validated commands such as `echo ...` and print-only `python -c ...`.
+- Claude Code execution is bounded to `claude --print`, tools disabled, session persistence disabled, task-local prompt files, timeout/output limits, and an explicit budget cap.
 - No private local paths or business data should be committed.
 
 ## License

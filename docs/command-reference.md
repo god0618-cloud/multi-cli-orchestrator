@@ -1,6 +1,6 @@
 # Command Reference
 
-v1.0 command surface:
+Command surface:
 
 | Command | Purpose |
 | --- | --- |
@@ -12,13 +12,13 @@ v1.0 command surface:
 | `mco task status` | Show task metadata |
 | `mco task event` | Append an event to `RUN_LEDGER.json` |
 | `mco artifact register` | Register evidence in the run ledger |
-| `mco adapter capabilities` | Show generic adapter capability manifest |
+| `mco adapter capabilities` | Show adapter capability manifest for `generic-cli` or `claude-code` |
 | `mco adapter doctor` | Check adapter readiness against optional sandbox contract |
 | `mco dispatch queue` | Queue a dispatch for an agent |
 | `mco dispatch list` | List task dispatches |
 | `mco dispatch claim` | Claim a queued dispatch |
 | `mco dispatch complete` | Complete a dispatch |
-| `mco dispatch execute` | Validate adapter/sandbox gates, dry-run, or run a safe command |
+| `mco dispatch execute` | Validate adapter/sandbox gates, dry-run, run a safe command, or run a bounded Claude Code prompt |
 | `mco dashboard` | Render a static task dashboard |
 | `mco orchestrate-start` | Create a task and initialize a workflow plan |
 | `mco schema validate` | Validate loop spec, adapter manifest, sandbox contract, or run ledger |
@@ -30,4 +30,6 @@ v1.0 command surface:
 
 `mco dispatch execute --dry-run` validates gates and writes evidence only.
 
-`mco dispatch execute --command-json '["echo","hello"]'` runs a narrowly allowed command after sandbox enforcement. It is not an arbitrary shell runner and does not execute real external CLI workers yet.
+`mco dispatch execute --command-json '["echo","hello"]'` runs a narrowly allowed command after sandbox enforcement. It is not an arbitrary shell runner.
+
+`mco dispatch execute --agent claude-code --prompt-file <task-dir>/prompt.md --max-budget-usd 0.25` runs a supervised Claude Code prompt through `claude --print` with tools disabled, session persistence disabled, timeout/output limits, and a transcript artifact.

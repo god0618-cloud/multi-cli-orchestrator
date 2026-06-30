@@ -1,0 +1,12 @@
+{
+  "schema": "mco.sandbox_contract.v0.2",
+  "worker_id": "claude-code-supervised-worker",
+  "agent": "claude-code",
+  "write_scope": ["task workspace only"],
+  "read_scope": ["task workspace only"],
+  "ports": [],
+  "data_boundary": "prompt text and task-local files only",
+  "credential_policy": "host CLI auth only",
+  "merge_owner": "local user",
+  "verification_artifacts": ["RUN_LEDGER.json", "claude execution report"]
+}

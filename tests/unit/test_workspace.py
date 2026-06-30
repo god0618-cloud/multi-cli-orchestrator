@@ -13,9 +13,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def run_mco(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def run_mco(*args: str, cwd: Path | None = None, env_extra: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(ROOT / "src")
+    if env_extra:
+        env.update(env_extra)
     return subprocess.run(
         [sys.executable, "-m", "mco.cli", *args],
         cwd=cwd or ROOT,
@@ -24,6 +26,34 @@ def run_mco(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[
         capture_output=True,
         check=False,
     )
+
+
+def write_fake_claude(path: Path, fail_budget: bool = False) -> None:
+    script = f"""#!/usr/bin/env python3
+import json
+import sys
+
+args = sys.argv[1:]
+if args == ["--version"]:
+    print("2.1.140 (Claude Code)")
+    raise SystemExit(0)
+if args == ["--help"]:
+    print("--print --output-format --max-budget-usd --no-session-persistence --permission-mode --tools")
+    raise SystemExit(0)
+if args == ["auth", "status"]:
+    print(json.dumps({{"loggedIn": True, "authMethod": "oauth_token", "apiProvider": "firstParty"}}))
+    raise SystemExit(0)
+if "--print" in args:
+    if {str(fail_budget)}:
+        print(json.dumps({{"type": "result", "subtype": "error_max_budget_usd", "is_error": True}}))
+        raise SystemExit(1)
+    print(json.dumps({{"type": "result", "subtype": "success", "is_error": False, "result": "MCO_ADAPTER_SMOKE_OK"}}))
+    raise SystemExit(0)
+print("unexpected args", args)
+raise SystemExit(2)
+"""
+    path.write_text(script, encoding="utf-8")
+    path.chmod(0o755)
 
 
 class WorkspaceTests(unittest.TestCase):
@@ -155,6 +185,131 @@ class WorkspaceTests(unittest.TestCase):
                 self.assertEqual(payload["quota_status"], "unknown")
                 check = run_mco("schema", "validate", "adapter-manifest", str(path))
                 self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
+
+    def test_claude_code_adapter_doctor_and_supervised_execution(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            fake_claude = tmp_path / "claude"
+            write_fake_claude(fake_claude)
+            env = {"CLAUDE_CODE_BIN": str(fake_claude)}
+
+            capabilities = run_mco("adapter", "capabilities", "claude-code", env_extra=env)
+            self.assertEqual(capabilities.returncode, 0, capabilities.stdout + capabilities.stderr)
+            manifest = json.loads(capabilities.stdout)
+            self.assertTrue(manifest["supervised"])
+            self.assertFalse(manifest["can_run_shell"])
+
+            sandbox = tmp_path / "claude-sandbox.json"
+            sandbox.write_text((ROOT / "templates" / "sandbox-contracts" / "claude-code-supervised.json").read_text(encoding="utf-8"), encoding="utf-8")
+            doctor = run_mco("adapter", "doctor", "claude-code", "--sandbox", str(sandbox), env_extra=env)
+            self.assertEqual(doctor.returncode, 0, doctor.stdout + doctor.stderr)
+            doctor_payload = json.loads(doctor.stdout)
+            self.assertEqual(doctor_payload["status"], "READY_SUPERVISED")
+
+            workspace = tmp_path / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Claude Adapter Task", "--workspace", str(workspace))
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            queued = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "claude-code",
+                "--title",
+                "Smoke prompt",
+                "--instructions",
+                "Return a fixed smoke string.",
+                "--workspace",
+                str(workspace),
+            )
+            dispatch_id = json.loads(queued.stdout)["dispatch_id"]
+            task_dir = workspace / "tasks" / task_id
+            prompt = task_dir / "prompt.md"
+            prompt.write_text("Return exactly: MCO_ADAPTER_SMOKE_OK\n", encoding="utf-8")
+
+            executed = run_mco(
+                "dispatch",
+                "execute",
+                task_id,
+                dispatch_id,
+                "--agent",
+                "claude-code",
+                "--sandbox",
+                str(sandbox),
+                "--prompt-file",
+                str(prompt),
+                "--timeout-seconds",
+                "30",
+                "--max-output-bytes",
+                "20000",
+                "--max-budget-usd",
+                "0.25",
+                "--workspace",
+                str(workspace),
+                env_extra=env,
+            )
+            self.assertEqual(executed.returncode, 0, executed.stdout + executed.stderr)
+            dispatch = json.loads(executed.stdout)
+            self.assertEqual(dispatch["status"], "completed")
+            report_path = task_dir / "artifacts" / f"{dispatch_id}-claude-execution-report.json"
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertTrue(report["success"])
+            self.assertIn("MCO_ADAPTER_SMOKE_OK", report["stdout"])
+
+    def test_claude_code_adapter_records_budget_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            fake_claude = tmp_path / "claude"
+            write_fake_claude(fake_claude, fail_budget=True)
+            env = {"CLAUDE_CODE_BIN": str(fake_claude)}
+            workspace = tmp_path / "workspace"
+            sandbox = tmp_path / "claude-sandbox.json"
+            sandbox.write_text((ROOT / "templates" / "sandbox-contracts" / "claude-code-supervised.json").read_text(encoding="utf-8"), encoding="utf-8")
+
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Claude Budget Task", "--workspace", str(workspace))
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            queued = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "claude-code",
+                "--title",
+                "Budget prompt",
+                "--instructions",
+                "Trigger budget error.",
+                "--workspace",
+                str(workspace),
+            )
+            dispatch_id = json.loads(queued.stdout)["dispatch_id"]
+            task_dir = workspace / "tasks" / task_id
+            prompt = task_dir / "prompt.md"
+            prompt.write_text("Return exactly: MCO_ADAPTER_SMOKE_OK\n", encoding="utf-8")
+
+            executed = run_mco(
+                "dispatch",
+                "execute",
+                task_id,
+                dispatch_id,
+                "--agent",
+                "claude-code",
+                "--sandbox",
+                str(sandbox),
+                "--prompt-file",
+                str(prompt),
+                "--timeout-seconds",
+                "30",
+                "--workspace",
+                str(workspace),
+                env_extra=env,
+            )
+            self.assertNotEqual(executed.returncode, 0)
+            report_path = task_dir / "artifacts" / f"{dispatch_id}-claude-execution-report.json"
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertFalse(report["success"])
+            self.assertIn("error_max_budget_usd", report["summary"])
 
     def test_release_check_passes_without_git_failure(self) -> None:
         for path in ROOT.rglob("__pycache__"):

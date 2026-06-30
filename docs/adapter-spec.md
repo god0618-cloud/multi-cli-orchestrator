@@ -21,7 +21,7 @@ Planned manifest fields:
 
 The orchestrator should use adapter capability evidence, not assumptions.
 
-v1.0 includes only:
+The baseline generic adapter includes:
 
 ```bash
 mco adapter capabilities generic-cli
@@ -42,4 +42,31 @@ The v1.0 execution surface is intentionally narrow:
 - `echo ...`
 - `python -c "print(...)"`, resolved through the current Python interpreter
 
-The print-only Python path rejects imports, filesystem access markers, dynamic execution markers, subprocess access, sockets, and common module escape hatches. Real first-party adapters for Claude Code, Kimi Code, Mimo Code, CodeWhale, or other CLIs should be added only after they provide their own capability manifest, sandbox contract, quota checks, and evidence reporter.
+The print-only Python path rejects imports, filesystem access markers, dynamic execution markers, subprocess access, sockets, and common module escape hatches.
+
+v1.5 adds one real first-party adapter:
+
+```bash
+mco adapter capabilities claude-code
+mco adapter doctor claude-code --sandbox templates/sandbox-contracts/claude-code-supervised.json
+mco dispatch execute <task_id> <dispatch_id> \
+  --agent claude-code \
+  --sandbox <task-dir>/SANDBOX_CONTRACT.json \
+  --prompt-file <task-dir>/prompt.md \
+  --timeout-seconds 120 \
+  --max-budget-usd 0.25
+```
+
+Claude Code execution is deliberately constrained:
+
+- uses `claude --print`
+- uses `--output-format json`
+- uses `--no-session-persistence`
+- uses `--permission-mode default`
+- uses `--tools ""`
+- requires a positive `--max-budget-usd` no greater than `1`
+- requires `prompt-file` to live inside the task workspace
+- writes `artifacts/<dispatch_id>-claude-execution-report.json`
+- marks structured Claude errors, including `error_max_budget_usd`, as failed dispatches
+
+Other first-party adapters for Kimi Code, Mimo Code, CodeWhale, or additional CLIs remain disabled until they provide the same capability manifest, sandbox contract, quota checks, non-interactive command contract, and evidence reporter.

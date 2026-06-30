@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0
+
+- Added the first real supervised first-party adapter: `claude-code`.
+- Added Claude Code capability and doctor checks, including binary discovery, required non-interactive flags, and auth status verification.
+- Added `mco dispatch execute --agent claude-code --prompt-file ...` for bounded `claude --print` execution with no tools, no session persistence, timeout, output truncation, and budget cap.
+- Added Claude execution reports with prompt hash, stdout/stderr transcript, success/failure classification, and run-ledger artifact registration.
+- Added fail-safe handling for structured Claude budget errors such as `error_max_budget_usd`.
+- Added a `claude-code-supervised` sandbox contract template using host CLI auth only and task-workspace read/write boundaries.
+- Kept arbitrary shell execution and other first-party adapters disabled.
+
 ## 1.2.0
 
 - Added release readiness issue templates and pull request template.

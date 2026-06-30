@@ -43,9 +43,24 @@
 - First-party adapter manifests without default execution authority.
 - Control-room dashboard improvements.
 
+## v1.5
+
+- First real supervised first-party adapter: Claude Code.
+- Non-interactive prompt execution through `claude --print`.
+- Host CLI auth preflight.
+- Budget-limited execution.
+- Transcript artifact registration.
+- Structured budget/error fail-safe handling.
+
+## v1.6
+
+- Boss-view control room for live run state.
+- Adapter readiness and quota status surfaces.
+- Clear escalation queue for owner decisions.
+
 ## v2.0
 
-- First-party CLI adapters.
+- Multiple first-party CLI adapters.
 - Multi-worker supervised execution.
 - Replay UI.
 - Policy-driven escalation gates.
