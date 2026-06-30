@@ -47,7 +47,7 @@ if "--print" in args:
     if {str(fail_budget)}:
         print(json.dumps({{"type": "result", "subtype": "error_max_budget_usd", "is_error": True}}))
         raise SystemExit(1)
-    print(json.dumps({{"type": "result", "subtype": "success", "is_error": False, "result": "MCO_ADAPTER_SMOKE_OK"}}))
+    print(json.dumps({{"type": "result", "subtype": "success", "is_error": False, "result": "MCO_ADAPTER_SMOKE_OK", "total_cost_usd": 0.0123}}))
     raise SystemExit(0)
 print("unexpected args", args)
 raise SystemExit(2)
@@ -88,7 +88,7 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(dashboard.returncode, 0, dashboard.stderr)
             dashboard_path = workspace / "tasks" / task_id / "dashboard.html"
             self.assertTrue(dashboard_path.exists())
-            self.assertIn("Boss Dashboard Seed", dashboard_path.read_text(encoding="utf-8"))
+            self.assertIn("Boss Dashboard Control Room", dashboard_path.read_text(encoding="utf-8"))
 
     def test_task_create_json_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -257,6 +257,15 @@ class WorkspaceTests(unittest.TestCase):
             self.assertTrue(report["success"])
             self.assertIn("MCO_ADAPTER_SMOKE_OK", report["stdout"])
 
+            dashboard = run_mco("dashboard", task_id, "--workspace", str(workspace))
+            self.assertEqual(dashboard.returncode, 0, dashboard.stderr)
+            dashboard_html = (task_dir / "dashboard.html").read_text(encoding="utf-8")
+            self.assertIn("Control Room", dashboard_html)
+            self.assertIn("Adapter Readiness", dashboard_html)
+            self.assertIn("claude-code", dashboard_html)
+            self.assertIn("$0.0123 / $0.2500", dashboard_html)
+            self.assertIn("No owner action required", dashboard_html)
+
     def test_claude_code_adapter_records_budget_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -310,6 +319,13 @@ class WorkspaceTests(unittest.TestCase):
             report = json.loads(report_path.read_text(encoding="utf-8"))
             self.assertFalse(report["success"])
             self.assertIn("error_max_budget_usd", report["summary"])
+
+            dashboard = run_mco("dashboard", task_id, "--workspace", str(workspace))
+            self.assertEqual(dashboard.returncode, 0, dashboard.stderr)
+            dashboard_html = (task_dir / "dashboard.html").read_text(encoding="utf-8")
+            self.assertIn("Owner Escalations", dashboard_html)
+            self.assertIn("error_max_budget_usd", dashboard_html)
+            self.assertIn("NEEDS_ATTENTION", dashboard_html)
 
     def test_release_check_passes_without_git_failure(self) -> None:
         for path in ROOT.rglob("__pycache__"):

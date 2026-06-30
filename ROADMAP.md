@@ -54,9 +54,10 @@
 
 ## v1.6
 
-- Boss-view control room for live run state.
-- Adapter readiness and quota status surfaces.
+- Boss-view control room for task-local run state.
+- Adapter readiness, dispatch counts, and budget surfaces.
 - Clear escalation queue for owner decisions.
+- Static dependency-free HTML output.
 
 ## v2.0
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0
+
+- Upgraded the static dashboard into a boss-view control room.
+- Added adapter readiness summaries grouped by agent, including dispatch counts and latest execution report status.
+- Surfaced supervised Claude Code budget usage and remaining budget from execution reports.
+- Added an owner escalation queue for blocked/failed dispatches and structured adapter errors.
+- Kept the dashboard dependency-free and task-local so public demos remain easy to clone and run.
+
 ## 1.5.0
 
 - Added the first real supervised first-party adapter: `claude-code`.
