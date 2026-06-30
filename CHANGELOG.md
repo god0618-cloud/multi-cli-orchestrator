@@ -5,6 +5,7 @@
 - Added release readiness issue templates and pull request template.
 - Added reusable Mermaid diagram assets.
 - Added local git readiness as part of release check reporting.
+- Release check reports generated Python/package cache files as WARN instead of FAIL so editable-install users are not blocked by local cache artifacts.
 
 ## 1.1.0
 

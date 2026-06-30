@@ -12,7 +12,7 @@ Use this checklist before publishing the repository.
 - [ ] Run unsafe command rejection smoke.
 - [ ] Run `mco audit .`.
 - [ ] Run `mco release check .`.
-- [ ] Confirm no generated cache files are present.
+- [ ] Confirm no generated cache files are present. `mco release check .` reports these as WARN because editable installs may generate them.
 - [ ] Confirm no private paths, credentials, screenshots, or business data are present.
 - [ ] Confirm `README.md`, `CHANGELOG.md`, and `ROADMAP.md` match the package version.
 - [ ] Confirm first-party adapter templates are disabled by default.

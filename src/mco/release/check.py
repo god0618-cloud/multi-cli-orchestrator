@@ -102,7 +102,7 @@ def check_release(root: Path) -> ReleaseCheckResult:
         if any(pattern in path_text for pattern in GENERATED_PATTERNS):
             generated.append(str(path.relative_to(root)))
     if generated:
-        _add(findings, "FAIL", "generated_files", ", ".join(generated[:20]))
+        _add(findings, "WARN", "generated_files", ", ".join(generated[:20]))
     else:
         pass_count += 1
 
