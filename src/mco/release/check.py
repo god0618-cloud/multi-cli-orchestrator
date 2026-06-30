@@ -82,7 +82,13 @@ def _add(findings: list[dict], level: str, name: str, detail: str) -> None:
 
 
 def should_skip_path(path: Path) -> bool:
-    return any(part in IGNORED_TREE_PARTS for part in path.parts)
+    return any(
+        part in IGNORED_TREE_PARTS
+        or part == "__pycache__"
+        or part.endswith(".egg-info")
+        or part.endswith(".pyc")
+        for part in path.parts
+    )
 
 
 def check_release(root: Path) -> ReleaseCheckResult:
