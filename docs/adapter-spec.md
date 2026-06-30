@@ -55,6 +55,7 @@ mco dispatch execute <task_id> <dispatch_id> \
   --prompt-file <task-dir>/prompt.md \
   --timeout-seconds 120 \
   --max-budget-usd 0.25
+mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
 ```
 
 Claude Code execution is deliberately constrained:
@@ -68,5 +69,6 @@ Claude Code execution is deliberately constrained:
 - requires `prompt-file` to live inside the task workspace
 - writes `artifacts/<dispatch_id>-claude-execution-report.json`
 - marks structured Claude errors, including `error_max_budget_usd`, as failed dispatches
+- provides an explicit opt-in smoke command that creates a complete evidence bundle and verifies the fixed `MCO_ADAPTER_SMOKE_OK` sentinel
 
 Other first-party adapters for Kimi Code, Mimo Code, CodeWhale, or additional CLIs remain disabled until they provide the same capability manifest, sandbox contract, quota checks, non-interactive command contract, and evidence reporter.

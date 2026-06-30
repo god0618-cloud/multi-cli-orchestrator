@@ -66,6 +66,13 @@
 - Dashboard usage snapshot table.
 - Explicit unknown-provider-quota semantics.
 
+## v1.8
+
+- Explicit real Claude Code adapter smoke command.
+- Task-local smoke evidence bundle.
+- Fixed sentinel verification.
+- Cost-capped, opt-in adapter regression path.
+
 ## v2.0
 
 - Multiple first-party CLI adapters.

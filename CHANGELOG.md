@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.0
+
+- Added `mco adapter smoke claude-code` as an explicit real-adapter regression command.
+- The smoke command creates a task-local evidence bundle: sandbox contract, prompt, dispatch, Claude execution report, usage snapshot, dashboard, and adapter smoke result.
+- Added a fixed sentinel check so successful process execution alone is not enough; Claude output must contain `MCO_ADAPTER_SMOKE_OK`.
+- Capped smoke-test budget at `--max-budget-usd <= 0.25`, defaulting to `0.05`.
+- Kept real smoke tests opt-in and outside CI; unit tests use a fake Claude binary.
+
 ## 1.7.0
 
 - Added `mco usage snapshot <task_id>` to generate a task-local `USAGE_SNAPSHOT.json`.

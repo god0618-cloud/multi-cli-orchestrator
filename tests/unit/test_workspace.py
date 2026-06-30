@@ -275,6 +275,37 @@ class WorkspaceTests(unittest.TestCase):
             self.assertIn("$0.0123 / $0.2500", dashboard_html)
             self.assertIn("No owner action required", dashboard_html)
 
+    def test_claude_code_adapter_smoke_creates_evidence_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            fake_claude = tmp_path / "claude"
+            write_fake_claude(fake_claude)
+            env = {"CLAUDE_CODE_BIN": str(fake_claude)}
+            workspace = tmp_path / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+
+            smoke = run_mco(
+                "adapter",
+                "smoke",
+                "claude-code",
+                "--workspace",
+                str(workspace),
+                "--timeout-seconds",
+                "30",
+                "--max-budget-usd",
+                "0.05",
+                env_extra=env,
+            )
+            self.assertEqual(smoke.returncode, 0, smoke.stdout + smoke.stderr)
+            payload = json.loads(smoke.stdout)
+            self.assertEqual(payload["schema"], "mco.adapter_smoke.v1.0")
+            self.assertEqual(payload["status"], "PASS")
+            self.assertEqual(payload["agent"], "claude-code")
+            self.assertTrue(Path(payload["execution_report"]).exists())
+            self.assertTrue(Path(payload["usage_snapshot"]).exists())
+            self.assertTrue(Path(payload["dashboard"]).exists())
+            self.assertIn("MCO_ADAPTER_SMOKE_OK", Path(payload["execution_report"]).read_text(encoding="utf-8"))
+
     def test_claude_code_adapter_records_budget_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -380,6 +411,7 @@ class WorkspaceTests(unittest.TestCase):
             ("task", "--help"),
             ("artifact", "--help"),
             ("adapter", "--help"),
+            ("adapter", "smoke", "--help"),
             ("dispatch", "--help"),
             ("schema", "--help"),
             ("orchestrate-start", "--help"),

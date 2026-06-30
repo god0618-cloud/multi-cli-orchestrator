@@ -8,6 +8,7 @@ from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 from .adapters.doctor import doctor_adapter, manifest_for_agent
+from .adapters.smoke import smoke_claude_code
 from .audit.safety import audit_tree
 from .config import init_workspace, read_workspace_config, resolve_workspace
 from .dashboard.static import render_dashboard
@@ -145,6 +146,21 @@ def cmd_adapter_doctor(args: argparse.Namespace) -> int:
     result = doctor_adapter(args.agent, sandbox_path)
     print(json.dumps(result.to_dict(), indent=2))
     return 0 if result.status in {"READY_SUPERVISED", "READY_MANUAL"} else 1
+
+
+def cmd_adapter_smoke(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    if args.agent != "claude-code":
+        raise ValueError("adapter smoke currently supports claude-code only")
+    result = smoke_claude_code(
+        config,
+        max_budget_usd=args.max_budget_usd,
+        timeout_seconds=args.timeout_seconds,
+        max_output_bytes=args.max_output_bytes,
+    )
+    print(json.dumps(result, indent=2))
+    return 0 if result["status"] == "PASS" else 1
 
 
 def cmd_dispatch_queue(args: argparse.Namespace) -> int:
@@ -383,6 +399,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_adapter_doctor.add_argument("agent", choices=["generic-cli", "claude-code"])
     p_adapter_doctor.add_argument("--sandbox", help="path to SANDBOX_CONTRACT.json")
     p_adapter_doctor.set_defaults(func=cmd_adapter_doctor)
+    p_adapter_smoke = adapter_sub.add_parser("smoke", help="run an opt-in real adapter smoke test")
+    p_adapter_smoke.add_argument("agent", choices=["claude-code"])
+    p_adapter_smoke.add_argument("--workspace", default=".", help="workspace root")
+    p_adapter_smoke.add_argument("--timeout-seconds", type=int, default=120)
+    p_adapter_smoke.add_argument("--max-output-bytes", type=int, default=80000)
+    p_adapter_smoke.add_argument("--max-budget-usd", type=float, default=0.05)
+    p_adapter_smoke.set_defaults(func=cmd_adapter_smoke)
 
     p_dispatch = sub.add_parser("dispatch", help="manage dispatch queue")
     dispatch_sub = p_dispatch.add_subparsers(dest="dispatch_command", required=True)
