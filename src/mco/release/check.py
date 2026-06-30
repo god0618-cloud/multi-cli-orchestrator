@@ -25,6 +25,19 @@ REQUIRED_FILES = [
 ]
 
 GENERATED_PATTERNS = ["__pycache__", ".egg-info", ".pyc"]
+IGNORED_TREE_PARTS = {
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+}
 
 
 @dataclass(frozen=True)
@@ -68,6 +81,10 @@ def _add(findings: list[dict], level: str, name: str, detail: str) -> None:
     findings.append({"level": level, "name": name, "detail": detail})
 
 
+def should_skip_path(path: Path) -> bool:
+    return any(part in IGNORED_TREE_PARTS for part in path.parts)
+
+
 def check_release(root: Path) -> ReleaseCheckResult:
     root = root.resolve()
     findings: list[dict] = []
@@ -96,7 +113,7 @@ def check_release(root: Path) -> ReleaseCheckResult:
 
     generated = []
     for path in root.rglob("*"):
-        if ".git" in path.parts:
+        if should_skip_path(path):
             continue
         path_text = str(path)
         if any(pattern in path_text for pattern in GENERATED_PATTERNS):
@@ -109,7 +126,7 @@ def check_release(root: Path) -> ReleaseCheckResult:
     text_suffixes = {".py", ".md", ".json", ".toml", ".yml", ".yaml"}
     shell_true = []
     for path in root.rglob("*"):
-        if ".git" in path.parts or not path.is_file() or path.suffix not in text_suffixes:
+        if should_skip_path(path) or not path.is_file() or path.suffix not in text_suffixes:
             continue
         if ("shell" + "=True") in path.read_text(encoding="utf-8"):
             shell_true.append(str(path.relative_to(root)))

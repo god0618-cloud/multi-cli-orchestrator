@@ -164,6 +164,30 @@ class WorkspaceTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertEqual(payload["fail_count"], 0)
 
+    def test_release_and_audit_ignore_local_install_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = Path(tmp) / "repo"
+            shutil.copytree(
+                ROOT,
+                fixture,
+                ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc", "*.egg-info"),
+            )
+            vendored = fixture / ".venv" / "lib" / "python3.14" / "site-packages" / "pip" / "_internal" / "commands"
+            vendored.mkdir(parents=True)
+            (vendored / "configuration.py").write_text("subprocess.run(cmd, " + "shell" + "=True)\n", encoding="utf-8")
+            (vendored / "private.md").write_text(
+                "private path: " + "/" + "Users" + "/" + "liuyang" + "\n",
+                encoding="utf-8",
+            )
+
+            release = run_mco("release", "check", str(fixture), "--json")
+            self.assertEqual(release.returncode, 0, release.stdout + release.stderr)
+            release_payload = json.loads(release.stdout)
+            self.assertEqual(release_payload["fail_count"], 0)
+
+            audit = run_mco("audit", str(fixture))
+            self.assertEqual(audit.returncode, 0, audit.stdout + audit.stderr)
+
     def test_command_help_smoke(self) -> None:
         commands = [
             ("--help",),

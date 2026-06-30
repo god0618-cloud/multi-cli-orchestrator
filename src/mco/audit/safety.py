@@ -17,6 +17,19 @@ FORBIDDEN_PATTERNS = [
 ]
 
 CHECKED_SUFFIXES = {".py", ".md", ".json", ".toml", ".yml", ".yaml", ".html"}
+IGNORED_TREE_PARTS = {
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+}
 
 
 @dataclass(frozen=True)
@@ -35,7 +48,7 @@ def audit_tree(root: Path) -> AuditResult:
     findings: list[str] = []
     pass_count = 0
     for path in root.rglob("*"):
-        if ".git" in path.parts or path.is_dir() or path.suffix not in CHECKED_SUFFIXES:
+        if any(part in IGNORED_TREE_PARTS for part in path.parts) or path.is_dir() or path.suffix not in CHECKED_SUFFIXES:
             continue
         text = path.read_text(encoding="utf-8")
         for pattern in FORBIDDEN_PATTERNS:
