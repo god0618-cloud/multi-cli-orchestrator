@@ -154,6 +154,7 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
         for path in sorted(dispatch_dir.glob("*.json")):
             dispatches.append(_read_json(path))
     reports = _load_artifact_reports(artifacts)
+    usage_snapshot = _read_json(task_dir / "USAGE_SNAPSHOT.json")
     adapters = _summarize_adapters(dispatches, reports)
     problem_dispatches = [item for item in dispatches if item.get("status") in TERMINAL_PROBLEM_STATUSES]
     pending_dispatches = [item for item in dispatches if item.get("status") in {"queued", "claimed"}]
@@ -194,6 +195,22 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     )
     if not adapter_rows:
         adapter_rows = "<p>No adapter dispatches have been queued yet.</p>"
+
+    usage_rows = ""
+    for item in usage_snapshot.get("agents", []):
+        usage_rows += (
+            "<tr>"
+            f"<td>{html.escape(str(item.get('agent', 'unknown')))}</td>"
+            f"<td><span class=\"pill {_status_class(str(item.get('quota_status', 'unknown')))}\">{html.escape(str(item.get('quota_status', 'unknown')))}</span></td>"
+            f"<td>{html.escape(str(item.get('dispatch_count', 0)))}</td>"
+            f"<td>{_display_money(item.get('observed_cost_usd_total'))}</td>"
+            f"<td>{_display_money(item.get('max_budget_usd_total'))}</td>"
+            f"<td>{_display_money(item.get('budget_remaining_usd_estimate'))}</td>"
+            f"<td>{html.escape(str(item.get('last_error') or ''))}</td>"
+            "</tr>"
+        )
+    if not usage_rows:
+        usage_rows = "<tr><td colspan=\"7\">No usage snapshot has been generated yet. Run <code>mco usage snapshot &lt;task_id&gt;</code>.</td></tr>"
 
     escalation_items = []
     for dispatch in problem_dispatches:
@@ -249,6 +266,9 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     h2 {{ margin: 0 0 12px; font-size: 18px; }}
     h3 {{ margin: 4px 0 0; font-size: 20px; }}
     code {{ background: #1f2937; color: #d1d5db; padding: 2px 5px; border-radius: 5px; }}
+    table {{ width: 100%; border-collapse: collapse; overflow: hidden; }}
+    th, td {{ border-bottom: 1px solid #263247; padding: 10px 8px; text-align: left; vertical-align: top; }}
+    th {{ color: #94a3b8; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }}
     .metrics {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }}
     .metric {{ background: #0b1220; border: 1px solid #263247; border-radius: 12px; padding: 16px; }}
     .metric span, .adapter-grid span {{ display: block; color: #94a3b8; font-size: 12px; margin-bottom: 6px; }}
@@ -290,6 +310,16 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
   <section class="card">
     <h2>Owner Escalations</h2>
     <ul>{_html_list(escalation_items, "No owner action required.")}</ul>
+  </section>
+  <section class="card">
+    <h2>Usage Snapshot</h2>
+    <p class="small">Source: {html.escape(usage_snapshot.get("source", "not generated"))}</p>
+    <table>
+      <thead>
+        <tr><th>Agent</th><th>Quota status</th><th>Dispatches</th><th>Observed</th><th>Budget</th><th>Remaining</th><th>Last error</th></tr>
+      </thead>
+      <tbody>{usage_rows}</tbody>
+    </table>
   </section>
   <section class="card">
     <h2>Current Evidence</h2>

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.0
+
+- Added `mco usage snapshot <task_id>` to generate a task-local `USAGE_SNAPSHOT.json`.
+- Added a durable usage/quota evidence contract derived only from dispatch records and registered execution reports.
+- Aggregated per-agent dispatch counts, observed cost, budget caps, estimated remaining budget, quota status, and last error.
+- Added usage snapshot visibility to the boss dashboard.
+- Explicitly labels provider-account quota as unknown unless task-local evidence supports a narrower claim.
+
 ## 1.6.0
 
 - Upgraded the static dashboard into a boss-view control room.

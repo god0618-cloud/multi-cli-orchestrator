@@ -25,6 +25,7 @@ mco doctor
 mco task create "Build a mobile-first project page"
 mco orchestrate-start <task_id> --template frontend-review-loop
 mco dashboard <task_id>
+mco usage snapshot <task_id>
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
@@ -83,6 +84,7 @@ mco release check .
 | `mco dispatch execute --command-json` | safe command execution with sandbox, allowlist, timeout, and evidence report |
 | `mco dispatch execute --agent claude-code --prompt-file` | bounded Claude Code prompt execution with no tools, no session persistence, budget cap, timeout, and transcript artifact |
 | `mco dashboard` | implemented |
+| `mco usage snapshot` | task-local usage/quota evidence rollup |
 | `mco orchestrate-start` | bounded initializer |
 | `mco schema validate` | implemented |
 | `mco serve` | implemented |
@@ -118,6 +120,7 @@ Useful docs:
 - No destructive action without an explicit future gate.
 - No arbitrary shell execution. Generic execution only allows narrowly validated commands such as `echo ...` and print-only `python -c ...`.
 - Claude Code execution is bounded to `claude --print`, tools disabled, session persistence disabled, task-local prompt files, timeout/output limits, and an explicit budget cap.
+- Usage snapshots are evidence-derived. They aggregate task-local execution reports and dispatch records; they do not claim provider-account quota unless that evidence exists.
 - No private local paths or business data should be committed.
 
 ## License

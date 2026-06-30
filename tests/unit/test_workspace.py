@@ -257,11 +257,20 @@ class WorkspaceTests(unittest.TestCase):
             self.assertTrue(report["success"])
             self.assertIn("MCO_ADAPTER_SMOKE_OK", report["stdout"])
 
+            usage = run_mco("usage", "snapshot", task_id, "--workspace", str(workspace))
+            self.assertEqual(usage.returncode, 0, usage.stdout + usage.stderr)
+            usage_payload = json.loads((task_dir / "USAGE_SNAPSHOT.json").read_text(encoding="utf-8"))
+            self.assertEqual(usage_payload["schema"], "mco.usage_snapshot.v1.0")
+            self.assertEqual(usage_payload["agents"][0]["agent"], "claude-code")
+            self.assertEqual(usage_payload["agents"][0]["quota_status"], "budget_limited")
+            self.assertAlmostEqual(usage_payload["agents"][0]["observed_cost_usd_total"], 0.0123)
+
             dashboard = run_mco("dashboard", task_id, "--workspace", str(workspace))
             self.assertEqual(dashboard.returncode, 0, dashboard.stderr)
             dashboard_html = (task_dir / "dashboard.html").read_text(encoding="utf-8")
             self.assertIn("Control Room", dashboard_html)
             self.assertIn("Adapter Readiness", dashboard_html)
+            self.assertIn("Usage Snapshot", dashboard_html)
             self.assertIn("claude-code", dashboard_html)
             self.assertIn("$0.0123 / $0.2500", dashboard_html)
             self.assertIn("No owner action required", dashboard_html)
@@ -320,6 +329,12 @@ class WorkspaceTests(unittest.TestCase):
             self.assertFalse(report["success"])
             self.assertIn("error_max_budget_usd", report["summary"])
 
+            usage = run_mco("usage", "snapshot", task_id, "--workspace", str(workspace))
+            self.assertEqual(usage.returncode, 0, usage.stdout + usage.stderr)
+            usage_payload = json.loads((task_dir / "USAGE_SNAPSHOT.json").read_text(encoding="utf-8"))
+            self.assertEqual(usage_payload["agents"][0]["quota_status"], "needs_attention")
+            self.assertIn("error_max_budget_usd", usage_payload["agents"][0]["last_error"])
+
             dashboard = run_mco("dashboard", task_id, "--workspace", str(workspace))
             self.assertEqual(dashboard.returncode, 0, dashboard.stderr)
             dashboard_html = (task_dir / "dashboard.html").read_text(encoding="utf-8")
@@ -370,6 +385,7 @@ class WorkspaceTests(unittest.TestCase):
             ("orchestrate-start", "--help"),
             ("demo", "--help"),
             ("run", "--help"),
+            ("usage", "--help"),
             ("audit", "--help"),
             ("release", "--help"),
         ]

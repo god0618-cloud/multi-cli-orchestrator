@@ -20,6 +20,7 @@ Command surface:
 | `mco dispatch complete` | Complete a dispatch |
 | `mco dispatch execute` | Validate adapter/sandbox gates, dry-run, run a safe command, or run a bounded Claude Code prompt |
 | `mco dashboard` | Render a static task dashboard |
+| `mco usage snapshot` | Write a task-local usage/quota evidence snapshot |
 | `mco orchestrate-start` | Create a task and initialize a workflow plan |
 | `mco schema validate` | Validate loop spec, adapter manifest, sandbox contract, or run ledger |
 | `mco serve` | Serve a workspace directory over HTTP |
@@ -33,3 +34,5 @@ Command surface:
 `mco dispatch execute --command-json '["echo","hello"]'` runs a narrowly allowed command after sandbox enforcement. It is not an arbitrary shell runner.
 
 `mco dispatch execute --agent claude-code --prompt-file <task-dir>/prompt.md --max-budget-usd 0.25` runs a supervised Claude Code prompt through `claude --print` with tools disabled, session persistence disabled, timeout/output limits, and a transcript artifact.
+
+`mco usage snapshot <task_id>` writes `USAGE_SNAPSHOT.json` under the task directory and registers it in the run ledger. The snapshot aggregates only task-local dispatch records and registered execution reports.

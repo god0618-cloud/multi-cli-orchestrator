@@ -26,6 +26,7 @@ from .schemas import (
     validate_sandbox_contract,
 )
 from .task.lifecycle import create_task, list_tasks, read_task, task_dir
+from .usage.snapshot import write_usage_snapshot
 from .workflow.templates import load_workflow_template, write_plan
 
 
@@ -303,6 +304,15 @@ def cmd_run_replay(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_usage_snapshot(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    directory = task_dir(config, args.task_id)
+    out = write_usage_snapshot(directory)
+    print(f"usage snapshot: {out}")
+    return 0
+
+
 def cmd_release_check(args: argparse.Namespace) -> int:
     root = Path(args.path).expanduser().resolve()
     result = check_release(root)
@@ -460,6 +470,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_run_replay.add_argument("ledger", help="path to RUN_LEDGER.json")
     p_run_replay.add_argument("--json", action="store_true", help="print structured JSON")
     p_run_replay.set_defaults(func=cmd_run_replay)
+
+    p_usage = sub.add_parser("usage", help="usage and quota evidence utilities")
+    usage_sub = p_usage.add_subparsers(dest="usage_command", required=True)
+    p_usage_snapshot = usage_sub.add_parser("snapshot", help="write a task-local usage evidence snapshot")
+    p_usage_snapshot.add_argument("task_id")
+    p_usage_snapshot.add_argument("--workspace", default=".", help="workspace root")
+    p_usage_snapshot.set_defaults(func=cmd_usage_snapshot)
 
     p_release = sub.add_parser("release", help="release readiness utilities")
     release_sub = p_release.add_subparsers(dest="release_command", required=True)

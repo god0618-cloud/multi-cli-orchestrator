@@ -59,6 +59,13 @@
 - Clear escalation queue for owner decisions.
 - Static dependency-free HTML output.
 
+## v1.7
+
+- Durable task-local usage snapshot contract.
+- Per-agent observed cost and budget estimate rollups.
+- Dashboard usage snapshot table.
+- Explicit unknown-provider-quota semantics.
+
 ## v2.0
 
 - Multiple first-party CLI adapters.

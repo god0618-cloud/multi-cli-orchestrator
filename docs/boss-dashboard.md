@@ -26,6 +26,7 @@ The dashboard now includes:
 - **Control Room**: task status, completed dispatch count, artifact count, and whether owner action is required.
 - **Adapter Readiness**: one card per agent with dispatch counts, latest dispatch, latest execution summary, transcript label, observed budget, maximum budget, and approximate remaining budget.
 - **Owner Escalations**: blocked/failed dispatches and structured adapter errors, or a clear “No owner action required” line.
+- **Usage Snapshot**: per-agent observed cost, budget caps, remaining budget estimate, quota status, and last error from `USAGE_SNAPSHOT.json`.
 - **Current Evidence**: latest run-ledger event.
 - **Artifacts / Dispatches / Timeline**: audit trail details for deeper inspection.
 
