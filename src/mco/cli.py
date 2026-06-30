@@ -9,13 +9,13 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 from .adapters.doctor import doctor_adapter, manifest_for_agent
 from .adapters.scaffold import scaffold_adapter
-from .adapters.smoke import smoke_claude_code
+from .adapters.smoke import smoke_claude_code, smoke_kimi_code
 from .audit.safety import audit_tree
 from .config import init_workspace, read_workspace_config, resolve_workspace
 from .dashboard.static import render_dashboard
 from .demo.hello import run_hello_demo
 from .dispatch.queue import claim_dispatch, complete_dispatch, list_dispatches, queue_dispatch
-from .dispatch.execute import execute_dispatch_claude_prompt, execute_dispatch_command, execute_dispatch_dry_run
+from .dispatch.execute import execute_dispatch_claude_prompt, execute_dispatch_command, execute_dispatch_dry_run, execute_dispatch_kimi_prompt
 from .replay.ledger import append_event, register_artifact, set_workflow
 from .replay.readout import replay_ledger
 from .release.check import check_release
@@ -152,14 +152,21 @@ def cmd_adapter_doctor(args: argparse.Namespace) -> int:
 def cmd_adapter_smoke(args: argparse.Namespace) -> int:
     config = resolve_workspace(args.workspace)
     read_workspace_config(config)
-    if args.agent != "claude-code":
-        raise ValueError("adapter smoke currently supports claude-code only")
-    result = smoke_claude_code(
-        config,
-        max_budget_usd=args.max_budget_usd,
-        timeout_seconds=args.timeout_seconds,
-        max_output_bytes=args.max_output_bytes,
-    )
+    if args.agent == "claude-code":
+        result = smoke_claude_code(
+            config,
+            max_budget_usd=args.max_budget_usd,
+            timeout_seconds=args.timeout_seconds,
+            max_output_bytes=args.max_output_bytes,
+        )
+    elif args.agent == "kimi-code":
+        result = smoke_kimi_code(
+            config,
+            timeout_seconds=args.timeout_seconds,
+            max_output_bytes=args.max_output_bytes,
+        )
+    else:
+        raise ValueError("adapter smoke currently supports claude-code and kimi-code")
     print(json.dumps(result, indent=2))
     return 0 if result["status"] == "PASS" else 1
 
@@ -225,6 +232,18 @@ def cmd_dispatch_execute(args: argparse.Namespace) -> int:
             timeout_seconds=args.timeout_seconds,
             max_output_bytes=args.max_output_bytes,
             max_budget_usd=args.max_budget_usd,
+        )
+    elif args.agent == "kimi-code":
+        if not args.prompt_file:
+            raise ValueError("--prompt-file is required for kimi-code execution")
+        dispatch = execute_dispatch_kimi_prompt(
+            directory,
+            args.dispatch_id,
+            args.agent,
+            sandbox_path,
+            Path(args.prompt_file),
+            timeout_seconds=args.timeout_seconds,
+            max_output_bytes=args.max_output_bytes,
         )
     else:
         if not args.command_json:
@@ -399,15 +418,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_adapter = sub.add_parser("adapter", help="adapter capability utilities")
     adapter_sub = p_adapter.add_subparsers(dest="adapter_command", required=True)
     p_adapter_cap = adapter_sub.add_parser("capabilities", help="show adapter capability manifest")
-    p_adapter_cap.add_argument("agent", choices=["generic-cli", "claude-code"])
+    p_adapter_cap.add_argument("agent", choices=["generic-cli", "claude-code", "kimi-code"])
     p_adapter_cap.set_defaults(func=cmd_adapter_capabilities)
 
     p_adapter_doctor = adapter_sub.add_parser("doctor", help="check adapter readiness")
-    p_adapter_doctor.add_argument("agent", choices=["generic-cli", "claude-code"])
+    p_adapter_doctor.add_argument("agent", choices=["generic-cli", "claude-code", "kimi-code"])
     p_adapter_doctor.add_argument("--sandbox", help="path to SANDBOX_CONTRACT.json")
     p_adapter_doctor.set_defaults(func=cmd_adapter_doctor)
     p_adapter_smoke = adapter_sub.add_parser("smoke", help="run an opt-in real adapter smoke test")
-    p_adapter_smoke.add_argument("agent", choices=["claude-code"])
+    p_adapter_smoke.add_argument("agent", choices=["claude-code", "kimi-code"])
     p_adapter_smoke.add_argument("--workspace", default=".", help="workspace root")
     p_adapter_smoke.add_argument("--timeout-seconds", type=int, default=120)
     p_adapter_smoke.add_argument("--max-output-bytes", type=int, default=80000)

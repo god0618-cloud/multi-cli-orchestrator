@@ -8,6 +8,7 @@ import hashlib
 from pathlib import Path
 
 from mco.adapters.claude import claude_code_binary
+from mco.adapters.kimi import kimi_code_binary
 from mco.dispatch.queue import block_dispatch, claim_dispatch, complete_dispatch, fail_dispatch, read_dispatch
 from mco.replay.ledger import add_sandbox_contract_ref, append_event, register_artifact
 from mco.sandbox.enforcer import enforce_sandbox
@@ -82,6 +83,17 @@ def _ensure_path_within(path: Path, root: Path) -> Path:
 
 
 def _claude_env(binary: str) -> dict[str, str]:
+    env = {
+        "PATH": os.pathsep.join([str(Path(binary).parent), "/usr/bin", "/bin", "/opt/homebrew/bin"]),
+        "HOME": os.environ.get("HOME", ""),
+        "LANG": os.environ.get("LANG", "en_US.UTF-8"),
+        "LC_ALL": os.environ.get("LC_ALL", "en_US.UTF-8"),
+        "TERM": os.environ.get("TERM", "dumb"),
+    }
+    return {key: value for key, value in env.items() if value}
+
+
+def _host_cli_env(binary: str) -> dict[str, str]:
     env = {
         "PATH": os.pathsep.join([str(Path(binary).parent), "/usr/bin", "/bin", "/opt/homebrew/bin"]),
         "HOME": os.environ.get("HOME", ""),
@@ -337,5 +349,107 @@ def execute_dispatch_claude_prompt(
     )
     if ok:
         return complete_dispatch(task_dir, dispatch_id, agent, "Claude Code supervised prompt execution completed.")
+    fail_dispatch(task_dir, dispatch_id, agent, summary)
+    raise ValueError(summary)
+
+
+def execute_dispatch_kimi_prompt(
+    task_dir: Path,
+    dispatch_id: str,
+    agent: str,
+    sandbox_path: Path | None,
+    prompt_file: Path,
+    timeout_seconds: int = 120,
+    max_output_bytes: int = 80_000,
+) -> dict:
+    if agent != "kimi-code":
+        raise ValueError("kimi prompt execution requires agent=kimi-code")
+    if sandbox_path is None:
+        reason = "sandbox contract is required before dispatch execution"
+        block_dispatch(task_dir, dispatch_id, agent, reason)
+        raise ValueError(reason)
+    if timeout_seconds < 5 or timeout_seconds > 600:
+        raise ValueError("timeout_seconds must be between 5 and 600")
+    if max_output_bytes < 1000 or max_output_bytes > 500_000:
+        raise ValueError("max_output_bytes must be between 1000 and 500000")
+
+    sandbox = enforce_sandbox(agent, sandbox_path)
+    add_sandbox_contract_ref(task_dir, sandbox_path)
+    _ensure_claimed(task_dir, dispatch_id, agent)
+
+    prompt_path = _ensure_path_within(prompt_file, task_dir)
+    prompt = prompt_path.read_text(encoding="utf-8")
+    if len(prompt.encode("utf-8")) > 50_000:
+        raise ValueError("prompt_file exceeds 50000 bytes")
+
+    binary = kimi_code_binary()
+    if not binary:
+        reason = "kimi binary not found"
+        fail_dispatch(task_dir, dispatch_id, agent, reason)
+        raise ValueError(reason)
+
+    command = [
+        binary,
+        "--prompt",
+        prompt,
+        "--output-format",
+        "text",
+    ]
+
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=task_dir,
+            text=True,
+            capture_output=True,
+            timeout=timeout_seconds,
+            check=False,
+            shell=False,
+            env=_host_cli_env(binary),
+        )
+        stdout, stdout_truncated = _truncate(completed.stdout, max_output_bytes)
+        stderr, stderr_truncated = _truncate(completed.stderr, max_output_bytes)
+        exit_code = completed.returncode
+    except subprocess.TimeoutExpired as exc:
+        stdout, stdout_truncated = _truncate(exc.stdout or "", max_output_bytes)
+        stderr = f"timeout after {timeout_seconds}s"
+        stderr_truncated = False
+        exit_code = None
+
+    ok = exit_code == 0
+    summary = "kimi completed" if ok else f"kimi exited with code {exit_code}"
+    report = {
+        "schema": "mco.kimi_execution_report.v1.0",
+        "dispatch_id": dispatch_id,
+        "agent": agent,
+        "sandbox_worker": sandbox["worker_id"],
+        "adapter_binary": binary,
+        "prompt_file": str(prompt_path),
+        "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        "cwd": str(task_dir),
+        "timeout_seconds": timeout_seconds,
+        "max_output_bytes": max_output_bytes,
+        "exit_code": exit_code,
+        "success": ok,
+        "summary": summary,
+        "stdout": stdout,
+        "stderr": stderr,
+        "stdout_truncated": stdout_truncated,
+        "stderr_truncated": stderr_truncated,
+        "command_shape": "kimi --prompt <prompt> --output-format text",
+        "quota_status": "unknown",
+    }
+
+    artifact_path = task_dir / "artifacts" / f"{dispatch_id}-kimi-execution-report.json"
+    artifact_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    register_artifact(task_dir, artifact_path, f"{dispatch_id}-kimi-execution-report")
+    append_event(
+        task_dir,
+        "adapter_execution",
+        f"Kimi Code supervised execution for {agent}: {summary}",
+        {"dispatch_id": dispatch_id, "artifact": str(artifact_path), "success": ok, "exit_code": exit_code},
+    )
+    if ok:
+        return complete_dispatch(task_dir, dispatch_id, agent, "Kimi Code supervised prompt execution completed.")
     fail_dispatch(task_dir, dispatch_id, agent, summary)
     raise ValueError(summary)

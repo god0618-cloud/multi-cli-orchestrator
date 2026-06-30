@@ -20,4 +20,6 @@ def enforce_sandbox(agent: str, sandbox_path: Path) -> dict:
         raise ValueError("generic-cli credential_policy must be: no credentials")
     if agent == "claude-code" and sandbox["credential_policy"] != "host CLI auth only":
         raise ValueError("claude-code credential_policy must be: host CLI auth only")
+    if agent == "kimi-code" and sandbox["credential_policy"] != "host CLI auth only":
+        raise ValueError("kimi-code credential_policy must be: host CLI auth only")
     return sandbox

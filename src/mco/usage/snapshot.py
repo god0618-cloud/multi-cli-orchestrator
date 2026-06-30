@@ -82,7 +82,7 @@ def build_usage_snapshot(task_dir: Path) -> dict[str, Any]:
         if not agent:
             continue
         record = agents.setdefault(str(agent), _agent_record(str(agent)))
-        if report.get("schema") in {"mco.claude_execution_report.v1.0", "mco.execution_report.v1.0"}:
+        if report.get("schema") in {"mco.claude_execution_report.v1.0", "mco.kimi_execution_report.v1.0", "mco.execution_report.v1.0"}:
             record["execution_report_count"] += 1
         if report.get("schema") == "mco.claude_execution_report.v1.0":
             record["quota_status"] = "budget_limited"
@@ -92,6 +92,11 @@ def build_usage_snapshot(task_dir: Path) -> dict[str, Any]:
             budget = report.get("max_budget_usd")
             if isinstance(budget, (int, float)):
                 record["max_budget_usd_total"] += float(budget)
+            if report.get("success") is False:
+                record["quota_status"] = "needs_attention"
+                record["last_error"] = report.get("summary") or record["last_error"]
+        if report.get("schema") == "mco.kimi_execution_report.v1.0":
+            record["quota_status"] = str(report.get("quota_status") or "unknown")
             if report.get("success") is False:
                 record["quota_status"] = "needs_attention"
                 record["last_error"] = report.get("summary") or record["last_error"]

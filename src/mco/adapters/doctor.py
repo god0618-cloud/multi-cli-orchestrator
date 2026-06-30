@@ -6,6 +6,7 @@ from pathlib import Path
 
 from mco.adapters.claude import claude_code_manifest, probe_claude_code
 from mco.adapters.generic import generic_cli_manifest
+from mco.adapters.kimi import kimi_code_manifest, probe_kimi_code
 from mco.schemas import validate_adapter_manifest, validate_sandbox_contract
 
 
@@ -27,6 +28,8 @@ def manifest_for_agent(agent: str) -> dict:
         return generic_cli_manifest()
     if agent == "claude-code":
         return claude_code_manifest()
+    if agent == "kimi-code":
+        return kimi_code_manifest()
     raise ValueError(f"unsupported adapter: {agent}")
 
 
@@ -49,6 +52,8 @@ def doctor_adapter(agent: str, sandbox_path: Path | None = None) -> DoctorResult
 
     if agent == "claude-code":
         checks.extend(probe_claude_code())
+    if agent == "kimi-code":
+        checks.extend(probe_kimi_code())
 
     if sandbox_path is None:
         checks.append({"name": "sandbox_contract", "status": "WARN", "detail": "not provided"})
@@ -59,7 +64,7 @@ def doctor_adapter(agent: str, sandbox_path: Path | None = None) -> DoctorResult
                 checks.append({"name": "sandbox_agent", "status": "FAIL", "detail": sandbox["agent"]})
             else:
                 checks.append({"name": "sandbox_agent", "status": "PASS", "detail": agent})
-            allowed_credential_policy = "host CLI auth only" if agent == "claude-code" else "no credentials"
+            allowed_credential_policy = "host CLI auth only" if agent in {"claude-code", "kimi-code"} else "no credentials"
             if sandbox["credential_policy"] != allowed_credential_policy:
                 checks.append({"name": "credential_policy", "status": "FAIL", "detail": sandbox["credential_policy"]})
             else:

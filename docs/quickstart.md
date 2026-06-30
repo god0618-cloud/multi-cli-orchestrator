@@ -76,3 +76,28 @@ mco dispatch execute "$TASK_ID" "$DISPATCH_ID" \
 ```
 
 This path uses the host machine's Claude Code authentication. It sends the prompt to Claude, disables tools, disables session persistence, and writes a task-local execution report.
+
+Run one supervised Kimi Code prompt:
+
+```bash
+TASK_ID="$(
+  mco task create "Kimi adapter smoke" --json --workspace .mco-workspace \
+    | python -c 'import json,sys; print(json.load(sys.stdin)["task_id"])'
+)"
+TASK_DIR=".mco-workspace/tasks/$TASK_ID"
+cp templates/sandbox-contracts/kimi-code-supervised.json "$TASK_DIR/SANDBOX_CONTRACT.json"
+printf 'Return exactly: MCO_ADAPTER_SMOKE_OK\n' > "$TASK_DIR/prompt.md"
+DISPATCH_ID="$(
+  mco dispatch queue "$TASK_ID" --agent kimi-code --title "Kimi smoke" --instructions "Return a fixed smoke string." --workspace .mco-workspace \
+    | python -c 'import json,sys; print(json.load(sys.stdin)["dispatch_id"])'
+)"
+mco adapter doctor kimi-code --sandbox "$TASK_DIR/SANDBOX_CONTRACT.json"
+mco dispatch execute "$TASK_ID" "$DISPATCH_ID" \
+  --agent kimi-code \
+  --sandbox "$TASK_DIR/SANDBOX_CONTRACT.json" \
+  --prompt-file "$TASK_DIR/prompt.md" \
+  --timeout-seconds 120 \
+  --workspace .mco-workspace
+```
+
+This path uses the host machine's Kimi Code authentication and writes a task-local execution report. Kimi quota remains `unknown` because the current command contract does not expose a per-run budget cap.

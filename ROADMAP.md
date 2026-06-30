@@ -82,7 +82,13 @@
 
 ## v2.0
 
-- Multiple first-party CLI adapters.
+- Second supervised first-party adapter: Kimi Code.
+- Multiple first-party adapter doctor/smoke paths.
+- Shared task-local evidence contract across Claude Code and Kimi Code.
+- Honest quota semantics per adapter: budget-limited where supported, unknown where unsupported.
+
+## Future
+
 - Multi-worker supervised execution.
 - Replay UI.
 - Policy-driven escalation gates.

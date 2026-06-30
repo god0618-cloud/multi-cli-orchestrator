@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0
+
+- Added the second supervised first-party adapter: `kimi-code`.
+- Added Kimi Code capability and doctor checks, including binary discovery, prompt-mode flag checks, and `kimi doctor`.
+- Added `mco dispatch execute --agent kimi-code --prompt-file ...` for bounded `kimi --prompt` execution with task-local prompt files, timeout, output truncation, and execution report artifacts.
+- Added `mco adapter smoke kimi-code` as an explicit opt-in real-adapter smoke command with a sentinel evidence bundle.
+- Added a `kimi-code-supervised` sandbox contract template using host CLI auth only and task-workspace read/write boundaries.
+- Kept Kimi quota status honest as `unknown`; unlike Claude Code, this adapter currently has no provider-budget cap flag.
+
 ## 1.9.0
 
 - Added `mco adapter scaffold <agent>` to generate disabled adapter onboarding files.

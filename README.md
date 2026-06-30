@@ -6,7 +6,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is in v1.5 supervised-adapter stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter templates, a deliberately narrow real-execution path for safe commands, and one real first-party supervised adapter for Claude Code prompt execution.
+This repository is in v2.0 multi-adapter stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, and two supervised first-party prompt adapters: Claude Code and Kimi Code.
 
 ## Core Ideas
 
@@ -27,11 +27,12 @@ mco orchestrate-start <task_id> --template frontend-review-loop
 mco dashboard <task_id>
 mco usage snapshot <task_id>
 mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
+mco adapter smoke kimi-code --workspace .mco-workspace
 mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
-Implemented in this v1.5 baseline:
+Implemented in this v2.0 baseline:
 
 - `mco init`
 - `mco doctor`
@@ -48,6 +49,7 @@ Implemented in this v1.5 baseline:
 - `mco dispatch execute --dry-run`
 - `mco dispatch execute --command-json`
 - `mco dispatch execute --agent claude-code --prompt-file`
+- `mco dispatch execute --agent kimi-code --prompt-file`
 - `mco dashboard`
 - `mco orchestrate-start`
 - `mco schema validate`
@@ -69,7 +71,7 @@ mco audit .
 mco release check .
 ```
 
-## v1.5 Command Matrix
+## v2.0 Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -81,14 +83,15 @@ mco release check .
 | `mco task status` | implemented |
 | `mco task event` | implemented |
 | `mco artifact register` | implemented |
-| `mco adapter capabilities` | `generic-cli`, `claude-code` |
-| `mco adapter doctor` | generic and Claude Code readiness checks |
+| `mco adapter capabilities` | `generic-cli`, `claude-code`, `kimi-code` |
+| `mco adapter doctor` | generic, Claude Code, and Kimi Code readiness checks |
 | `mco adapter scaffold` | disabled adapter onboarding kit |
-| `mco adapter smoke` | explicit opt-in real Claude Code smoke test |
+| `mco adapter smoke` | explicit opt-in real Claude Code or Kimi Code smoke test |
 | `mco dispatch queue/list/claim/complete` | generic local queue |
 | `mco dispatch execute --dry-run` | sandbox/capability gate validation |
 | `mco dispatch execute --command-json` | safe command execution with sandbox, allowlist, timeout, and evidence report |
 | `mco dispatch execute --agent claude-code --prompt-file` | bounded Claude Code prompt execution with no tools, no session persistence, budget cap, timeout, and transcript artifact |
+| `mco dispatch execute --agent kimi-code --prompt-file` | bounded Kimi Code prompt execution with timeout, output cap, and transcript artifact |
 | `mco dashboard` | implemented |
 | `mco usage snapshot` | task-local usage/quota evidence rollup |
 | `mco orchestrate-start` | bounded initializer |
@@ -99,7 +102,7 @@ mco release check .
 | `mco run replay` | implemented |
 | `mco release check` | implemented |
 | arbitrary shell execution | intentionally not implemented |
-| first-party CLI adapters | Claude Code implemented; Kimi/Mimo/CodeWhale still disabled |
+| first-party CLI adapters | Claude Code and Kimi Code implemented; Mimo/CodeWhale still disabled |
 | run replay UI | not implemented |
 
 ## Repository Layout
@@ -127,6 +130,8 @@ Useful docs:
 - No arbitrary shell execution. Generic execution only allows narrowly validated commands such as `echo ...` and print-only `python -c ...`.
 - Claude Code execution is bounded to `claude --print`, tools disabled, session persistence disabled, task-local prompt files, timeout/output limits, and an explicit budget cap.
 - Claude Code smoke testing is explicit opt-in via `mco adapter smoke claude-code`; it may consume provider budget and writes a task-local evidence bundle.
+- Kimi Code execution is bounded to `kimi --prompt`, task-local prompt files, timeout/output limits, and transcript artifacts.
+- Kimi Code smoke testing is explicit opt-in via `mco adapter smoke kimi-code`; it may consume provider budget. Provider quota remains `unknown` because Kimi Code does not expose a Claude-style per-run budget cap in the current command contract.
 - New adapter onboarding starts disabled via `mco adapter scaffold`; promotion requires capability, sandbox, quota, execution evidence, and smoke gates.
 - Usage snapshots are evidence-derived. They aggregate task-local execution reports and dispatch records; they do not claim provider-account quota unless that evidence exists.
 - No private local paths or business data should be committed.

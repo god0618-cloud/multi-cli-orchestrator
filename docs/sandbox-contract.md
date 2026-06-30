@@ -50,6 +50,16 @@ mco dispatch execute <task_id> <dispatch_id> \
   --max-budget-usd 0.25
 ```
 
+Kimi Code supervised enforcement uses the same host-auth sandbox pattern:
+
+```bash
+mco adapter doctor kimi-code --sandbox templates/sandbox-contracts/kimi-code-supervised.json
+mco dispatch execute <task_id> <dispatch_id> \
+  --agent kimi-code \
+  --sandbox SANDBOX_CONTRACT.json \
+  --prompt-file <task-dir>/prompt.md
+```
+
 The dry-run executor validates capability and sandbox gates, writes a dry-run evidence artifact, and records the result in `RUN_LEDGER.json`.
 
 The safe-command executor also:
@@ -69,6 +79,7 @@ Fail-closed behavior:
 - agent mismatch -> execution fails
 - generic credential policy other than `no credentials` -> execution fails
 - Claude Code credential policy other than `host CLI auth only` -> execution fails
+- Kimi Code credential policy other than `host CLI auth only` -> execution fails
 - port access in generic dry-run -> execution fails
 - write/read scope missing `task workspace only` -> execution fails
 - command outside the allowlist -> execution fails

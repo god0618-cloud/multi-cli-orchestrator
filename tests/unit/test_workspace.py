@@ -56,6 +56,34 @@ raise SystemExit(2)
     path.chmod(0o755)
 
 
+def write_fake_kimi(path: Path, fail_prompt: bool = False) -> None:
+    script = f"""#!/usr/bin/env python3
+import sys
+
+args = sys.argv[1:]
+if args == ["--version"]:
+    print("0.20.3")
+    raise SystemExit(0)
+if args == ["--help"]:
+    print("-p, --prompt <prompt>")
+    print("--output-format <format>")
+    raise SystemExit(0)
+if args == ["doctor"]:
+    print("Kimi Code configuration OK")
+    raise SystemExit(0)
+if "--prompt" in args:
+    if {str(fail_prompt)}:
+        print("simulated kimi failure")
+        raise SystemExit(1)
+    print("MCO_ADAPTER_SMOKE_OK")
+    raise SystemExit(0)
+print("unexpected args", args)
+raise SystemExit(2)
+"""
+    path.write_text(script, encoding="utf-8")
+    path.chmod(0o755)
+
+
 class WorkspaceTests(unittest.TestCase):
     def test_init_and_doctor(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -332,6 +360,95 @@ class WorkspaceTests(unittest.TestCase):
             self.assertTrue(Path(payload["usage_snapshot"]).exists())
             self.assertTrue(Path(payload["dashboard"]).exists())
             self.assertIn("MCO_ADAPTER_SMOKE_OK", Path(payload["execution_report"]).read_text(encoding="utf-8"))
+
+    def test_kimi_code_adapter_doctor_execution_and_smoke(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            fake_kimi = tmp_path / "kimi"
+            write_fake_kimi(fake_kimi)
+            env = {"KIMI_CODE_BIN": str(fake_kimi)}
+
+            capabilities = run_mco("adapter", "capabilities", "kimi-code", env_extra=env)
+            self.assertEqual(capabilities.returncode, 0, capabilities.stdout + capabilities.stderr)
+            manifest = json.loads(capabilities.stdout)
+            self.assertTrue(manifest["supervised"])
+            self.assertEqual(manifest["quota_status"], "unknown")
+            self.assertFalse(manifest["can_run_shell"])
+
+            sandbox = tmp_path / "kimi-sandbox.json"
+            sandbox.write_text((ROOT / "templates" / "sandbox-contracts" / "kimi-code-supervised.json").read_text(encoding="utf-8"), encoding="utf-8")
+            doctor = run_mco("adapter", "doctor", "kimi-code", "--sandbox", str(sandbox), env_extra=env)
+            self.assertEqual(doctor.returncode, 0, doctor.stdout + doctor.stderr)
+            doctor_payload = json.loads(doctor.stdout)
+            self.assertEqual(doctor_payload["status"], "READY_SUPERVISED")
+
+            workspace = tmp_path / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Kimi Adapter Task", "--workspace", str(workspace))
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            queued = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "kimi-code",
+                "--title",
+                "Smoke prompt",
+                "--instructions",
+                "Return a fixed smoke string.",
+                "--workspace",
+                str(workspace),
+            )
+            dispatch_id = json.loads(queued.stdout)["dispatch_id"]
+            task_dir = workspace / "tasks" / task_id
+            prompt = task_dir / "prompt.md"
+            prompt.write_text("Return exactly: MCO_ADAPTER_SMOKE_OK\n", encoding="utf-8")
+
+            executed = run_mco(
+                "dispatch",
+                "execute",
+                task_id,
+                dispatch_id,
+                "--agent",
+                "kimi-code",
+                "--sandbox",
+                str(sandbox),
+                "--prompt-file",
+                str(prompt),
+                "--timeout-seconds",
+                "30",
+                "--workspace",
+                str(workspace),
+                env_extra=env,
+            )
+            self.assertEqual(executed.returncode, 0, executed.stdout + executed.stderr)
+            report_path = task_dir / "artifacts" / f"{dispatch_id}-kimi-execution-report.json"
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertTrue(report["success"])
+            self.assertEqual(report["quota_status"], "unknown")
+            self.assertIn("MCO_ADAPTER_SMOKE_OK", report["stdout"])
+
+            usage = run_mco("usage", "snapshot", task_id, "--workspace", str(workspace))
+            self.assertEqual(usage.returncode, 0, usage.stdout + usage.stderr)
+            usage_payload = json.loads((task_dir / "USAGE_SNAPSHOT.json").read_text(encoding="utf-8"))
+            self.assertEqual(usage_payload["agents"][0]["agent"], "kimi-code")
+            self.assertEqual(usage_payload["agents"][0]["quota_status"], "unknown")
+
+            smoke = run_mco(
+                "adapter",
+                "smoke",
+                "kimi-code",
+                "--workspace",
+                str(workspace),
+                "--timeout-seconds",
+                "30",
+                env_extra=env,
+            )
+            self.assertEqual(smoke.returncode, 0, smoke.stdout + smoke.stderr)
+            smoke_payload = json.loads(smoke.stdout)
+            self.assertEqual(smoke_payload["status"], "PASS")
+            self.assertEqual(smoke_payload["agent"], "kimi-code")
+            self.assertTrue(Path(smoke_payload["execution_report"]).exists())
 
     def test_claude_code_adapter_records_budget_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
