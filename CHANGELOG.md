@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.9.0rc1
+
+- Promoted the v5 public Alpha track to a release-candidate package version.
+- Added README visual walkthrough links and updated GitHub-facing positioning.
+- Added end-to-end tutorials for documentation release, frontend review, and adapter onboarding workflows.
+- Added Mimo Code and CodeWhale adapter extension readiness plans while keeping both manual-only.
+- Added an Operator Brief and next-command hint to the dashboard first screen.
+- Added a structured trial feedback issue template and maintainer triage loop.
+- Added v5.9 release notes and release-candidate evidence docs.
+
 ## 5.0.0
 
 - Added `mco workflow observe <task_id>` to recommend `advance`, `wait`, `escalate`, or `complete` from workflow gates and dispatch state.

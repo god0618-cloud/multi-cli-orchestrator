@@ -89,3 +89,11 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 - Trial feedback docs define intake, triage categories, maintainer loop, and close criteria.
 - README links to the trial feedback loop.
 - Feedback loop rejects unsafe shortcutting from trial enthusiasm to adapter promotion.
+
+## v5.9-release-candidate Acceptance
+
+- Package version, `src/mco/__init__.py`, README, ROADMAP, and CHANGELOG align on `5.9.0rc1`.
+- Release notes and release-candidate scope docs exist.
+- Full release checks pass locally.
+- GitHub CI passes on the release-candidate commit.
+- No public tag is created until the maintainer explicitly chooses to publish the RC.

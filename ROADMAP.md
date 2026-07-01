@@ -1,12 +1,12 @@
 # Roadmap
 
-Multi-CLI Orchestrator is currently at the v5.0 strict-gate self-closing loop baseline.
+Multi-CLI Orchestrator is currently at the v5.9.0rc1 public Alpha release-candidate baseline.
 
 This roadmap is intentionally capability-led rather than hype-version-led. The project should advance only when a capability is backed by tests, evidence artifacts, and clear safety boundaries.
 
-## Current Baseline: v5.0
+## Current Baseline: v5.9 RC
 
-The v5.0 baseline is a credible Alpha release for developers who want to experiment with local-first multi-CLI orchestration.
+The v5.9 RC baseline is a credible Alpha release candidate for developers who want to experiment with local-first multi-CLI orchestration.
 
 Completed capabilities:
 
@@ -21,6 +21,10 @@ Completed capabilities:
 - `strict-self-closing` template: `plan -> execute -> verify -> close`.
 - Operator surfaces: `mco status`, `mco monitor`, static boss dashboard, usage snapshot, run replay, and walkthrough demo.
 - CI coverage, release check, and audit gates.
+- Public launch facade with visual walkthrough assets.
+- Three end-to-end tutorials: documentation release, frontend review, and adapter onboarding.
+- Adapter extension roadmap for manual-only CLIs such as Mimo Code and CodeWhale.
+- Trial feedback loop and GitHub issue template for external evaluation.
 
 Known maturity level:
 
@@ -28,16 +32,16 @@ Known maturity level:
 - Public onboarding: usable, but still being polished.
 - Production automation: intentionally conservative; not advertised as a fully autonomous execution system.
 
-## Near-Term Polish
+## Completed v5 Public Polish
 
 Goal: make the project easier to understand, try, and share without changing the safety posture.
 
-- Tighten README first-screen positioning.
-- Keep public materials versioned and archive stale launch drafts.
-- Add a clear "when to use / when not to use" section.
-- Add a short demo story that shows the value without requiring users to read every schema document.
-- Add screenshots or generated walkthrough images for dashboard, adapter matrix, and replay.
-- Link the complete project overview from README and launch materials.
+- Tightened README first-screen positioning.
+- Kept public materials versioned and archived stale launch drafts.
+- Added a clear "when to use / when not to use" section.
+- Added a short demo story that shows the value without requiring users to read every schema document.
+- Added screenshots for dashboard, adapter matrix, and replay.
+- Linked complete project overview, tutorial index, contributor onramp, and trial feedback loop from README.
 
 Acceptance bar:
 
@@ -96,6 +100,24 @@ Acceptance bar:
 - A contributor can request a new adapter with the right evidence.
 - A contributor can generate and validate an adapter kit locally.
 - Maintainers can reject unsafe adapters with a documented reason instead of a subjective judgment.
+
+## Next Candidate Track
+
+Goal: move from Alpha RC to broader external adoption evidence.
+
+Candidate work:
+
+- Collect at least three sanitized trial feedback reports.
+- Add one more adapter kit based on external evidence, but keep it disabled until gates pass.
+- Add dashboard screenshots after the v5.7 Operator Brief.
+- Add a public demo GIF or short video if it can be produced without private data.
+- Tighten docs around installation on macOS/Linux/Windows.
+
+Acceptance bar:
+
+- External users can reproduce at least one tutorial without maintainer hand-holding.
+- Trial feedback closes through the documented loop.
+- No safety boundary is loosened for marketing reasons.
 
 ## Medium-Term Exploration
 

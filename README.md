@@ -16,7 +16,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is at v5.0 strict-gate self-closing loop status. The baseline is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, dynamic workflow gates, bounded observe/advance loops, a strict self-closing workflow template, and contributor-ready adapter kits.
+This repository is at v5.9.0rc1 public Alpha release-candidate status. The v5 core is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, dynamic workflow gates, bounded observe/advance loops, a strict self-closing workflow template, end-to-end tutorials, adapter extension planning, trial feedback intake, and contributor-ready adapter kits.
 
 ## Start Here
 
@@ -88,7 +88,7 @@ mco run replay <path-to-RUN_LEDGER.json>
 mco run replay <path-to-RUN_LEDGER.json> --html replay.html
 ```
 
-Implemented in this v5.0 baseline:
+Current command coverage:
 
 - `mco init`
 - `mco doctor`
@@ -135,7 +135,7 @@ mco audit .
 mco release check .
 ```
 
-## v5.0 Command Matrix
+## v5.9 RC Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -177,7 +177,7 @@ mco release check .
 | arbitrary shell execution | intentionally not implemented |
 | strict self-closing workflow | `strict-self-closing` template with plan -> execute -> verify -> close evidence gates |
 | first-party CLI adapters | Claude Code and Kimi Code implemented; Mimo/CodeWhale still manual-only/disabled for auto-dispatch |
-| real concurrent provider execution | intentionally not implemented; v5.0 keeps execution bounded by adapter gates, workflow gates, and explicit loop caps |
+| real concurrent provider execution | intentionally not implemented; v5 keeps execution bounded by adapter gates, workflow gates, and explicit loop caps |
 
 ## Repository Layout
 
@@ -199,6 +199,7 @@ Useful docs:
 - `docs/WORKFLOW_TEMPLATE_CONTRIBUTING.md`
 - `docs/GOOD_FIRST_ISSUES.md`
 - `docs/launch-playbook.md`
+- `docs/release-notes-v5.9.md`
 - `docs/release-notes-v5.0.md`
 - `docs/release-notes-v3.0.md`
 - `docs/release-checklist.md`

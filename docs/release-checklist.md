@@ -15,7 +15,7 @@ Use this checklist before publishing the repository.
 - [ ] Confirm no generated cache files are present. `mco release check .` reports these as WARN because editable installs may generate them.
 - [ ] Confirm no private paths, credentials, screenshots, or business data are present.
 - [ ] Confirm `README.md`, `CHANGELOG.md`, and `ROADMAP.md` match the package version.
-- [ ] Confirm `docs/release-notes-v3.0.md` matches the release tag.
+- [ ] Confirm the current `docs/release-notes-*.md` file matches the release tag.
 - [ ] Confirm source-tree templates and packaged templates contain the same JSON filenames.
 - [ ] Confirm first-party adapter templates are disabled by default.
 - [ ] Confirm no command grants arbitrary shell execution.
