@@ -4,9 +4,17 @@ Local-first Agent OS for coordinating multiple AI coding CLIs as supervised work
 
 Multi-CLI Orchestrator is not another single-runtime agent framework. It is a coordination layer for people who already use multiple AI coding CLIs and want them to share task state, workflow gates, evidence artifacts, run replay, and a boss dashboard.
 
+## What It Gives You
+
+- A local task workspace with `LOOP_SPEC.json`, `RUN_LEDGER.json`, `plan.json`, dispatch inboxes, and artifact evidence.
+- Supervised CLI workstations instead of hidden subagents: Claude Code and Kimi Code can run through bounded adapters when installed and authenticated.
+- Fail-stop workflow gates so phases advance only after evidence is written.
+- A dependency-free boss dashboard for status, adapter readiness, dispatch gates, usage snapshots, artifacts, and timeline.
+- Disabled-by-default adapter kits for adding new CLIs without pretending they are production-ready on day one.
+
 ## Status
 
-This repository is in v2.8 multi-adapter control-plane stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, a compact operator status command with explicit doctor probing, bounded monitor snapshots, phase-gated workflow advancement, and adapter contributor kits.
+This repository is at v3.0 open-source MVP release status. The baseline is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, phase-gated workflow advancement, and contributor-ready adapter kits.
 
 ## Core Ideas
 
@@ -39,7 +47,7 @@ mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
-Implemented in this v2.8 baseline:
+Implemented in this v3.0 baseline:
 
 - `mco init`
 - `mco doctor`
@@ -83,7 +91,7 @@ mco audit .
 mco release check .
 ```
 
-## v2.8 Command Matrix
+## v3.0 Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -138,6 +146,8 @@ Useful docs:
 - `docs/diagrams.md`
 - `docs/adapter-templates.md`
 - `docs/adapter-contributor-guide.md`
+- `docs/launch-playbook.md`
+- `docs/release-notes-v3.0.md`
 - `docs/release-checklist.md`
 
 ## Safety Defaults

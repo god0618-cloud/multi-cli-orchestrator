@@ -4,12 +4,34 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi-cli-orchestrator"
-version = "2.8.0"
+version = "3.0.0"
 description = "Local-first Agent OS for coordinating multiple AI coding CLIs as supervised workstations."
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Multi-CLI Orchestrator Contributors" }]
+license = { file = "LICENSE" }
+keywords = ["ai-agents", "cli", "orchestration", "multi-agent", "local-first", "codex", "claude-code", "kimi-code"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/god0618-cloud/multi-cli-orchestrator"
+Repository = "https://github.com/god0618-cloud/multi-cli-orchestrator"
+Issues = "https://github.com/god0618-cloud/multi-cli-orchestrator/issues"
+Documentation = "https://github.com/god0618-cloud/multi-cli-orchestrator/tree/main/docs"
 
 [project.scripts]
 mco = "mco.cli:main"

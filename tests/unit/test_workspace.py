@@ -400,6 +400,16 @@ class WorkspaceTests(unittest.TestCase):
                 check = run_mco("schema", "validate", "adapter-manifest", str(path))
                 self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
 
+    def test_source_tree_and_packaged_templates_stay_in_sync(self) -> None:
+        for relative_dir in ("adapters", "sandbox-contracts", "workflows"):
+            source_files = sorted((ROOT / "templates" / relative_dir).glob("*.json"))
+            packaged_files = sorted((ROOT / "src" / "mco" / "templates" / relative_dir).glob("*.json"))
+            self.assertEqual(
+                [path.name for path in source_files],
+                [path.name for path in packaged_files],
+                f"template mismatch in {relative_dir}",
+            )
+
     def test_adapter_scaffold_writes_disabled_onboarding_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out_dir = Path(tmp) / "adapter-kit"

@@ -141,6 +141,13 @@
 - Generated README, fake CLI fixture, and unittest contract template.
 - Adapter contributor guide for promotion gates and review expectations.
 
+## v3.0
+
+- Public open-source MVP release baseline.
+- README first-screen positioning for external users.
+- Package metadata, release notes, and launch playbook.
+- Source-tree and packaged template synchronization gate.
+
 ## Future
 
 - Multi-worker supervised execution.

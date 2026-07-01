@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.0
+
+- Promoted the project to an open-source MVP release baseline.
+- Added package metadata for license, keywords, Python classifiers, and public project URLs.
+- Added `docs/launch-playbook.md` and `docs/release-notes-v3.0.md` for public launch and release operations.
+- Updated the README first screen around external-user value, status, and command coverage.
+- Added a packaged Kimi Code supervised sandbox contract that was previously present only in the source-tree templates.
+- Added regression coverage to keep source-tree templates and packaged templates synchronized.
+
 ## 2.8.0
 
 - Expanded `mco adapter scaffold` into a contributor-ready adapter kit.
