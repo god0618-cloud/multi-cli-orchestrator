@@ -44,6 +44,12 @@ Before creating a public tag or GitHub release:
 4. Confirm no private paths, credentials, screenshots, or business data are present.
 5. Decide whether to tag `v5.9.0rc1` or continue collecting trial feedback first.
 
+## Hardening Added After RC Draft
+
+- Public tutorial workflows are now covered by automated regression tests.
+- The regression test completes `documentation-release-loop`, `frontend-review-loop`, and `adapter-onboarding-loop` with the same evidence labels documented in the tutorials.
+- This prevents workflow template gates and tutorial commands from drifting silently.
+
 ## Recommended Next Step
 
 Collect external trial feedback using the trial feedback issue template before promoting this RC to a stable release.

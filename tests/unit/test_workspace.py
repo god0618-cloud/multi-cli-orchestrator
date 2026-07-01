@@ -84,6 +84,18 @@ raise SystemExit(2)
     path.chmod(0o755)
 
 
+def created_task_id(output: str) -> str:
+    return next(line.split(": ", 1)[1] for line in output.splitlines() if line.startswith("created task:"))
+
+
+def register_text_artifact(workspace: Path, task_id: str, task_dir: Path, label: str, content: str = "# Evidence\n") -> None:
+    artifact = task_dir / label
+    artifact.write_text(content, encoding="utf-8")
+    registered = run_mco("artifact", "register", task_id, str(artifact), "--label", label, "--workspace", str(workspace))
+    if registered.returncode != 0:
+        raise AssertionError(registered.stdout + registered.stderr)
+
+
 class WorkspaceTests(unittest.TestCase):
     def test_init_and_doctor(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -573,6 +585,82 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(final_payload["advances"][0]["status"], "completed")
             completed = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
             self.assertEqual(json.loads(completed.stdout)["recommended_action"], "complete")
+
+    def test_public_tutorial_workflows_complete_with_documented_evidence(self) -> None:
+        cases = [
+            {
+                "template": "documentation-release-loop",
+                "steps": [
+                    {"artifacts": ["draft-release-material.md"]},
+                    {"artifacts": ["verification-report.md"], "verification_event": True, "dashboard": True},
+                    {"artifacts": ["close-report.md"]},
+                ],
+            },
+            {
+                "template": "frontend-review-loop",
+                "steps": [
+                    {"artifacts": ["implementation-report.md", "screenshot-index.md"]},
+                    {"artifacts": ["visual-verification-report.md"], "verification_event": True, "dashboard": True},
+                    {"artifacts": ["close-report.md"]},
+                ],
+            },
+            {
+                "template": "adapter-onboarding-loop",
+                "steps": [
+                    {"artifacts": ["adapter-validation-report.md"]},
+                    {"artifacts": ["adapter-smoke-review.md"], "verification_event": True, "dashboard": True},
+                    {"artifacts": ["close-report.md"]},
+                ],
+            },
+        ]
+        for case in cases:
+            with self.subTest(template=case["template"]):
+                with tempfile.TemporaryDirectory() as tmp:
+                    workspace = Path(tmp) / "workspace"
+                    self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+                    started = run_mco(
+                        "orchestrate-start",
+                        f"Tutorial {case['template']}",
+                        "--template",
+                        str(case["template"]),
+                        "--workspace",
+                        str(workspace),
+                    )
+                    self.assertEqual(started.returncode, 0, started.stdout + started.stderr)
+                    task_id = created_task_id(started.stdout)
+                    task_dir = workspace / "tasks" / task_id
+
+                    initial = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+                    self.assertEqual(initial.returncode, 0, initial.stdout + initial.stderr)
+
+                    for step in case["steps"]:
+                        for label in step["artifacts"]:
+                            register_text_artifact(workspace, task_id, task_dir, label)
+                        if step.get("verification_event"):
+                            event = run_mco(
+                                "task",
+                                "event",
+                                task_id,
+                                "--type",
+                                "verification",
+                                "--message",
+                                "Tutorial verification passed.",
+                                "--workspace",
+                                str(workspace),
+                            )
+                            self.assertEqual(event.returncode, 0, event.stdout + event.stderr)
+                        if step.get("dashboard"):
+                            dashboard = run_mco("dashboard", task_id, "--workspace", str(workspace))
+                            self.assertEqual(dashboard.returncode, 0, dashboard.stdout + dashboard.stderr)
+                        advanced = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+                        self.assertEqual(advanced.returncode, 0, advanced.stdout + advanced.stderr)
+
+                    observed = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+                    self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+                    payload = json.loads(observed.stdout)
+                    self.assertEqual(payload["status"], "completed")
+                    self.assertEqual(payload["recommended_action"], "complete")
+                    self.assertTrue((task_dir / "dashboard.html").exists())
 
     def test_workflow_advance_fail_stops_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

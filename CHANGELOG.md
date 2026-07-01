@@ -9,6 +9,7 @@
 - Added an Operator Brief and next-command hint to the dashboard first screen.
 - Added a structured trial feedback issue template and maintainer triage loop.
 - Added v5.9 release notes and release-candidate evidence docs.
+- Added regression coverage proving all three public tutorial workflows complete with documented evidence gates.
 
 ## 5.0.0
 
