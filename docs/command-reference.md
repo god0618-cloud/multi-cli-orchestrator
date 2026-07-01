@@ -6,7 +6,7 @@ Command surface:
 | --- | --- |
 | `mco init` | Initialize a local workspace |
 | `mco doctor` | Validate workspace readiness |
-| `mco status` | Print compact workspace, latest task, dispatch, adapter gate, and optional audit status |
+| `mco status` | Print compact workspace, latest task, dispatch, adapter gate, optional audit status, and explicit adapter doctor probes |
 | `mco task create` | Create a task with `task.json`, `LOOP_SPEC.json`, and `RUN_LEDGER.json` |
 | `mco task create --json` | Create a task and print machine-readable paths |
 | `mco task list` | List workspace tasks |
@@ -34,6 +34,14 @@ Command surface:
 | `mco release check` | Run release readiness checks |
 
 `mco dispatch execute --dry-run` validates gates and writes evidence only.
+
+`mco status` is the fastest operator readout. By default it uses the adapter policy baseline and does not probe external CLI binaries or auth state. Add `--doctor` when you explicitly want local adapter checks:
+
+```bash
+mco status --workspace .mco-workspace
+mco status --workspace .mco-workspace --doctor
+mco status --workspace .mco-workspace --doctor --json
+```
 
 `mco dispatch queue <task_id> --agent kimi-code --title "Work" --instructions "..." --require-ready` is the queueing mode intended for auto-dispatch. It probes the adapter matrix and only writes an inbox file when readiness is `READY_SUPERVISED`. If the adapter is disabled, unknown, manual-only, or blocked, the dispatch is written as `status=blocked` with gate evidence and no inbox file.
 

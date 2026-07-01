@@ -56,8 +56,8 @@ def _dispatch_summary(config: WorkspaceConfig, task: dict[str, Any] | None) -> d
     return {"counts": counts, "latest": latest}
 
 
-def _adapter_summary() -> list[dict[str, Any]]:
-    matrix = build_adapter_matrix(include_doctor=False)
+def _adapter_summary(include_doctor: bool = False) -> list[dict[str, Any]]:
+    matrix = build_adapter_matrix(include_doctor=include_doctor)
     rows = []
     for row in matrix["agents"]:
         readiness = str(row.get("readiness", "UNKNOWN"))
@@ -67,13 +67,20 @@ def _adapter_summary() -> list[dict[str, Any]]:
                 "readiness": readiness,
                 "quota_status": row.get("quota_status"),
                 "gate": "auto-dispatch-ok" if readiness == "READY_SUPERVISED" else "requires-review",
+                "doctor_status": row.get("doctor_status"),
+                "doctor_check_count": len(row.get("doctor_checks") or []),
                 "promotion_blockers": row.get("promotion_blockers", []),
             }
         )
     return rows
 
 
-def build_status_snapshot(config: WorkspaceConfig, task_id: str | None = None, include_audit: bool = False) -> StatusSnapshot:
+def build_status_snapshot(
+    config: WorkspaceConfig,
+    task_id: str | None = None,
+    include_audit: bool = False,
+    include_doctor: bool = False,
+) -> StatusSnapshot:
     task = _select_task(config, task_id)
     audit_payload: dict[str, Any] | None = None
     if include_audit:
@@ -88,6 +95,7 @@ def build_status_snapshot(config: WorkspaceConfig, task_id: str | None = None, i
     payload = {
         "schema": "mco.status.v1.0",
         "workspace": str(config.workspace_root),
+        "doctor_probe": include_doctor,
         "task": None
         if task is None
         else {
@@ -98,7 +106,7 @@ def build_status_snapshot(config: WorkspaceConfig, task_id: str | None = None, i
             "artifacts_dir": task.get("artifacts_dir"),
         },
         "dispatch": _dispatch_summary(config, task),
-        "adapters": _adapter_summary(),
+        "adapters": _adapter_summary(include_doctor=include_doctor),
         "audit": audit_payload,
     }
     return StatusSnapshot(payload)
@@ -109,6 +117,7 @@ def render_status_text(snapshot: StatusSnapshot) -> str:
     lines = [
         "MCO Status",
         f"workspace: {payload['workspace']}",
+        f"doctor_probe: {payload['doctor_probe']}",
     ]
     task = payload.get("task")
     if task is None:
@@ -128,7 +137,8 @@ def render_status_text(snapshot: StatusSnapshot) -> str:
 
     lines.append("adapters:")
     for row in payload["adapters"]:
-        lines.append(f"  - {row['agent']}: {row['readiness']} | quota={row['quota_status']} | gate={row['gate']}")
+        doctor = f" | doctor_checks={row['doctor_check_count']}" if payload["doctor_probe"] else ""
+        lines.append(f"  - {row['agent']}: {row['readiness']} | quota={row['quota_status']} | gate={row['gate']}{doctor}")
 
     audit = payload.get("audit")
     if audit is not None:

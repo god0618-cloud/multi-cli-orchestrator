@@ -114,6 +114,13 @@
 - JSON output for scripts and optional audit counts for release/monitor loops.
 - No implicit provider doctor probing during routine status checks.
 
+## v2.5
+
+- Explicit `mco status --doctor` probe mode.
+- Machine-readable distinction between policy-baseline status and local adapter doctor checks.
+- Doctor check counts and gate posture available in terminal and JSON output.
+- Default status remains lightweight and non-probing.
+
 ## Future
 
 - Multi-worker supervised execution.

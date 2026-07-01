@@ -168,8 +168,38 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(status_json.returncode, 0, status_json.stdout + status_json.stderr)
             payload = json.loads(status_json.stdout)
             self.assertEqual(payload["schema"], "mco.status.v1.0")
+            self.assertFalse(payload["doctor_probe"])
             self.assertEqual(payload["task"]["task_id"], task_id)
             self.assertEqual(payload["dispatch"]["counts"]["blocked"], 1)
+
+    def test_status_doctor_probe_is_explicit_and_machine_readable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            workspace = tmp_path / "workspace"
+            fake_claude = tmp_path / "claude"
+            fake_kimi = tmp_path / "kimi"
+            write_fake_claude(fake_claude)
+            write_fake_kimi(fake_kimi)
+            env = {"CLAUDE_CODE_BIN": str(fake_claude), "KIMI_CODE_BIN": str(fake_kimi)}
+
+            self.assertEqual(run_mco("init", "--workspace", str(workspace), env_extra=env).returncode, 0)
+            created = run_mco("task", "create", "Doctor Status", "--workspace", str(workspace), env_extra=env)
+            self.assertEqual(created.returncode, 0, created.stderr)
+
+            status_json = run_mco("status", "--doctor", "--json", "--workspace", str(workspace), env_extra=env)
+            self.assertEqual(status_json.returncode, 0, status_json.stdout + status_json.stderr)
+            payload = json.loads(status_json.stdout)
+            self.assertTrue(payload["doctor_probe"])
+            agents = {item["agent"]: item for item in payload["adapters"]}
+            self.assertEqual(agents["claude-code"]["readiness"], "READY_SUPERVISED")
+            self.assertEqual(agents["kimi-code"]["readiness"], "READY_SUPERVISED")
+            self.assertEqual(agents["claude-code"]["gate"], "auto-dispatch-ok")
+            self.assertGreater(agents["claude-code"]["doctor_check_count"], 0)
+
+            status_text = run_mco("status", "--doctor", "--workspace", str(workspace), env_extra=env)
+            self.assertEqual(status_text.returncode, 0, status_text.stdout + status_text.stderr)
+            self.assertIn("doctor_probe: True", status_text.stdout)
+            self.assertIn("claude-code: READY_SUPERVISED", status_text.stdout)
 
     def test_event_artifact_status_and_audit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

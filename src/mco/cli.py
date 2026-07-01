@@ -393,7 +393,7 @@ def cmd_release_check(args: argparse.Namespace) -> int:
 def cmd_status(args: argparse.Namespace) -> int:
     config = resolve_workspace(args.workspace)
     read_workspace_config(config)
-    snapshot = build_status_snapshot(config, task_id=args.task_id, include_audit=args.audit)
+    snapshot = build_status_snapshot(config, task_id=args.task_id, include_audit=args.audit, include_doctor=args.doctor)
     if args.json:
         print(snapshot.to_json())
     else:
@@ -419,6 +419,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_status.add_argument("--task-id", help="task to summarize; defaults to latest task")
     p_status.add_argument("--json", action="store_true", help="print structured JSON")
     p_status.add_argument("--audit", action="store_true", help="include workspace audit counts")
+    p_status.add_argument("--doctor", action="store_true", help="probe implemented adapter CLIs and include doctor readiness")
     p_status.set_defaults(func=cmd_status)
 
     p_task = sub.add_parser("task", help="manage tasks")

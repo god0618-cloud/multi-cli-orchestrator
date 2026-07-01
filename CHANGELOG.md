@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.5.0
+
+- Added `mco status --doctor` for explicit local adapter probing.
+- Status JSON now includes `doctor_probe`, `doctor_status`, and `doctor_check_count` so automation can distinguish policy baseline from real local checks.
+- Kept default `mco status` lightweight and free of external CLI/auth probing.
+- Added regression coverage proving fake Claude Code and Kimi Code adapters become `READY_SUPERVISED` only when `--doctor` is requested.
+
 ## 2.4.0
 
 - Added `mco status` as a compact operator summary for the workspace.
