@@ -35,3 +35,11 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 - Dashboard, replay, and adapter matrix screenshots exist without private user paths.
 - A demo story document explains the narrative from prompt-copy pain to evidence-backed control plane.
 - README links to the demo story.
+
+## v5.2-dogfood-workflows Acceptance
+
+- Three realistic workflow templates exist: documentation release, frontend review, and adapter onboarding.
+- Templates are synced between source-tree templates and packaged templates.
+- A realistic workflow examples README explains how to run and close one workflow with placeholder evidence.
+- All three templates have been dogfooded to `recommended_action=complete` with placeholder evidence in a temporary workspace.
+- No new provider execution authority is added.

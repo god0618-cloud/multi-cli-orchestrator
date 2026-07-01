@@ -1,0 +1,56 @@
+{
+  "schema": "mco.workflow.v0.2",
+  "name": "documentation-release-loop",
+  "description": "Dogfood workflow for documentation or launch-material releases: brief, write, verify, close.",
+  "phases": [
+    {
+      "id": "brief",
+      "role": "planner",
+      "preferred_agent": "generic-cli",
+      "gates": ["loop_spec_exists"],
+      "outputs": ["documentation-brief.md"],
+      "on_pass": "write",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "write",
+      "role": "writer",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:draft-release-material.md",
+        "all_dispatches_terminal",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["draft-release-material.md"],
+      "on_pass": "verify",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "verify",
+      "role": "verifier",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:verification-report.md",
+        "ledger_event:verification",
+        "dashboard_exists"
+      ],
+      "outputs": ["verification-report.md", "dashboard.html"],
+      "on_pass": "close",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "close",
+      "role": "controller",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:close-report.md",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["close-report.md"],
+      "on_pass": "complete",
+      "on_fail": "human_review"
+    }
+  ]
+}

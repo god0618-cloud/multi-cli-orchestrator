@@ -1,0 +1,56 @@
+{
+  "schema": "mco.workflow.v0.2",
+  "name": "adapter-onboarding-loop",
+  "description": "Dogfood workflow for adding or reviewing a CLI adapter: scaffold, validate, smoke review, close.",
+  "phases": [
+    {
+      "id": "scaffold",
+      "role": "adapter-author",
+      "preferred_agent": "generic-cli",
+      "gates": ["loop_spec_exists"],
+      "outputs": ["adapter-scaffold-report.md"],
+      "on_pass": "validate",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "validate",
+      "role": "adapter-reviewer",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:adapter-validation-report.md",
+        "all_dispatches_terminal",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["adapter-validation-report.md"],
+      "on_pass": "smoke_review",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "smoke_review",
+      "role": "safety-reviewer",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:adapter-smoke-review.md",
+        "ledger_event:verification",
+        "dashboard_exists"
+      ],
+      "outputs": ["adapter-smoke-review.md", "dashboard.html"],
+      "on_pass": "close",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "close",
+      "role": "controller",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:close-report.md",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["close-report.md"],
+      "on_pass": "complete",
+      "on_fail": "human_review"
+    }
+  ]
+}

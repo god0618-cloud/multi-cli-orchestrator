@@ -1,0 +1,57 @@
+{
+  "schema": "mco.workflow.v0.2",
+  "name": "frontend-review-loop",
+  "description": "Dogfood workflow for frontend implementation review: spec, implementation, visual verification, close.",
+  "phases": [
+    {
+      "id": "spec",
+      "role": "designer",
+      "preferred_agent": "generic-cli",
+      "gates": ["loop_spec_exists"],
+      "outputs": ["frontend-review-spec.md"],
+      "on_pass": "implement",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "implement",
+      "role": "frontend",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:implementation-report.md",
+        "artifact_registered:screenshot-index.md",
+        "all_dispatches_terminal",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["implementation-report.md", "screenshot-index.md"],
+      "on_pass": "visual_verify",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "visual_verify",
+      "role": "verifier",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:visual-verification-report.md",
+        "ledger_event:verification",
+        "dashboard_exists"
+      ],
+      "outputs": ["visual-verification-report.md", "dashboard.html"],
+      "on_pass": "close",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "close",
+      "role": "controller",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:close-report.md",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["close-report.md"],
+      "on_pass": "complete",
+      "on_fail": "human_review"
+    }
+  ]
+}
