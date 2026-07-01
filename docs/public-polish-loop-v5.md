@@ -75,3 +75,10 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 - Scaffold validation proves fixture readiness without provider credentials.
 - Adapter maturity docs link to the extension roadmap.
 - No manual-only adapter is promoted without doctor/smoke/evidence gates.
+
+## v5.7-dashboard-readability Acceptance
+
+- Dashboard first screen includes an operator brief.
+- Dashboard names whether owner action is required, work is pending, gates can advance, or workflow can close.
+- Dashboard provides a next-command hint without granting automatic authority.
+- Existing dashboard tests cover the new top-level labels.

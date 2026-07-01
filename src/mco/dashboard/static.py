@@ -193,6 +193,65 @@ def _workflow_observation(task_dir: Path) -> dict[str, Any]:
     return observe_workflow(task_dir)
 
 
+def _owner_brief(
+    workflow_observation: dict[str, Any],
+    problem_dispatches: list[dict[str, Any]],
+    pending_dispatches: list[dict[str, Any]],
+    task_id: str,
+) -> dict[str, str]:
+    action = str(workflow_observation.get("recommended_action", "wait"))
+    phase = str(workflow_observation.get("current_phase") or "n/a")
+    reason = str(workflow_observation.get("reason") or "No workflow reason recorded.")
+
+    if problem_dispatches:
+        return {
+            "status": "Decision required",
+            "class": "bad",
+            "headline": "A dispatch is blocked or failed.",
+            "detail": "Review Owner Escalations before advancing the workflow.",
+            "next_command": f"mco workflow observe {task_id}",
+        }
+    if pending_dispatches:
+        return {
+            "status": "Work in progress",
+            "class": "warn",
+            "headline": f"{len(pending_dispatches)} dispatch(es) are queued or claimed.",
+            "detail": "No owner decision is required yet. Watch for terminal status or timeout.",
+            "next_command": f"mco status {task_id}",
+        }
+    if action == "complete":
+        return {
+            "status": "Ready to close",
+            "class": "ok",
+            "headline": "Workflow gates are complete.",
+            "detail": "Review the close evidence and replay ledger before publishing broader claims.",
+            "next_command": f"mco run replay <task-dir>/RUN_LEDGER.json",
+        }
+    if action == "advance":
+        return {
+            "status": "Advance available",
+            "class": "ok",
+            "headline": f"Current phase {phase} can advance.",
+            "detail": reason,
+            "next_command": f"mco workflow loop {task_id} --max-steps 1",
+        }
+    if action == "escalate":
+        return {
+            "status": "Review required",
+            "class": "bad",
+            "headline": f"Workflow is blocked at {phase}.",
+            "detail": reason,
+            "next_command": f"mco workflow observe {task_id}",
+        }
+    return {
+        "status": "Waiting",
+        "class": "warn",
+        "headline": f"Workflow is waiting at {phase}.",
+        "detail": reason,
+        "next_command": f"mco workflow observe {task_id}",
+    }
+
+
 def _render_workflow_gate_rows(observation: dict[str, Any]) -> str:
     rows = []
     for item in observation.get("gate_results", []):
@@ -234,6 +293,7 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     pending_dispatches = [item for item in dispatches if item.get("status") in {"queued", "claimed"}]
     completed_dispatches = [item for item in dispatches if item.get("status") == "completed"]
     latest_event = events[-1] if events else {}
+    owner_brief = _owner_brief(workflow_observation, problem_dispatches, pending_dispatches, task_id)
 
     control_cards = "\n".join(
         [
@@ -346,6 +406,10 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     th {{ color: #94a3b8; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }}
     .metrics {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }}
     .metric {{ background: #0b1220; border: 1px solid #263247; border-radius: 12px; padding: 16px; }}
+    .brief {{ display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(260px, .8fr); gap: 16px; align-items: stretch; }}
+    .brief-panel {{ background: #0b1220; border: 1px solid #263247; border-radius: 12px; padding: 18px; }}
+    .brief-panel h2 {{ margin-bottom: 6px; font-size: 24px; }}
+    .brief-panel p {{ color: #94a3b8; margin: 8px 0 0; }}
     .metric span, .adapter-grid span {{ display: block; color: #94a3b8; font-size: 12px; margin-bottom: 6px; }}
     .metric strong, .adapter-grid strong {{ color: #f8fafc; }}
     .adapter-head {{ display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }}
@@ -361,7 +425,7 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     li {{ margin-bottom: 12px; }}
     li p {{ margin: 4px 0 0; color: #94a3b8; }}
     @media (max-width: 760px) {{
-      .metrics, .adapter-grid {{ grid-template-columns: 1fr 1fr; }}
+      .metrics, .adapter-grid, .brief {{ grid-template-columns: 1fr; }}
       main {{ padding: 20px 12px; }}
     }}
   </style>
@@ -373,6 +437,21 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     <h1>{html.escape(task.get("title", task_id))}</h1>
     <div>Task: <code>{html.escape(task_id)}</code></div>
   </header>
+  <section class="card">
+    <div class="brief">
+      <div class="brief-panel">
+        <div class="label">Operator Brief</div>
+        <h2>{html.escape(owner_brief["headline"])}</h2>
+        <span class="pill {html.escape(owner_brief["class"])}">{html.escape(owner_brief["status"])}</span>
+        <p>{html.escape(owner_brief["detail"])}</p>
+      </div>
+      <div class="brief-panel">
+        <div class="label">Next Command</div>
+        <p><code>{html.escape(owner_brief["next_command"])}</code></p>
+        <p class="small">This is a hint, not automatic authority. Use workflow gates and evidence before advancing.</p>
+      </div>
+    </div>
+  </section>
   <section class="card">
     <h2>Control Room</h2>
     <div class="metrics">{control_cards}</div>

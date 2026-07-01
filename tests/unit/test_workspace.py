@@ -116,7 +116,10 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(dashboard.returncode, 0, dashboard.stderr)
             dashboard_path = workspace / "tasks" / task_id / "dashboard.html"
             self.assertTrue(dashboard_path.exists())
-            self.assertIn("Boss Dashboard Control Room", dashboard_path.read_text(encoding="utf-8"))
+            dashboard_html = dashboard_path.read_text(encoding="utf-8")
+            self.assertIn("Boss Dashboard Control Room", dashboard_html)
+            self.assertIn("Operator Brief", dashboard_html)
+            self.assertIn("Next Command", dashboard_html)
 
     def test_task_create_json_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
