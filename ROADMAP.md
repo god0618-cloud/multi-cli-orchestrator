@@ -107,6 +107,13 @@
 - Dispatch gate status embedded in task dashboard.
 - Boss-view visibility for blocked auto-dispatches.
 
+## v2.4
+
+- Compact `mco status` operator command.
+- Latest task, dispatch counts, latest dispatch, adapter readiness, quota semantics, and gate posture in one terminal readout.
+- JSON output for scripts and optional audit counts for release/monitor loops.
+- No implicit provider doctor probing during routine status checks.
+
 ## Future
 
 - Multi-worker supervised execution.

@@ -6,7 +6,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is in v2.0 multi-adapter stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, and two supervised first-party prompt adapters: Claude Code and Kimi Code.
+This repository is in v2.4 multi-adapter control-plane stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, and a compact operator status command.
 
 ## Core Ideas
 
@@ -23,6 +23,7 @@ This repository is in v2.0 multi-adapter stage. The current baseline is a clean 
 mco init
 mco doctor
 mco task create "Build a mobile-first project page"
+mco status
 mco orchestrate-start <task_id> --template frontend-review-loop
 mco dashboard <task_id>
 mco usage snapshot <task_id>
@@ -34,10 +35,11 @@ mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
-Implemented in this v2.0 baseline:
+Implemented in this v2.4 baseline:
 
 - `mco init`
 - `mco doctor`
+- `mco status`
 - `mco task create`
 - `mco task list`
 - `mco task status`
@@ -67,6 +69,7 @@ pip install -e .
 mco init --workspace .mco-workspace
 mco doctor --workspace .mco-workspace
 mco task create "Hello multi-CLI" --workspace .mco-workspace
+mco status --workspace .mco-workspace
 mco task list --workspace .mco-workspace
 mco orchestrate-start "Hello orchestrated task" --template hello-multi-cli --workspace .mco-workspace
 mco demo hello-multi-cli --workspace .mco-demo
@@ -74,12 +77,13 @@ mco audit .
 mco release check .
 ```
 
-## v2.0 Command Matrix
+## v2.4 Command Matrix
 
 | Command | Status |
 | --- | --- |
 | `mco init` | implemented |
 | `mco doctor` | implemented |
+| `mco status` | compact workspace, latest task, dispatch, adapter gate, and optional audit summary |
 | `mco task create` | implemented |
 | `mco task create --json` | implemented |
 | `mco task list` | implemented |

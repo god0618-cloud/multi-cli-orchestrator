@@ -12,7 +12,7 @@ It should answer:
 - What evidence exists?
 - What gates passed or failed?
 
-v2.3 renders a static, dependency-free control room per task.
+v2.3 renders a static, dependency-free control room per task. v2.4 adds `mco status` as the fast terminal readout for the same operating posture when opening HTML would be too heavy.
 
 It reads only task-local evidence:
 
@@ -34,3 +34,11 @@ The dashboard now includes:
 - **Artifacts / Dispatches / Timeline**: audit trail details for deeper inspection.
 
 This is intentionally still static HTML. The goal is operational legibility before a heavier UI: users can open a file, publish it as an artifact, or serve it with `mco serve` without installing a frontend stack.
+
+For command-line checks, use:
+
+```bash
+mco status --workspace .mco-workspace
+mco status --workspace .mco-workspace --json
+mco status --workspace .mco-workspace --audit
+```

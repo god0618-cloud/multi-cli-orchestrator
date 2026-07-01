@@ -6,6 +6,7 @@ Command surface:
 | --- | --- |
 | `mco init` | Initialize a local workspace |
 | `mco doctor` | Validate workspace readiness |
+| `mco status` | Print compact workspace, latest task, dispatch, adapter gate, and optional audit status |
 | `mco task create` | Create a task with `task.json`, `LOOP_SPEC.json`, and `RUN_LEDGER.json` |
 | `mco task create --json` | Create a task and print machine-readable paths |
 | `mco task list` | List workspace tasks |

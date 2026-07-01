@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.0
+
+- Added `mco status` as a compact operator summary for the workspace.
+- The status command defaults to the latest task and summarizes dispatch counts, the latest dispatch, adapter readiness, quota semantics, and gate posture.
+- Added `mco status --json` for automation and `mco status --audit` for one-line audit counts.
+- Kept status rendering free of provider doctor probing so routine operator checks do not consume external CLI/auth calls.
+
 ## 2.3.0
 
 - Integrated the adapter matrix into the task dashboard.

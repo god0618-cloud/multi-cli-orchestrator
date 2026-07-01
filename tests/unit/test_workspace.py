@@ -131,6 +131,46 @@ class WorkspaceTests(unittest.TestCase):
             self.assertTrue(Path(payload["loop_spec"]).exists())
             self.assertTrue(Path(payload["run_ledger"]).exists())
 
+    def test_status_defaults_to_latest_task_and_summarizes_gates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            first = run_mco("task", "create", "First Task", "--workspace", str(workspace))
+            self.assertEqual(first.returncode, 0, first.stderr)
+            second = run_mco("task", "create", "Second Task", "--workspace", str(workspace))
+            self.assertEqual(second.returncode, 0, second.stderr)
+            task_id = next(line.split(": ", 1)[1] for line in second.stdout.splitlines() if line.startswith("created task:"))
+
+            blocked = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "mimo-code",
+                "--title",
+                "Blocked worker",
+                "--instructions",
+                "Should not reach inbox.",
+                "--require-ready",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertNotEqual(blocked.returncode, 0)
+
+            status = run_mco("status", "--workspace", str(workspace))
+            self.assertEqual(status.returncode, 0, status.stdout + status.stderr)
+            self.assertIn("Second Task", status.stdout)
+            self.assertIn("blocked=1", status.stdout)
+            self.assertIn("mimo-code: DISABLED", status.stdout)
+            self.assertIn("gate=requires-review", status.stdout)
+
+            status_json = run_mco("status", "--json", "--workspace", str(workspace))
+            self.assertEqual(status_json.returncode, 0, status_json.stdout + status_json.stderr)
+            payload = json.loads(status_json.stdout)
+            self.assertEqual(payload["schema"], "mco.status.v1.0")
+            self.assertEqual(payload["task"]["task_id"], task_id)
+            self.assertEqual(payload["dispatch"]["counts"]["blocked"], 1)
+
     def test_event_artifact_status_and_audit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "workspace"

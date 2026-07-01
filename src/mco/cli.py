@@ -28,6 +28,7 @@ from .schemas import (
     validate_run_ledger,
     validate_sandbox_contract,
 )
+from .status import build_status_snapshot, render_status_text
 from .task.lifecycle import create_task, list_tasks, read_task, task_dir
 from .usage.snapshot import write_usage_snapshot
 from .workflow.templates import load_workflow_template, write_plan
@@ -389,6 +390,18 @@ def cmd_release_check(args: argparse.Namespace) -> int:
     return 0 if result.ok else 1
 
 
+def cmd_status(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    snapshot = build_status_snapshot(config, task_id=args.task_id, include_audit=args.audit)
+    if args.json:
+        print(snapshot.to_json())
+    else:
+        print(render_status_text(snapshot))
+    audit = snapshot.payload.get("audit")
+    return 1 if audit is not None and not audit["ok"] else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="mco", description="Multi-CLI Orchestrator")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -400,6 +413,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_doctor = sub.add_parser("doctor", help="check local MCO workspace readiness")
     p_doctor.add_argument("--workspace", default=".", help="workspace root")
     p_doctor.set_defaults(func=cmd_doctor)
+
+    p_status = sub.add_parser("status", help="show compact operator status for the workspace")
+    p_status.add_argument("--workspace", default=".", help="workspace root")
+    p_status.add_argument("--task-id", help="task to summarize; defaults to latest task")
+    p_status.add_argument("--json", action="store_true", help="print structured JSON")
+    p_status.add_argument("--audit", action="store_true", help="include workspace audit counts")
+    p_status.set_defaults(func=cmd_status)
 
     p_task = sub.add_parser("task", help="manage tasks")
     task_sub = p_task.add_subparsers(dest="task_command", required=True)
