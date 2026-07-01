@@ -31,6 +31,14 @@ Use:
 mco schema validate adapter-manifest templates/adapters/claude-code.disabled.json
 ```
 
+For new adapters, generate a contributor kit:
+
+```bash
+mco adapter scaffold my-cli --output-dir adapter-kits/my-cli
+cd adapter-kits/my-cli
+python -m unittest test_my_cli_adapter_contract.py
+```
+
 `claude-code` is the first implemented supervised first-party adapter. `kimi-code` is the second implemented supervised first-party adapter in v2.0. Their disabled templates are intentionally retained as design-history markers for how first-party adapters start: no execution authority until doctor, sandbox, quota semantics, non-interactive execution, and evidence reporting all exist.
 
 Runtime check:

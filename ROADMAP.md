@@ -135,6 +135,12 @@
 - `mco workflow advance` for phase-gated pass/fail transitions.
 - Fail-stop behavior and optional auto-dispatch to the next phase.
 
+## v2.8
+
+- Contributor-ready adapter scaffold output.
+- Generated README, fake CLI fixture, and unittest contract template.
+- Adapter contributor guide for promotion gates and review expectations.
+
 ## Future
 
 - Multi-worker supervised execution.

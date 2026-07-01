@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.8.0
+
+- Expanded `mco adapter scaffold` into a contributor-ready adapter kit.
+- Scaffold output now includes README guidance, a deterministic fake CLI fixture, and a unittest contract template.
+- Added `docs/adapter-contributor-guide.md` for adapter promotion expectations and review gates.
+- Added regression coverage that generated adapter contract tests pass.
+
 ## 2.7.0
 
 - Added workflow phase state to generated `plan.json` files.

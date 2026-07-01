@@ -411,9 +411,15 @@ class WorkspaceTests(unittest.TestCase):
             manifest = out_dir / "new-cli.adapter.json"
             sandbox = out_dir / "new-cli.sandbox.json"
             checklist = out_dir / "new-cli-smoke-checklist.md"
+            readme = out_dir / "README.md"
+            fake_cli = out_dir / "fake-new-cli.py"
+            contract_test = out_dir / "test_new_cli_adapter_contract.py"
             self.assertTrue(manifest.exists())
             self.assertTrue(sandbox.exists())
             self.assertTrue(checklist.exists())
+            self.assertTrue(readme.exists())
+            self.assertTrue(fake_cli.exists())
+            self.assertTrue(contract_test.exists())
 
             manifest_payload = json.loads(manifest.read_text(encoding="utf-8"))
             self.assertFalse(manifest_payload["supervised"])
@@ -422,6 +428,14 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(manifest_check.returncode, 0, manifest_check.stdout + manifest_check.stderr)
             sandbox_check = run_mco("schema", "validate", "sandbox-contract", str(sandbox))
             self.assertEqual(sandbox_check.returncode, 0, sandbox_check.stdout + sandbox_check.stderr)
+            contract_check = subprocess.run(
+                [sys.executable, str(contract_test)],
+                cwd=out_dir,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(contract_check.returncode, 0, contract_check.stdout + contract_check.stderr)
 
             blocked = run_mco("adapter", "scaffold", "new-cli", "--output-dir", str(out_dir))
             self.assertNotEqual(blocked.returncode, 0)

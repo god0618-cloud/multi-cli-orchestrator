@@ -79,6 +79,6 @@ mco workflow advance "$TASK_ID" --workspace .mco-workspace \
 
 `mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html` writes a machine-readable adapter comparison plus static HTML. Without `--doctor`, the command does not probe local CLI binaries. With `--doctor`, implemented adapters are probed and disabled template adapters remain non-executable.
 
-`mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code` writes a disabled adapter manifest, sandbox contract draft, and smoke checklist. Scaffolded adapters are not executable until their gates are implemented and reviewed.
+`mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code` writes a disabled adapter onboarding kit: manifest, sandbox contract draft, smoke checklist, README, deterministic fake CLI fixture, and unittest contract template. Scaffolded adapters are not executable until their gates are implemented and reviewed.
 
 `mco usage snapshot <task_id>` writes `USAGE_SNAPSHOT.json` under the task directory and registers it in the run ledger. The snapshot aggregates only task-local dispatch records and registered execution reports.

@@ -110,6 +110,6 @@ Kimi Code execution is deliberately constrained:
 - provides an explicit opt-in smoke command that creates a complete evidence bundle and verifies the fixed `MCO_ADAPTER_SMOKE_OK` sentinel
 - preserves quota as `unknown` because the current Kimi command contract does not expose a per-run budget cap equivalent to Claude Code's `--max-budget-usd`
 
-New adapters should start with `mco adapter scaffold <agent>`. The scaffold is deliberately disabled by default and includes a manifest, sandbox draft, and smoke checklist. Promotion requires durable evidence for capability discovery, sandbox boundaries, quota semantics, non-interactive execution, execution reports, usage snapshots, and opt-in smoke gates.
+New adapters should start with `mco adapter scaffold <agent>`. The scaffold is deliberately disabled by default and includes a manifest, sandbox draft, smoke checklist, README, fake CLI fixture, and unittest contract template. Promotion requires durable evidence for capability discovery, sandbox boundaries, quota semantics, non-interactive execution, execution reports, usage snapshots, and opt-in smoke gates.
 
 Other first-party adapters for Mimo Code, CodeWhale, or additional CLIs remain disabled until they provide the same capability manifest, sandbox contract, quota checks, non-interactive command contract, and evidence reporter.

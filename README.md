@@ -6,7 +6,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is in v2.7 multi-adapter control-plane stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, a compact operator status command with explicit doctor probing, bounded monitor snapshots, and phase-gated workflow advancement.
+This repository is in v2.8 multi-adapter control-plane stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, a compact operator status command with explicit doctor probing, bounded monitor snapshots, phase-gated workflow advancement, and adapter contributor kits.
 
 ## Core Ideas
 
@@ -39,7 +39,7 @@ mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
-Implemented in this v2.7 baseline:
+Implemented in this v2.8 baseline:
 
 - `mco init`
 - `mco doctor`
@@ -83,7 +83,7 @@ mco audit .
 mco release check .
 ```
 
-## v2.7 Command Matrix
+## v2.8 Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -100,7 +100,7 @@ mco release check .
 | `mco adapter capabilities` | `generic-cli`, `claude-code`, `kimi-code` |
 | `mco adapter doctor` | generic, Claude Code, and Kimi Code readiness checks |
 | `mco adapter matrix` | adapter readiness, quota, smoke, and promotion-blocker matrix |
-| `mco adapter scaffold` | disabled adapter onboarding kit |
+| `mco adapter scaffold` | disabled adapter onboarding kit with README, fake CLI fixture, and unittest template |
 | `mco adapter smoke` | explicit opt-in real Claude Code or Kimi Code smoke test |
 | `mco dispatch queue/list/claim/complete` | generic local queue |
 | `mco dispatch queue --require-ready` | blocks auto-dispatch unless adapter readiness is `READY_SUPERVISED` |
@@ -137,6 +137,7 @@ Useful docs:
 - `docs/why-multi-cli.md`
 - `docs/diagrams.md`
 - `docs/adapter-templates.md`
+- `docs/adapter-contributor-guide.md`
 - `docs/release-checklist.md`
 
 ## Safety Defaults
