@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
+import sys
 from pathlib import Path
+
+from mco.schemas import validate_adapter_manifest, validate_sandbox_contract
 
 
 AGENT_RE = re.compile(r"^[a-z0-9][a-z0-9-]{1,62}$")
@@ -116,6 +120,7 @@ def onboarding_readme(agent: str) -> str:
             f"mco schema validate adapter-manifest {agent}.adapter.json",
             f"mco schema validate sandbox-contract {agent}.sandbox.json",
             f"python -m unittest test_{agent.replace('-', '_')}_adapter_contract.py",
+            "mco adapter validate-kit .",
             "```",
             "",
         ]
@@ -215,4 +220,69 @@ def scaffold_adapter(agent: str, output_dir: Path, force: bool = False) -> dict:
         "output_dir": str(output_dir),
         "files": written,
         "status": "created",
+    }
+
+
+def validate_adapter_kit(kit_dir: Path) -> dict:
+    kit_dir = kit_dir.expanduser().resolve()
+    if not kit_dir.exists() or not kit_dir.is_dir():
+        raise FileNotFoundError(f"adapter kit directory not found: {kit_dir}")
+
+    manifests = sorted(kit_dir.glob("*.adapter.json"))
+    sandboxes = sorted(kit_dir.glob("*.sandbox.json"))
+    tests = sorted(kit_dir.glob("test_*_adapter_contract.py"))
+    fake_fixtures = sorted(kit_dir.glob("fake-*.py"))
+    checks: list[dict] = []
+
+    def add(name: str, ok: bool, detail: str) -> None:
+        checks.append({"name": name, "ok": ok, "detail": detail})
+
+    add("manifest_count", len(manifests) == 1, f"count={len(manifests)}")
+    add("sandbox_count", len(sandboxes) == 1, f"count={len(sandboxes)}")
+    add("contract_test_count", len(tests) == 1, f"count={len(tests)}")
+    add("fake_fixture_count", len(fake_fixtures) == 1, f"count={len(fake_fixtures)}")
+    add("readme_exists", (kit_dir / "README.md").exists(), str(kit_dir / "README.md"))
+
+    agent = "unknown"
+    if manifests:
+        try:
+            manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+            validate_adapter_manifest(manifest)
+            agent = str(manifest.get("agent") or "unknown")
+            disabled = (
+                manifest.get("supervised") is False
+                and manifest.get("non_interactive") is False
+                and manifest.get("can_run_shell") is False
+                and manifest.get("quota_status") == "unknown"
+            )
+            add("manifest_schema", True, str(manifests[0]))
+            add("manifest_disabled_by_default", disabled, f"agent={agent}")
+        except Exception as exc:
+            add("manifest_schema", False, str(exc))
+
+    if sandboxes:
+        try:
+            sandbox = json.loads(sandboxes[0].read_text(encoding="utf-8"))
+            validate_sandbox_contract(sandbox)
+            add("sandbox_schema", True, str(sandboxes[0]))
+        except Exception as exc:
+            add("sandbox_schema", False, str(exc))
+
+    if tests:
+        completed = subprocess.run(
+            [sys.executable, str(tests[0])],
+            cwd=kit_dir,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        add("contract_unittest", completed.returncode == 0, (completed.stdout + completed.stderr).strip() or f"exit={completed.returncode}")
+
+    ok = all(item["ok"] for item in checks)
+    return {
+        "schema": "mco.adapter_kit_validation.v1.0",
+        "kit_dir": str(kit_dir),
+        "agent": agent,
+        "status": "PASS" if ok else "FAIL",
+        "checks": checks,
     }

@@ -160,6 +160,12 @@
 - Walkthrough bundles include text and HTML replay artifacts.
 - Replay UI baseline before multi-worker execution.
 
+## v3.3
+
+- Adapter contributor CI harness.
+- `mco adapter validate-kit` checks generated adapter kit health.
+- Fail-fast guard against unsafe manifest promotion.
+
 ## Future
 
 - Multi-worker supervised execution.

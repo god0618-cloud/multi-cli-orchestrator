@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.0
+
+- Added `mco adapter validate-kit <dir>` for CI-friendly validation of generated adapter contributor kits.
+- Validation checks schema health, disabled-by-default posture, fake fixture presence, README presence, and generated contract tests.
+- Added regression coverage for both passing kits and unsafe manifest promotion failures.
+
 ## 3.2.0
 
 - Added `mco run replay --html <path>` for dependency-free static replay pages.

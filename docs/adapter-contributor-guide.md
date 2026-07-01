@@ -22,6 +22,7 @@ cd adapter-kits/my-cli
 mco schema validate adapter-manifest my-cli.adapter.json
 mco schema validate sandbox-contract my-cli.sandbox.json
 python -m unittest test_my_cli_adapter_contract.py
+mco adapter validate-kit .
 ```
 
 Promotion rule:

@@ -446,10 +446,32 @@ class WorkspaceTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(contract_check.returncode, 0, contract_check.stdout + contract_check.stderr)
+            kit_check = run_mco("adapter", "validate-kit", str(out_dir))
+            self.assertEqual(kit_check.returncode, 0, kit_check.stdout + kit_check.stderr)
+            kit_payload = json.loads(kit_check.stdout)
+            self.assertEqual(kit_payload["status"], "PASS")
+            self.assertEqual(kit_payload["agent"], "new-cli")
 
             blocked = run_mco("adapter", "scaffold", "new-cli", "--output-dir", str(out_dir))
             self.assertNotEqual(blocked.returncode, 0)
             self.assertIn("refusing to overwrite", blocked.stderr)
+
+    def test_adapter_validate_kit_fails_if_manifest_promoted_without_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out_dir = Path(tmp) / "adapter-kit"
+            scaffold = run_mco("adapter", "scaffold", "unsafe-cli", "--output-dir", str(out_dir))
+            self.assertEqual(scaffold.returncode, 0, scaffold.stdout + scaffold.stderr)
+            manifest_path = out_dir / "unsafe-cli.adapter.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["supervised"] = True
+            manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+            kit_check = run_mco("adapter", "validate-kit", str(out_dir))
+            self.assertNotEqual(kit_check.returncode, 0)
+            kit_payload = json.loads(kit_check.stdout)
+            self.assertEqual(kit_payload["status"], "FAIL")
+            failed_checks = [item["name"] for item in kit_payload["checks"] if not item["ok"]]
+            self.assertIn("manifest_disabled_by_default", failed_checks)
 
     def test_claude_code_adapter_doctor_and_supervised_execution(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

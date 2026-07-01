@@ -9,7 +9,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 from .adapters.doctor import doctor_adapter, manifest_for_agent
 from .adapters.matrix import build_adapter_matrix, write_adapter_matrix
-from .adapters.scaffold import scaffold_adapter
+from .adapters.scaffold import scaffold_adapter, validate_adapter_kit
 from .adapters.smoke import smoke_claude_code, smoke_kimi_code
 from .audit.safety import audit_tree
 from .config import init_workspace, read_workspace_config, resolve_workspace
@@ -180,6 +180,12 @@ def cmd_adapter_scaffold(args: argparse.Namespace) -> int:
     result = scaffold_adapter(args.agent, Path(args.output_dir).expanduser().resolve(), force=args.force)
     print(json.dumps(result, indent=2))
     return 0
+
+
+def cmd_adapter_validate_kit(args: argparse.Namespace) -> int:
+    result = validate_adapter_kit(Path(args.kit_dir))
+    print(json.dumps(result, indent=2))
+    return 0 if result["status"] == "PASS" else 1
 
 
 def cmd_adapter_matrix(args: argparse.Namespace) -> int:
@@ -542,6 +548,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_adapter_scaffold.add_argument("--output-dir", default=".", help="directory for generated adapter onboarding files")
     p_adapter_scaffold.add_argument("--force", action="store_true", help="overwrite existing generated files")
     p_adapter_scaffold.set_defaults(func=cmd_adapter_scaffold)
+    p_adapter_validate_kit = adapter_sub.add_parser("validate-kit", help="validate a generated adapter contributor kit")
+    p_adapter_validate_kit.add_argument("kit_dir")
+    p_adapter_validate_kit.set_defaults(func=cmd_adapter_validate_kit)
     p_adapter_matrix = adapter_sub.add_parser("matrix", help="show adapter readiness and promotion matrix")
     p_adapter_matrix.add_argument("--doctor", action="store_true", help="probe implemented adapters and include doctor status")
     p_adapter_matrix.add_argument("--output", help="write matrix JSON to this path")

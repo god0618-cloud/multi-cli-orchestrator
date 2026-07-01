@@ -18,6 +18,7 @@ Command surface:
 | `mco adapter doctor` | Check adapter readiness against optional sandbox contract |
 | `mco adapter matrix` | Show adapter readiness, quota, smoke, and promotion blockers |
 | `mco adapter scaffold` | Create disabled adapter onboarding files |
+| `mco adapter validate-kit` | Validate a generated adapter contributor kit |
 | `mco adapter smoke` | Run an explicit opt-in real Claude Code or Kimi Code adapter smoke test |
 | `mco dispatch queue` | Queue a dispatch for an agent |
 | `mco dispatch list` | List task dispatches |
@@ -80,5 +81,7 @@ mco workflow advance "$TASK_ID" --workspace .mco-workspace \
 `mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html` writes a machine-readable adapter comparison plus static HTML. Without `--doctor`, the command does not probe local CLI binaries. With `--doctor`, implemented adapters are probed and disabled template adapters remain non-executable.
 
 `mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code` writes a disabled adapter onboarding kit: manifest, sandbox contract draft, smoke checklist, README, deterministic fake CLI fixture, and unittest contract template. Scaffolded adapters are not executable until their gates are implemented and reviewed.
+
+`mco adapter validate-kit adapter-kits/kimi-code` validates one generated adapter contributor kit. It checks schema validity, disabled-by-default posture, fake fixture presence, README presence, and the generated contract unittest.
 
 `mco usage snapshot <task_id>` writes `USAGE_SNAPSHOT.json` under the task directory and registers it in the run ledger. The snapshot aggregates only task-local dispatch records and registered execution reports.

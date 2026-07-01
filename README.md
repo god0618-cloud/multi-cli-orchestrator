@@ -44,6 +44,7 @@ mco dispatch queue <task_id> --agent kimi-code --title "Frontend pass" --instruc
 mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
 mco adapter smoke kimi-code --workspace .mco-workspace
 mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
+mco adapter validate-kit adapter-kits/kimi-code
 mco demo walkthrough --workspace .mco-walkthrough --output-dir .mco-walkthrough-output
 mco run replay <path-to-RUN_LEDGER.json>
 mco run replay <path-to-RUN_LEDGER.json> --html replay.html
@@ -64,6 +65,7 @@ Implemented in this v3.0 baseline:
 - `mco adapter doctor`
 - `mco adapter matrix`
 - `mco adapter scaffold`
+- `mco adapter validate-kit`
 - `mco adapter smoke`
 - `mco dispatch queue/list/claim/complete`
 - `mco dispatch execute --dry-run`
@@ -111,6 +113,7 @@ mco release check .
 | `mco adapter doctor` | generic, Claude Code, and Kimi Code readiness checks |
 | `mco adapter matrix` | adapter readiness, quota, smoke, and promotion-blocker matrix |
 | `mco adapter scaffold` | disabled adapter onboarding kit with README, fake CLI fixture, and unittest template |
+| `mco adapter validate-kit` | CI-friendly validation for generated adapter contributor kits |
 | `mco adapter smoke` | explicit opt-in real Claude Code or Kimi Code smoke test |
 | `mco dispatch queue/list/claim/complete` | generic local queue |
 | `mco dispatch queue --require-ready` | blocks auto-dispatch unless adapter readiness is `READY_SUPERVISED` |
