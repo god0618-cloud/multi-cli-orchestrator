@@ -10,6 +10,7 @@
 - Added a structured trial feedback issue template and maintainer triage loop.
 - Added v5.9 release notes and release-candidate evidence docs.
 - Added regression coverage proving all three public tutorial workflows complete with documented evidence gates.
+- Updated CI to Node 24-compatible GitHub Actions versions.
 
 ## 5.0.0
 

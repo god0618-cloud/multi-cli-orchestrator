@@ -49,6 +49,7 @@ Before creating a public tag or GitHub release:
 - Public tutorial workflows are now covered by automated regression tests.
 - The regression test completes `documentation-release-loop`, `frontend-review-loop`, and `adapter-onboarding-loop` with the same evidence labels documented in the tutorials.
 - This prevents workflow template gates and tutorial commands from drifting silently.
+- GitHub Actions workflow now uses Node 24-compatible `actions/checkout@v5` and `actions/setup-python@v6`.
 
 ## Recommended Next Step
 
