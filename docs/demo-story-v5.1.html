@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multi-CLI Orchestrator Demo Story v5.1</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #657286;
+      --line: #dfe5ee;
+      --blue: #2563eb;
+      --green: #0f9f6e;
+      --code: #101827;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .bar, main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 22px;
+    }
+    .bar {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand { font-weight: 780; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; }
+    a { color: var(--blue); text-decoration: none; }
+    nav a { color: #39465a; padding: 6px 8px; border-radius: 6px; }
+    nav a:hover { background: #eef3fb; text-decoration: none; }
+    main { padding-top: 26px; padding-bottom: 56px; }
+    .hero, section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0; font-size: 34px; line-height: 1.2; letter-spacing: 0; }
+    h2 { margin: 0 0 12px; font-size: 23px; letter-spacing: 0; }
+    h3 { margin: 18px 0 8px; font-size: 18px; letter-spacing: 0; }
+    p { margin: 10px 0; }
+    .lead { color: #3c4759; font-size: 16px; max-width: 840px; }
+    .eyebrow { color: var(--blue); font-weight: 760; font-size: 13px; margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+    th, td { border: 1px solid var(--line); padding: 10px 11px; vertical-align: top; text-align: left; }
+    th { background: #f8fafc; }
+    pre { background: var(--code); color: #edf2ff; border-radius: 8px; padding: 14px; overflow-x: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .shots {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    figure {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    figcaption {
+      padding: 10px 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+    }
+    .callout {
+      border-left: 4px solid var(--green);
+      background: #edf9f4;
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin: 14px 0;
+    }
+    @media (max-width: 760px) {
+      .bar { align-items: flex-start; flex-direction: column; padding-top: 12px; padding-bottom: 12px; }
+      h1 { font-size: 27px; }
+      .hero, section { padding: 18px; }
+      main { padding-left: 12px; padding-right: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="brand">Demo Story v5.1</div>
+      <nav>
+        <a href="#pain">痛点</a>
+        <a href="#walkthrough">演示</a>
+        <a href="#screens">截图</a>
+        <a href="#reproduce">复现</a>
+        <a href="#criteria">验收</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="hero">
+      <div class="eyebrow">Multi-CLI Orchestrator</div>
+      <h1>从复制粘贴 prompt，到可见、可审计、可回放的多 CLI 协作</h1>
+      <p class="lead">这条演示线展示一个具体转变：任务不再散落在多个 AI CLI 窗口里，而是进入本地控制平面，由 workflow gate、artifact、dashboard 和 replay 共同证明下一步该继续、等待、升级还是完成。</p>
+    </div>
+
+    <section id="pain">
+      <h2>1. 从真实痛点开始</h2>
+      <p>多个 AI Coding CLI 可以带来多模型、多工具、多视角，但复杂任务里用户很容易变成“人工消息总线”：复制 prompt、贴路径、问谁完成了、判断有没有跑偏。</p>
+      <div class="callout">Multi-CLI Orchestrator 把工作单元从“窗口里的 prompt”变成“有状态、有门禁、有证据的 task workspace”。</div>
+    </section>
+
+    <section id="walkthrough">
+      <h2>2. 一条命令生成演示包</h2>
+      <pre><code>mco demo walkthrough \
+  --workspace /tmp/mco-public-demo \
+  --output-dir /tmp/mco-public-demo-output</code></pre>
+      <table>
+        <thead><tr><th>产物</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>Demo task</td><td>一个本地任务工作区，包含 loop spec 和 ledger。</td></tr>
+          <tr><td>Dashboard</td><td>展示 workflow action、adapter readiness、dispatch、artifact 和 timeline。</td></tr>
+          <tr><td>Replay</td><td>从 run ledger 重建执行过程。</td></tr>
+          <tr><td>Adapter kit</td><td>生成 disabled-by-default 的 fake CLI adapter 示例。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="screens">
+      <h2>3. 三张图讲清楚价值</h2>
+      <div class="shots">
+        <figure>
+          <img src="assets/demo-dashboard-v5.1.png" alt="Multi-CLI Orchestrator dashboard demo" />
+          <figcaption>Dashboard：谁在干活、当前建议动作、adapter 姿态和证据产物都在一个页面里。</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/demo-run-replay-v5.1.png" alt="Run replay demo" />
+          <figcaption>Run replay：任务过程可以从 ledger 重建，不依赖聊天上下文。</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/demo-adapter-matrix-v5.1.png" alt="Adapter matrix demo" />
+          <figcaption>Adapter matrix：哪些 CLI 可监督执行、哪些只能手动参与，被显性化。</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="reproduce">
+      <h2>4. 复现命令</h2>
+      <pre><code>git clone https://github.com/god0618-cloud/multi-cli-orchestrator.git
+cd multi-cli-orchestrator
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+
+mco demo walkthrough \
+  --workspace /tmp/mco-public-demo \
+  --output-dir /tmp/mco-public-demo-output
+
+open /tmp/mco-public-demo-output/RUN_REPLAY.html</code></pre>
+    </section>
+
+    <section id="criteria">
+      <h2>5. 演示验收</h2>
+      <table>
+        <thead><tr><th>Gate</th><th>Pass condition</th></tr></thead>
+        <tbody>
+          <tr><td>Fresh clone</td><td>命令能在干净 clone 中运行。</td></tr>
+          <tr><td>Dashboard</td><td>能看见 workflow action、adapter readiness、artifact 和 timeline。</td></tr>
+          <tr><td>Replay</td><td>能从 `RUN_LEDGER.json` 重建过程。</td></tr>
+          <tr><td>Adapter kit</td><td>新 adapter 从 disabled 和 fake fixture 开始。</td></tr>
+          <tr><td>Safety story</td><td>观众理解为什么不能把所有 CLI 直接自动派发。</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MCO Adapter Matrix</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #0f172a; color: #e5e7eb; }
+    main { max-width: 1180px; margin: 0 auto; padding: 32px; }
+    h1 { margin-bottom: 4px; }
+    p { color: #94a3b8; }
+    table { width: 100%; border-collapse: collapse; background: #111827; border: 1px solid #1f2937; border-radius: 12px; overflow: hidden; }
+    th, td { padding: 14px; border-bottom: 1px solid #1f2937; text-align: left; vertical-align: top; }
+    th { color: #cbd5e1; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+    span { color: #94a3b8; font-size: 13px; }
+    small { color: #94a3b8; }
+    .pill { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .ok { color: #bbf7d0; background: #14532d; }
+    .warn { color: #fde68a; background: #713f12; }
+    .bad { color: #fecaca; background: #7f1d1d; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Adapter Matrix</h1>
+    <p>Generated at 2026-07-01T19:50:21.851075+00:00. Doctor probing: False.</p>
+    <table>
+      <thead><tr><th>Agent</th><th>Readiness</th><th>Execution Mode</th><th>Non-interactive</th><th>Supervised</th><th>Quota</th><th>Smoke</th><th>Use / Promotion Blockers</th></tr></thead>
+      <tbody><tr><td><strong>generic-cli</strong><br><span>generic</span></td><td><span class="pill ok">IMPLEMENTED_NOT_PROBED</span></td><td>supervised_non_interactive<br><small>implemented_but_probe_before_auto_dispatch</small></td><td><span class="pill ok">True</span></td><td><span class="pill ok">True</span></td><td><span class="pill ok">not_applicable</span><br><small>budget cap: False</small></td><td><span class="pill bad">False</span></td><td>deterministic local commands inside sandbox contracts<br><small>none</small></td></tr><tr><td><strong>claude-code</strong><br><span>first-party-supervised</span></td><td><span class="pill ok">IMPLEMENTED_NOT_PROBED</span></td><td>supervised_non_interactive<br><small>implemented_but_probe_before_auto_dispatch</small></td><td><span class="pill ok">True</span></td><td><span class="pill ok">True</span></td><td><span class="pill ok">budget_limited</span><br><small>budget cap: True</small></td><td><span class="pill ok">True</span></td><td>supervised non-interactive reasoning, controller, and implementation tasks<br><small>none</small></td></tr><tr><td><strong>kimi-code</strong><br><span>first-party-supervised</span></td><td><span class="pill ok">IMPLEMENTED_NOT_PROBED</span></td><td>supervised_non_interactive<br><small>implemented_but_probe_before_auto_dispatch</small></td><td><span class="pill ok">True</span></td><td><span class="pill ok">True</span></td><td><span class="pill warn">unknown</span><br><small>budget cap: False</small></td><td><span class="pill ok">True</span></td><td>supervised non-interactive frontend and UI implementation tasks<br><small>none</small></td></tr><tr><td><strong>mimo-code</strong><br><span>first-party-disabled-template</span></td><td><span class="pill bad">DISABLED</span></td><td>manual_interactive<br><small>manual_only_do_not_auto_dispatch</small></td><td><span class="pill bad">False</span></td><td><span class="pill bad">False</span></td><td><span class="pill warn">unknown</span><br><small>budget cap: False</small></td><td><span class="pill bad">False</span></td><td>manual research/ammo collection until non-interactive evidence exists<br><small>supervised adapter not implemented; non-interactive command contract missing; task inbox/artifact participation missing; quota semantics unknown; opt-in smoke gate missing</small></td></tr><tr><td><strong>codewhale</strong><br><span>first-party-disabled-template</span></td><td><span class="pill bad">DISABLED</span></td><td>manual_interactive<br><small>manual_only_do_not_auto_dispatch</small></td><td><span class="pill bad">False</span></td><td><span class="pill bad">False</span></td><td><span class="pill warn">unknown</span><br><small>budget cap: False</small></td><td><span class="pill bad">False</span></td><td>manual red-team or DeepSeek-style review until adapter evidence exists<br><small>supervised adapter not implemented; non-interactive command contract missing; task inbox/artifact participation missing; quota semantics unknown; opt-in smoke gate missing</small></td></tr></tbody>
+    </table>
+  </main>
+</body>
+</html>

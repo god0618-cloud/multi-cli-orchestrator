@@ -7,5 +7,9 @@ __pycache__/
 .venv/
 .mco-demo/
 .mco-workspace/
+.mco-walkthrough/
+.mco-walkthrough-output/
+.mco-public-demo/
+.mco-public-demo-output/
 dist/
 build/

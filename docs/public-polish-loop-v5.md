@@ -28,3 +28,10 @@ Acceptance:
 ## Operating Rule
 
 Do not increase automation authority in this loop. Improve clarity, demos, evidence, and contribution paths first.
+
+## v5.1-demo-story Acceptance
+
+- `mco demo walkthrough` produces a public-safe demo bundle.
+- Dashboard, replay, and adapter matrix screenshots exist without private user paths.
+- A demo story document explains the narrative from prompt-copy pain to evidence-backed control plane.
+- README links to the demo story.
