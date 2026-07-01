@@ -12,7 +12,7 @@ It should answer:
 - What evidence exists?
 - What gates passed or failed?
 
-v2.3 renders a static, dependency-free control room per task. v2.4 adds `mco status` as the fast terminal readout for the same operating posture when opening HTML would be too heavy. v2.5 adds explicit `mco status --doctor` probing for moments when local adapter readiness needs to be checked from the same surface.
+v2.3 renders a static, dependency-free control room per task. v2.4 adds `mco status` as the fast terminal readout for the same operating posture when opening HTML would be too heavy. v2.5 adds explicit `mco status --doctor` probing for moments when local adapter readiness needs to be checked from the same surface. v2.6 adds bounded `mco monitor` snapshots so status can become durable task evidence.
 
 It reads only task-local evidence:
 
@@ -42,4 +42,5 @@ mco status --workspace .mco-workspace
 mco status --workspace .mco-workspace --json
 mco status --workspace .mco-workspace --audit
 mco status --workspace .mco-workspace --doctor
+mco monitor <task_id> --workspace .mco-workspace --cycles 3 --interval-seconds 10
 ```

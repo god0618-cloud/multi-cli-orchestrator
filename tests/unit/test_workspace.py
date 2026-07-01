@@ -201,6 +201,40 @@ class WorkspaceTests(unittest.TestCase):
             self.assertIn("doctor_probe: True", status_text.stdout)
             self.assertIn("claude-code: READY_SUPERVISED", status_text.stdout)
 
+    def test_monitor_writes_bounded_status_snapshot_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Monitor Task", "--workspace", str(workspace))
+            self.assertEqual(created.returncode, 0, created.stderr)
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            monitor = run_mco("monitor", task_id, "--cycles", "2", "--interval-seconds", "0", "--workspace", str(workspace))
+            self.assertEqual(monitor.returncode, 0, monitor.stdout + monitor.stderr)
+            payload = json.loads(monitor.stdout)
+            self.assertEqual(payload["schema"], "mco.monitor.v1.0")
+            self.assertEqual(payload["cycles"], 2)
+            self.assertEqual(len(payload["snapshots"]), 2)
+
+            for index, snapshot_path in enumerate(payload["snapshots"], start=1):
+                snapshot = json.loads(Path(snapshot_path).read_text(encoding="utf-8"))
+                self.assertEqual(snapshot["schema"], "mco.status.v1.0")
+                self.assertEqual(snapshot["task"]["task_id"], task_id)
+                self.assertFalse(snapshot["doctor_probe"])
+                self.assertEqual(snapshot["monitor"]["cycle"], index)
+
+            ledger = json.loads((task_dir / "RUN_LEDGER.json").read_text(encoding="utf-8"))
+            event_types = [event["type"] for event in ledger["events"]]
+            self.assertGreaterEqual(event_types.count("status_snapshot"), 2)
+            labels = [artifact["label"] for artifact in ledger["artifacts"] if isinstance(artifact, dict)]
+            self.assertIn("status-snapshot-cycle-1", labels)
+            self.assertIn("status-snapshot-cycle-2", labels)
+
+            too_many = run_mco("monitor", task_id, "--cycles", "25", "--workspace", str(workspace))
+            self.assertNotEqual(too_many.returncode, 0)
+            self.assertIn("--cycles must be <= 24", too_many.stderr)
+
     def test_event_artifact_status_and_audit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp) / "workspace"

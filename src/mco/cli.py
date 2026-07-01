@@ -17,6 +17,7 @@ from .dashboard.static import render_dashboard
 from .demo.hello import run_hello_demo
 from .dispatch.queue import claim_dispatch, complete_dispatch, list_dispatches, queue_dispatch
 from .dispatch.execute import execute_dispatch_claude_prompt, execute_dispatch_command, execute_dispatch_dry_run, execute_dispatch_kimi_prompt
+from .monitor import run_monitor
 from .replay.ledger import append_event, register_artifact, set_workflow
 from .replay.readout import replay_ledger
 from .release.check import check_release
@@ -402,6 +403,21 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 1 if audit is not None and not audit["ok"] else 0
 
 
+def cmd_monitor(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    result = run_monitor(
+        config,
+        args.task_id,
+        cycles=args.cycles,
+        interval_seconds=args.interval_seconds,
+        include_audit=args.audit,
+        include_doctor=args.doctor,
+    )
+    print(json.dumps(result, indent=2))
+    return int(result["exit_code"])
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="mco", description="Multi-CLI Orchestrator")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -421,6 +437,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_status.add_argument("--audit", action="store_true", help="include workspace audit counts")
     p_status.add_argument("--doctor", action="store_true", help="probe implemented adapter CLIs and include doctor readiness")
     p_status.set_defaults(func=cmd_status)
+
+    p_monitor = sub.add_parser("monitor", help="write bounded task status snapshots as evidence")
+    p_monitor.add_argument("task_id")
+    p_monitor.add_argument("--workspace", default=".", help="workspace root")
+    p_monitor.add_argument("--cycles", type=int, default=1, help="number of snapshots to write; max 24")
+    p_monitor.add_argument("--interval-seconds", type=float, default=0, help="delay between cycles; max 3600")
+    p_monitor.add_argument("--audit", action="store_true", help="include workspace audit counts")
+    p_monitor.add_argument("--doctor", action="store_true", help="probe implemented adapter CLIs and include doctor readiness")
+    p_monitor.set_defaults(func=cmd_monitor)
 
     p_task = sub.add_parser("task", help="manage tasks")
     task_sub = p_task.add_subparsers(dest="task_command", required=True)

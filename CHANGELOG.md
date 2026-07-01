@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.6.0
+
+- Added `mco monitor <task_id>` to write bounded task status snapshots as evidence.
+- Monitor snapshots are registered in `RUN_LEDGER.json` and stored under task-local `artifacts/status-snapshots/`.
+- Added `--cycles`, `--interval-seconds`, `--audit`, and `--doctor` flags with hard upper bounds.
+- Kept provider probing explicit via `--doctor`; default monitor cycles use the lightweight status baseline.
+
 ## 2.5.0
 
 - Added `mco status --doctor` for explicit local adapter probing.

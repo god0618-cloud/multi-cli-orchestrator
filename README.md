@@ -6,7 +6,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is in v2.5 multi-adapter control-plane stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, and a compact operator status command with explicit doctor probing.
+This repository is in v2.6 multi-adapter control-plane stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, a compact operator status command with explicit doctor probing, and bounded monitor snapshots.
 
 ## Core Ideas
 
@@ -25,6 +25,7 @@ mco doctor
 mco task create "Build a mobile-first project page"
 mco status
 mco status --doctor
+mco monitor <task_id> --cycles 3 --interval-seconds 10
 mco orchestrate-start <task_id> --template frontend-review-loop
 mco dashboard <task_id>
 mco usage snapshot <task_id>
@@ -36,11 +37,12 @@ mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
-Implemented in this v2.5 baseline:
+Implemented in this v2.6 baseline:
 
 - `mco init`
 - `mco doctor`
 - `mco status`
+- `mco monitor`
 - `mco task create`
 - `mco task list`
 - `mco task status`
@@ -78,13 +80,14 @@ mco audit .
 mco release check .
 ```
 
-## v2.5 Command Matrix
+## v2.6 Command Matrix
 
 | Command | Status |
 | --- | --- |
 | `mco init` | implemented |
 | `mco doctor` | implemented |
 | `mco status` | compact workspace, latest task, dispatch, adapter gate, optional audit summary, and explicit `--doctor` probe |
+| `mco monitor` | bounded status snapshot loop that writes task-local evidence artifacts |
 | `mco task create` | implemented |
 | `mco task create --json` | implemented |
 | `mco task list` | implemented |

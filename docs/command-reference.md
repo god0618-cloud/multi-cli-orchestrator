@@ -7,6 +7,7 @@ Command surface:
 | `mco init` | Initialize a local workspace |
 | `mco doctor` | Validate workspace readiness |
 | `mco status` | Print compact workspace, latest task, dispatch, adapter gate, optional audit status, and explicit adapter doctor probes |
+| `mco monitor` | Write bounded task-local status snapshots as evidence |
 | `mco task create` | Create a task with `task.json`, `LOOP_SPEC.json`, and `RUN_LEDGER.json` |
 | `mco task create --json` | Create a task and print machine-readable paths |
 | `mco task list` | List workspace tasks |
@@ -41,6 +42,14 @@ Command surface:
 mco status --workspace .mco-workspace
 mco status --workspace .mco-workspace --doctor
 mco status --workspace .mco-workspace --doctor --json
+```
+
+`mco monitor <task_id>` writes status snapshots as task-local artifacts and registers them in `RUN_LEDGER.json`. It is intentionally bounded: `--cycles` must be between 1 and 24, and `--interval-seconds` must be between 0 and 3600.
+
+```bash
+mco monitor "$TASK_ID" --workspace .mco-workspace
+mco monitor "$TASK_ID" --workspace .mco-workspace --cycles 3 --interval-seconds 10
+mco monitor "$TASK_ID" --workspace .mco-workspace --audit --doctor
 ```
 
 `mco dispatch queue <task_id> --agent kimi-code --title "Work" --instructions "..." --require-ready` is the queueing mode intended for auto-dispatch. It probes the adapter matrix and only writes an inbox file when readiness is `READY_SUPERVISED`. If the adapter is disabled, unknown, manual-only, or blocked, the dispatch is written as `status=blocked` with gate evidence and no inbox file.

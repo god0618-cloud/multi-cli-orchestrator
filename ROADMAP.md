@@ -121,6 +121,13 @@
 - Doctor check counts and gate posture available in terminal and JSON output.
 - Default status remains lightweight and non-probing.
 
+## v2.6
+
+- Bounded `mco monitor <task_id>` status snapshot loop.
+- Task-local status snapshot artifacts registered in the run ledger.
+- Hard cycle and interval caps to avoid accidental long-running daemons.
+- Optional audit and doctor probing remain explicit per run.
+
 ## Future
 
 - Multi-worker supervised execution.
