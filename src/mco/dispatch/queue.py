@@ -30,7 +30,7 @@ def queue_dispatch(
 ) -> dict:
     root = dispatch_root(task_dir)
     (root / "dispatches").mkdir(parents=True, exist_ok=True)
-    dispatch_id = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S") + f"-{agent}"
+    dispatch_id = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S-%f") + f"-{agent}"
     gate = evaluate_adapter_gate(agent, sandbox_path) if require_ready else None
     status = "queued" if gate is None or gate.allowed else "blocked"
     payload = {

@@ -166,8 +166,15 @@
 - `mco adapter validate-kit` checks generated adapter kit health.
 - Fail-fast guard against unsafe manifest promotion.
 
+## v4.0
+
+- Bounded multi-worker dispatch waves.
+- `mco dispatch wave` queues one to six worker dispatches from a machine-readable spec.
+- `mco dispatch wave --require-ready` applies adapter gates per worker and records blocked workers as evidence.
+- Dispatch IDs include microseconds so batch dispatches to the same agent cannot overwrite each other.
+
 ## Future
 
-- Multi-worker supervised execution.
-- Replay UI.
+- Wave execution policies after queue-time safety is proven.
+- Real concurrent provider execution with quota and cancellation gates.
 - Policy-driven escalation gates.

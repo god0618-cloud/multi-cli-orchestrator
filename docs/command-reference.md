@@ -21,6 +21,7 @@ Command surface:
 | `mco adapter validate-kit` | Validate a generated adapter contributor kit |
 | `mco adapter smoke` | Run an explicit opt-in real Claude Code or Kimi Code adapter smoke test |
 | `mco dispatch queue` | Queue a dispatch for an agent |
+| `mco dispatch wave` | Queue a bounded multi-worker dispatch wave |
 | `mco dispatch list` | List task dispatches |
 | `mco dispatch claim` | Claim a queued dispatch |
 | `mco dispatch complete` | Complete a dispatch |
@@ -67,6 +68,29 @@ mco workflow advance "$TASK_ID" --workspace .mco-workspace \
 ```
 
 `mco dispatch queue <task_id> --agent kimi-code --title "Work" --instructions "..." --require-ready` is the queueing mode intended for auto-dispatch. It probes the adapter matrix and only writes an inbox file when readiness is `READY_SUPERVISED`. If the adapter is disabled, unknown, manual-only, or blocked, the dispatch is written as `status=blocked` with gate evidence and no inbox file.
+
+`mco dispatch wave <task_id> --spec wave.json --require-ready` queues a bounded batch of worker dispatches. The wave spec must contain one to six workers:
+
+```json
+{
+  "title": "Sprint review wave",
+  "workers": [
+    {
+      "agent": "generic-cli",
+      "title": "Reviewer A",
+      "instructions": "Review API contract drift.",
+      "sandbox": "templates/sandbox-contracts/single-worker.json"
+    },
+    {
+      "agent": "kimi-code",
+      "title": "Frontend polish",
+      "instructions": "Review mobile UI fit and report findings."
+    }
+  ]
+}
+```
+
+Each worker still passes through the normal dispatch queue and, with `--require-ready`, through the adapter readiness gate. Non-ready workers are written as blocked dispatches with gate evidence and no inbox file. The command writes a task-local wave manifest under `dispatch/waves/` and returns non-zero when any worker is blocked.
 
 `mco dispatch execute --command-json '["echo","hello"]'` runs a narrowly allowed command after sandbox enforcement. It is not an arbitrary shell runner.
 

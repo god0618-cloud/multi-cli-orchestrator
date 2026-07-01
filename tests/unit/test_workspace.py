@@ -799,6 +799,96 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(payload["gate"]["readiness"], "READY_SUPERVISED")
             self.assertTrue((task_dir / "dispatch" / "agent-inbox" / "kimi-code" / f"{payload['dispatch_id']}.md").exists())
 
+    def test_dispatch_wave_queues_bounded_workers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            workspace = tmp_path / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Wave Dispatch", "--workspace", str(workspace))
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+            spec_path = tmp_path / "wave.json"
+            spec_path.write_text(
+                json.dumps(
+                    {
+                        "title": "Two generic workers",
+                        "workers": [
+                            {"agent": "generic-cli", "title": "Worker A", "instructions": "Do A."},
+                            {"agent": "generic-cli", "title": "Worker B", "instructions": "Do B."},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            queued = run_mco("dispatch", "wave", task_id, "--spec", str(spec_path), "--workspace", str(workspace))
+            self.assertEqual(queued.returncode, 0, queued.stdout + queued.stderr)
+            payload = json.loads(queued.stdout)
+            self.assertEqual(payload["schema"], "mco.dispatch_wave.v1.0")
+            self.assertEqual(payload["status"], "PASS")
+            self.assertEqual(payload["worker_count"], 2)
+            self.assertEqual(payload["queued_count"], 2)
+            self.assertEqual(payload["blocked_count"], 0)
+            self.assertTrue(Path(payload["path"]).exists())
+
+            dispatch_ids = [item["dispatch_id"] for item in payload["dispatches"]]
+            self.assertEqual(len(dispatch_ids), len(set(dispatch_ids)))
+            inbox_files = sorted((task_dir / "dispatch" / "agent-inbox" / "generic-cli").glob("*.md"))
+            self.assertEqual(len(inbox_files), 2)
+            listed = run_mco("dispatch", "list", task_id, "--workspace", str(workspace))
+            self.assertEqual(listed.returncode, 0, listed.stdout + listed.stderr)
+            self.assertIn("Worker A", listed.stdout)
+            self.assertIn("Worker B", listed.stdout)
+            ledger = json.loads((task_dir / "RUN_LEDGER.json").read_text(encoding="utf-8"))
+            self.assertIn("dispatch_wave_queued", [event["type"] for event in ledger["events"]])
+
+    def test_dispatch_wave_require_ready_blocks_disabled_worker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            workspace = tmp_path / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Gated Wave", "--workspace", str(workspace))
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+            spec_path = tmp_path / "wave.json"
+            spec_path.write_text(
+                json.dumps(
+                    {
+                        "title": "Mixed readiness wave",
+                        "workers": [
+                            {"agent": "generic-cli", "title": "Allowed work", "instructions": "May enter inbox."},
+                            {"agent": "mimo-code", "title": "Blocked work", "instructions": "Must not enter inbox."},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            blocked = run_mco(
+                "dispatch",
+                "wave",
+                task_id,
+                "--spec",
+                str(spec_path),
+                "--require-ready",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertNotEqual(blocked.returncode, 0)
+            payload = json.loads(blocked.stdout)
+            self.assertEqual(payload["status"], "BLOCKED")
+            self.assertEqual(payload["queued_count"], 1)
+            self.assertEqual(payload["blocked_count"], 1)
+            by_agent = {item["agent"]: item for item in payload["dispatches"]}
+            self.assertEqual(by_agent["generic-cli"]["status"], "queued")
+            self.assertEqual(by_agent["mimo-code"]["status"], "blocked")
+            self.assertFalse((task_dir / "dispatch" / "agent-inbox" / "mimo-code").exists())
+            self.assertTrue((task_dir / "dispatch" / "agent-inbox" / "generic-cli" / f"{by_agent['generic-cli']['dispatch_id']}.md").exists())
+            ledger = json.loads((task_dir / "RUN_LEDGER.json").read_text(encoding="utf-8"))
+            event_types = [event["type"] for event in ledger["events"]]
+            self.assertIn("dispatch_gate_blocked", event_types)
+            self.assertIn("dispatch_wave_queued", event_types)
+
     def test_claude_code_adapter_records_budget_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

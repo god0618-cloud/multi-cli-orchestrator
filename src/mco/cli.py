@@ -18,6 +18,7 @@ from .demo.hello import run_hello_demo
 from .demo.walkthrough import run_walkthrough_demo
 from .dispatch.queue import claim_dispatch, complete_dispatch, list_dispatches, queue_dispatch
 from .dispatch.execute import execute_dispatch_claude_prompt, execute_dispatch_command, execute_dispatch_dry_run, execute_dispatch_kimi_prompt
+from .dispatch.wave import load_wave_spec, queue_dispatch_wave
 from .monitor import run_monitor
 from .replay.ledger import append_event, register_artifact, set_workflow
 from .replay.readout import render_replay_html, replay_ledger
@@ -216,6 +217,16 @@ def cmd_dispatch_queue(args: argparse.Namespace) -> int:
     )
     print(json.dumps(dispatch, indent=2))
     return 1 if args.require_ready and dispatch["status"] == "blocked" else 0
+
+
+def cmd_dispatch_wave(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    directory = task_dir(config, args.task_id)
+    spec = load_wave_spec(Path(args.spec))
+    result = queue_dispatch_wave(directory, spec, require_ready=args.require_ready)
+    print(json.dumps(result, indent=2))
+    return 1 if result["status"] == "BLOCKED" else 0
 
 
 def cmd_dispatch_list(args: argparse.Namespace) -> int:
@@ -569,6 +580,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_dispatch_queue.add_argument("--sandbox", help="optional sandbox contract reference for gate context")
     p_dispatch_queue.add_argument("--workspace", default=".", help="workspace root")
     p_dispatch_queue.set_defaults(func=cmd_dispatch_queue)
+
+    p_dispatch_wave = dispatch_sub.add_parser("wave", help="queue a bounded multi-worker dispatch wave")
+    p_dispatch_wave.add_argument("task_id")
+    p_dispatch_wave.add_argument("--spec", required=True, help="JSON wave spec with workers")
+    p_dispatch_wave.add_argument("--require-ready", action="store_true", help="block each worker unless its adapter is READY_SUPERVISED")
+    p_dispatch_wave.add_argument("--workspace", default=".", help="workspace root")
+    p_dispatch_wave.set_defaults(func=cmd_dispatch_wave)
 
     p_dispatch_list = dispatch_sub.add_parser("list", help="list task dispatches")
     p_dispatch_list.add_argument("task_id")

@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.0.0
+
+- Added `mco dispatch wave <task_id> --spec wave.json` for bounded multi-worker dispatch waves.
+- Dispatch waves queue up to six worker dispatches through the existing inbox and readiness-gate machinery.
+- Added `--require-ready` support so non-`READY_SUPERVISED` workers become blocked evidence and do not receive inbox files.
+- Fixed dispatch IDs to include microseconds so batch dispatches to the same agent cannot overwrite each other.
+- Fixed the generic CLI sandbox-template lookup so `generic-cli` can reach `READY_SUPERVISED` in doctor-backed adapter gates.
+- Added regression coverage for successful mixed-worker wave manifests and blocked non-ready workers.
+
 ## 3.3.0
 
 - Added `mco adapter validate-kit <dir>` for CI-friendly validation of generated adapter contributor kits.

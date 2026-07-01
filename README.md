@@ -14,7 +14,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is at v3.0 open-source MVP release status. The baseline is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, phase-gated workflow advancement, and contributor-ready adapter kits.
+This repository is at v4.0 open-source MVP release status. The baseline is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, phase-gated workflow advancement, and contributor-ready adapter kits.
 
 ## Core Ideas
 
@@ -41,6 +41,7 @@ mco dashboard <task_id>
 mco usage snapshot <task_id>
 mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html
 mco dispatch queue <task_id> --agent kimi-code --title "Frontend pass" --instructions "..." --require-ready
+mco dispatch wave <task_id> --spec wave.json --require-ready
 mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
 mco adapter smoke kimi-code --workspace .mco-workspace
 mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
@@ -50,7 +51,7 @@ mco run replay <path-to-RUN_LEDGER.json>
 mco run replay <path-to-RUN_LEDGER.json> --html replay.html
 ```
 
-Implemented in this v3.0 baseline:
+Implemented in this v4.0 baseline:
 
 - `mco init`
 - `mco doctor`
@@ -68,6 +69,7 @@ Implemented in this v3.0 baseline:
 - `mco adapter validate-kit`
 - `mco adapter smoke`
 - `mco dispatch queue/list/claim/complete`
+- `mco dispatch wave`
 - `mco dispatch execute --dry-run`
 - `mco dispatch execute --command-json`
 - `mco dispatch execute --agent claude-code --prompt-file`
@@ -95,7 +97,7 @@ mco audit .
 mco release check .
 ```
 
-## v3.0 Command Matrix
+## v4.0 Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -117,6 +119,8 @@ mco release check .
 | `mco adapter smoke` | explicit opt-in real Claude Code or Kimi Code smoke test |
 | `mco dispatch queue/list/claim/complete` | generic local queue |
 | `mco dispatch queue --require-ready` | blocks auto-dispatch unless adapter readiness is `READY_SUPERVISED` |
+| `mco dispatch wave` | bounded multi-worker dispatch wave; queues up to six worker dispatches and writes a wave manifest |
+| `mco dispatch wave --require-ready` | applies adapter readiness gates to every worker and records blocked workers as evidence |
 | `mco dispatch execute --dry-run` | sandbox/capability gate validation |
 | `mco dispatch execute --command-json` | safe command execution with sandbox, allowlist, timeout, and evidence report |
 | `mco dispatch execute --agent claude-code --prompt-file` | bounded Claude Code prompt execution with no tools, no session persistence, budget cap, timeout, and transcript artifact |
@@ -134,7 +138,7 @@ mco release check .
 | `mco release check` | implemented |
 | arbitrary shell execution | intentionally not implemented |
 | first-party CLI adapters | Claude Code and Kimi Code implemented; Mimo/CodeWhale still disabled |
-| run replay UI | not implemented |
+| real concurrent provider execution | intentionally not implemented; v4.0 queues supervised waves before execution |
 
 ## Repository Layout
 
@@ -168,6 +172,7 @@ Useful docs:
 - Kimi Code smoke testing is explicit opt-in via `mco adapter smoke kimi-code`; it may consume provider budget. Provider quota remains `unknown` because Kimi Code does not expose a Claude-style per-run budget cap in the current command contract.
 - New adapter onboarding starts disabled via `mco adapter scaffold`; promotion requires capability, sandbox, quota, execution evidence, and smoke gates.
 - Auto-dispatch paths should use `mco dispatch queue --require-ready`; non-ready adapters become blocked evidence and do not receive inbox files.
+- Multi-worker paths should use `mco dispatch wave --require-ready`; the wave is capped at six workers and each worker still passes through the same adapter gates.
 - Usage snapshots are evidence-derived. They aggregate task-local execution reports and dispatch records; they do not claim provider-account quota unless that evidence exists.
 - No private local paths or business data should be committed.
 

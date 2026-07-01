@@ -24,6 +24,9 @@ def _template_path(agent: str) -> Path:
 
 
 def _sandbox_template(agent: str) -> Path | None:
+    if agent == "generic-cli":
+        path = _repo_root() / "templates" / "sandbox-contracts" / "single-worker.json"
+        return path if path.exists() else None
     path = _repo_root() / "templates" / "sandbox-contracts" / f"{agent}-supervised.json"
     return path if path.exists() else None
 
