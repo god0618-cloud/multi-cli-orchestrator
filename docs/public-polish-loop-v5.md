@@ -59,3 +59,11 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 - Launch playbook reflects the current v5 public Alpha posture.
 - GitHub topics and repo description match the project positioning.
 - Public launch language avoids unsafe automation claims.
+
+## v5.5-end-to-end-cases Acceptance
+
+- Documentation release, frontend review, and adapter onboarding tutorials exist.
+- Each tutorial includes workflow template, phase evidence, close criteria, and common failure modes.
+- Tutorial commands use temporary workspaces and avoid private local paths.
+- README links to the tutorial index.
+- Tutorials describe bounded evidence gates instead of promising unsupervised automation.

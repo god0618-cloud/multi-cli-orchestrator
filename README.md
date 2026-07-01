@@ -23,6 +23,7 @@ This repository is at v5.0 strict-gate self-closing loop status. The baseline is
 - New to the idea? Read [`docs/project-overview-v5.0.md`](docs/project-overview-v5.0.md).
 - Want the shortest setup path? Run the [Quick Start](#quick-start).
 - Want a shareable demo narrative? Open [`docs/demo-story-v5.1.md`](docs/demo-story-v5.1.md).
+- Want a concrete end-to-end case? Start with [`docs/end-to-end-cases-v5.5.md`](docs/end-to-end-cases-v5.5.md).
 - Want to see the operator surface? Generate a dashboard with `mco dashboard <task_id>`.
 - Want to add a CLI? Start from [`docs/adapter-contributor-guide.md`](docs/adapter-contributor-guide.md).
 - Want to contribute? Start with [`docs/GOOD_FIRST_ISSUES.md`](docs/GOOD_FIRST_ISSUES.md).
