@@ -1,0 +1,63 @@
+name: Trial feedback
+description: Share results from trying Multi-CLI Orchestrator locally.
+title: "[Trial]: "
+labels: ["trial-feedback", "needs-triage"]
+body:
+  - type: dropdown
+    id: path
+    attributes:
+      label: Trial path
+      description: Which path did you try?
+      options:
+        - quickstart
+        - demo walkthrough
+        - documentation-release-loop tutorial
+        - frontend-review-loop tutorial
+        - adapter-onboarding-loop tutorial
+        - adapter scaffold
+        - dashboard or replay
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: commands
+    attributes:
+      label: Commands
+      description: Paste the exact commands you ran with sanitized output.
+      placeholder: |
+        mco init --workspace /tmp/mco-trial
+        mco demo walkthrough --workspace /tmp/mco-trial --output-dir /tmp/mco-trial-output
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - completed as expected
+        - completed but confusing
+        - blocked by setup
+        - blocked by command failure
+        - blocked by docs
+        - safety or privacy concern
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Attach sanitized logs, screenshots, dashboard snippets, or RUN_LEDGER snippets. Do not include secrets, private paths, or business data.
+  - type: textarea
+    id: expectation
+    attributes:
+      label: What would have made this easier?
+      description: Describe the missing command, docs, UI cue, error message, or adapter behavior.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety acknowledgement
+      options:
+        - label: I removed credentials, tokens, private business data, and private file paths from this report.
+          required: true
+        - label: I understand trial feedback does not request unbounded provider execution by default.
+          required: true

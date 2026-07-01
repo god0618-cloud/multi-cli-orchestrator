@@ -27,6 +27,7 @@ This repository is at v5.0 strict-gate self-closing loop status. The baseline is
 - Want to see the operator surface? Generate a dashboard with `mco dashboard <task_id>`.
 - Want to add a CLI? Start from [`docs/adapter-contributor-guide.md`](docs/adapter-contributor-guide.md).
 - Want to contribute? Start with [`docs/GOOD_FIRST_ISSUES.md`](docs/GOOD_FIRST_ISSUES.md).
+- Tried it and hit friction? Use [`docs/TRIAL_FEEDBACK_LOOP.md`](docs/TRIAL_FEEDBACK_LOOP.md).
 
 ## Visual Walkthrough
 

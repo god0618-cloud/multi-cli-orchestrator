@@ -82,3 +82,10 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 - Dashboard names whether owner action is required, work is pending, gates can advance, or workflow can close.
 - Dashboard provides a next-command hint without granting automatic authority.
 - Existing dashboard tests cover the new top-level labels.
+
+## v5.8-external-trial-feedback Acceptance
+
+- GitHub has a structured trial feedback issue template.
+- Trial feedback docs define intake, triage categories, maintainer loop, and close criteria.
+- README links to the trial feedback loop.
+- Feedback loop rejects unsafe shortcutting from trial enthusiasm to adapter promotion.
