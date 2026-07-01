@@ -38,3 +38,9 @@ Review checklist:
 - Native CLI memory/profile files are not modified.
 - Stable knowledge bases are not modified.
 - Smoke tests write task-local evidence and verify a fixed sentinel.
+
+## First-Party Extension Roadmap
+
+For Mimo Code and CodeWhale readiness plans, see [`adapter-extension-roadmap-v5.6.md`](adapter-extension-roadmap-v5.6.md).
+
+Both adapters remain manual-only until their doctor, sandbox, non-interactive execution, usage semantics, and opt-in smoke gates have evidence.

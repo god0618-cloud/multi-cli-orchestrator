@@ -67,3 +67,11 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 - Tutorial commands use temporary workspaces and avoid private local paths.
 - README links to the tutorial index.
 - Tutorials describe bounded evidence gates instead of promising unsupervised automation.
+
+## v5.6-adapter-extension-prep Acceptance
+
+- Mimo Code and CodeWhale have explicit promotion plans.
+- Docs separate manual participation from supervised execution.
+- Scaffold validation proves fixture readiness without provider credentials.
+- Adapter maturity docs link to the extension roadmap.
+- No manual-only adapter is promoted without doctor/smoke/evidence gates.

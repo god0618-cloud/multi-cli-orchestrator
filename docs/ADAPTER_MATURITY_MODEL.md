@@ -40,6 +40,8 @@ An adapter cannot move to `READY_SUPERVISED` unless it has:
 | `mimo-code` | L1 | Manual-only until non-interactive command, evidence, and smoke gates exist |
 | `codewhale` | L1 | Manual-only until non-interactive command, evidence, and smoke gates exist |
 
+See [`adapter-extension-roadmap-v5.6.md`](adapter-extension-roadmap-v5.6.md) for the current Mimo Code and CodeWhale promotion plan.
+
 ## Rejection Reasons
 
 Maintainers should reject or hold adapter promotion when:
@@ -51,4 +53,3 @@ Maintainers should reject or hold adapter promotion when:
 - native memory/profile files are modified silently,
 - smoke tests require credentials in CI,
 - failure behavior cannot be observed.
-
