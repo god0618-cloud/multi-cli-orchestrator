@@ -1,0 +1,113 @@
+<title>Multi-CLI Orchestrator v5.0｜严格门禁下的多 CLI 自闭环</title>
+
+<h1>Multi-CLI Orchestrator v5.0：严格门禁下的多 CLI 自闭环</h1>
+
+<callout emoji="✅" background-color="light-green" border-color="green">
+  <p><b>一句话：</b>这是一个本地优先的多 AI Coding CLI 协作控制平面，把 Codex、Claude Code、Kimi Code、Mimo Code、CodeWhale 等 CLI 组织成可监管、可审计、可回放、可停止的小团队。</p>
+</callout>
+
+<p><b>当前版本：</b>v5.0.0</p>
+<p><b>GitHub：</b><a href="https://github.com/god0618-cloud/multi-cli-orchestrator">https://github.com/god0618-cloud/multi-cli-orchestrator</a></p>
+<p><b>Release：</b><a href="https://github.com/god0618-cloud/multi-cli-orchestrator/releases/tag/v5.0.0">https://github.com/god0618-cloud/multi-cli-orchestrator/releases/tag/v5.0.0</a></p>
+
+<h2>1. 背景：多 CLI 好用，但协作需要控制面</h2>
+
+<p>现在 AI Coding CLI 越来越多，每个工具都有自己的优势：有的适合项目总控，有的适合前端实现，有的适合调研素材，有的适合红队审查。</p>
+
+<p>但复杂任务一旦跨多个 CLI，就容易变成“人在多个窗口里复制粘贴 prompt”，状态、证据、失败、成本和决策都靠人脑记忆。</p>
+
+<p>Multi-CLI Orchestrator 要解决的是控制面问题：谁在干、能不能自动干、干完证据在哪、失败后是否停止、什么时候必须找人拍板。</p>
+
+<h2>2. v5.0 核心变化：从“派棒”到“严格门禁自闭环”</h2>
+
+<p>v4.0 已经支持有界多 worker dispatch wave。v5.0 进一步增加了 workflow observe / loop，让任务能在严格门禁下判断下一步。</p>
+
+<pre lang="bash" caption="v5.0 核心命令"><code>mco workflow observe &lt;task_id&gt;
+mco workflow loop &lt;task_id&gt; --max-steps 1</code></pre>
+
+<table>
+  <thead>
+    <tr><th background-color="light-gray">推荐动作</th><th background-color="light-gray">含义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>advance</code></td><td>当前阶段证据满足，可以推进。</td></tr>
+    <tr><td><code>wait</code></td><td>证据不足或 worker 尚未结束，需要等待。</td></tr>
+    <tr><td><code>escalate</code></td><td>出现失败、阻塞或用户决策门，需要人工介入。</td></tr>
+    <tr><td><code>complete</code></td><td>工作流已经闭环完成。</td></tr>
+  </tbody>
+</table>
+
+<callout emoji="❗" background-color="light-yellow" border-color="yellow">
+  <p><b>重要边界：</b><code>workflow loop</code> 是有硬上限的 observe/advance 循环，不是 daemon，不会无限跑，也不会绕过 gate。</p>
+</callout>
+
+<h2>3. strict-self-closing 模板</h2>
+
+<pre lang="bash" caption="严格自闭环模板"><code>mco orchestrate-start "Strict product task" \
+  --template strict-self-closing \
+  --workspace .mco-workspace</code></pre>
+
+<p>这个模板将复杂任务拆成：</p>
+
+<pre lang="text" caption="闭环阶段"><code>plan -&gt; execute -&gt; verify -&gt; close</code></pre>
+
+<table>
+  <thead>
+    <tr><th background-color="light-gray">阶段</th><th background-color="light-gray">必要证据</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>plan</td><td><code>LOOP_SPEC.json</code> 存在。</td></tr>
+    <tr><td>execute</td><td><code>implementation-report.md</code> 已登记；dispatch 全部 terminal；无 failed / blocked。</td></tr>
+    <tr><td>verify</td><td><code>verification-report.md</code> 已登记；存在 verification ledger event；dashboard 存在。</td></tr>
+    <tr><td>close</td><td><code>close-report.md</code> 已登记；dispatch 状态干净。</td></tr>
+  </tbody>
+</table>
+
+<h2>4. 老板视角：Dashboard 能看见为什么继续或停下</h2>
+
+<p>v5.0 的 dashboard 增加了 <code>Workflow Loop Control</code>，展示当前 workflow、当前 phase、推荐动作、推荐原因和 gate 明细。</p>
+
+<p>这对多 agent 协作很关键：自动化不是越猛越好，而是要让人看得懂、停得住、审得清。</p>
+
+<h2>5. Adapter Matrix：不制造“什么都能自动”的幻觉</h2>
+
+<p>v5.0 显性化了每个 CLI 的能力成熟度：</p>
+
+<ul>
+  <li><code>execution_mode</code></li>
+  <li><code>automation_posture</code></li>
+  <li><code>recommended_use</code></li>
+  <li>quota status</li>
+  <li>smoke gate</li>
+  <li>promotion blockers</li>
+</ul>
+
+<table>
+  <thead>
+    <tr><th background-color="light-gray">CLI</th><th background-color="light-gray">当前姿态</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Claude Code</td><td>supervised non-interactive adapter 已实现。</td></tr>
+    <tr><td>Kimi Code</td><td>supervised non-interactive adapter 已实现。</td></tr>
+    <tr><td>Mimo Code</td><td>manual only，不自动派发。</td></tr>
+    <tr><td>CodeWhale / DeepSeek</td><td>manual only，不自动派发。</td></tr>
+  </tbody>
+</table>
+
+<h2>6. v5.0 验证结果</h2>
+
+<pre lang="text" caption="封版验证"><code>41 tests OK
+compileall OK
+release check PASS=27 WARN=0 FAIL=0
+audit PASS=101 WARN=0 FAIL=0
+strict-self-closing CLI smoke -&gt; recommended_action=complete
+GitHub CI main -&gt; success
+GitHub CI v5.0.0 tag -&gt; success</code></pre>
+
+<h2>7. 当前边界</h2>
+
+<p>v5.0 仍然不做无约束真实并发 provider execution。项目刻意先把控制面、证据面和停止条件做扎实，再开放更强执行能力。</p>
+
+<h2>8. 公司群转发摘要</h2>
+
+<blockquote>分享一个我最近开源的小项目：Multi-CLI Orchestrator v5.0。它不是新的 AI Coding CLI，而是一个本地优先的多 CLI 协作控制平面，用来把 Codex、Claude Code、Kimi Code 等工具组织成可监管、可审计、可回放的“工位”。v5.0 已支持严格门禁下的自闭环工作流：系统会判断下一步是继续、等待、升级还是完成，不会无限跑。项目已发布到 GitHub，并通过 CI、release check、audit 和 strict-self-closing smoke。</blockquote>
