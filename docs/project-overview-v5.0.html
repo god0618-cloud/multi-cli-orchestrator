@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multi-CLI Orchestrator v5.0 完整项目说明</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #647084;
+      --line: #dfe5ee;
+      --blue: #2563eb;
+      --green: #0f9f6e;
+      --red: #dc2626;
+      --amber: #b7791f;
+      --code: #101827;
+      --soft-blue: #eaf1ff;
+      --soft-green: #e9f8f2;
+      --soft-red: #fff1f1;
+      --soft-amber: #fff7e6;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255,255,255,.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+    .topbar {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      min-width: 240px;
+      font-weight: 780;
+      letter-spacing: 0;
+    }
+    .brand small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 520;
+      margin-top: 1px;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 6px;
+      font-size: 13px;
+    }
+    nav a {
+      color: #39465a;
+      padding: 6px 9px;
+      border-radius: 6px;
+    }
+    nav a:hover {
+      background: #eef3fb;
+      text-decoration: none;
+    }
+    main {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 26px 22px 64px;
+    }
+    .hero {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 30px;
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+    .eyebrow {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 760;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 36px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+    .lead {
+      margin: 16px 0 0;
+      color: #3c4759;
+      font-size: 16px;
+      max-width: 760px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 8px 13px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      font-weight: 680;
+      font-size: 14px;
+    }
+    .button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .button:hover { text-decoration: none; }
+    .hero-side {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+    }
+    .metric:last-child { border-bottom: 0; padding-bottom: 0; }
+    .metric span { color: var(--muted); }
+    .metric strong { text-align: right; }
+    section {
+      margin-top: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+    h3 {
+      margin: 20px 0 8px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    p { margin: 10px 0; }
+    .muted { color: var(--muted); }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fff;
+    }
+    .card h3 { margin-top: 0; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 720;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      color: #20304a;
+      background: #eef3fb;
+    }
+    .tag.green { background: var(--soft-green); color: #05734f; }
+    .tag.blue { background: var(--soft-blue); color: #1d4ed8; }
+    .tag.red { background: var(--soft-red); color: #b91c1c; }
+    .tag.amber { background: var(--soft-amber); color: #8a5a0a; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 4px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 11px;
+      vertical-align: top;
+      text-align: left;
+    }
+    th {
+      background: #f8fafc;
+      font-weight: 760;
+    }
+    code {
+      background: #eef2f7;
+      border: 1px solid #d9e1ec;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: .92em;
+    }
+    pre {
+      overflow-x: auto;
+      background: var(--code);
+      color: #edf2ff;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    pre code {
+      background: transparent;
+      border: 0;
+      color: inherit;
+      padding: 0;
+    }
+    .diagram {
+      background: #f8fafc;
+      border: 1px dashed #c7d1df;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      white-space: pre;
+      color: #243044;
+    }
+    .callout {
+      border-left: 4px solid var(--blue);
+      background: #f5f8ff;
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin: 14px 0;
+    }
+    .callout.warn {
+      border-color: var(--amber);
+      background: #fff9ed;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .flow div {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      background: #f8fafc;
+      font-weight: 720;
+      font-size: 13px;
+    }
+    .footer {
+      color: var(--muted);
+      text-align: center;
+      margin-top: 22px;
+      font-size: 13px;
+    }
+    @media (max-width: 860px) {
+      .topbar { align-items: flex-start; flex-direction: column; }
+      nav { justify-content: flex-start; }
+      .hero, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      h1 { font-size: 28px; }
+      .flow { grid-template-columns: 1fr; }
+      main { padding: 18px 12px 42px; }
+      section, .hero { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        Multi-CLI Orchestrator v5.0
+        <small>完整项目说明 · 严格门禁下的多 CLI 自闭环</small>
+      </div>
+      <nav>
+        <a href="#why">为什么</a>
+        <a href="#concepts">概念</a>
+        <a href="#architecture">架构</a>
+        <a href="#capabilities">能力</a>
+        <a href="#workflow">闭环</a>
+        <a href="#safety">安全</a>
+        <a href="#quickstart">体验</a>
+        <a href="#roadmap">路线图</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Local-first Agent OS Control Plane</div>
+        <h1>把多个 AI Coding CLI 组织成可监管、可审计、可回放的小团队</h1>
+        <p class="lead">Multi-CLI Orchestrator 不替代 Codex、Claude Code、Kimi Code、Mimo Code 或 CodeWhale。它把这些 CLI 当成“工位”，用任务状态、workflow gate、artifact evidence、run ledger 和 boss dashboard 让复杂 AI 协作真正工程化。</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/god0618-cloud/multi-cli-orchestrator">打开 GitHub</a>
+          <a class="button" href="https://github.com/god0618-cloud/multi-cli-orchestrator/releases/tag/v5.0.0">查看 v5.0 Release</a>
+          <a class="button" href="./public-launch-article-v5.0.html">外发长文</a>
+        </div>
+      </div>
+      <aside class="hero-side">
+        <div class="metric"><span>当前版本</span><strong>v5.0.0</strong></div>
+        <div class="metric"><span>项目定位</span><strong>多 CLI 协作控制面</strong></div>
+        <div class="metric"><span>核心突破</span><strong>strict-gate self-closing loop</strong></div>
+        <div class="metric"><span>验证结果</span><strong>41 tests / CI success</strong></div>
+        <div class="metric"><span>许可证</span><strong>Apache-2.0</strong></div>
+      </aside>
+    </div>
+
+    <section id="why">
+      <h2>1. 为什么需要它</h2>
+      <p>很多开发者已经不是只用一个 AI 工具。Codex 适合本地工程执行，Claude Code 适合长上下文规划，Kimi Code 适合前端快速落地，Mimo Code 适合调研弹药，CodeWhale/DeepSeek 适合红队审查。问题不在于这些工具不强，而在于复杂任务里缺少一个共同控制面。</p>
+      <table>
+        <thead><tr><th>协作痛点</th><th>没有控制面时的表现</th><th>项目提供的解法</th></tr></thead>
+        <tbody>
+          <tr><td>状态分散</td><td>每个 CLI 窗口都有一部分上下文</td><td>任务工作区保存共同事实</td></tr>
+          <tr><td>交接靠人</td><td>用户复制 prompt 和文件路径</td><td>dispatch queue / claim / complete</td></tr>
+          <tr><td>门禁靠自觉</td><td>prompt 写“自检通过再继续”</td><td>workflow gate 机器判定</td></tr>
+          <tr><td>完成不可验</td><td>回答说完成，但缺证据链</td><td>artifact / ledger / replay</td></tr>
+          <tr><td>自动化不可见</td><td>不知道为什么继续或停下</td><td>boss dashboard + observe recommendation</td></tr>
+        </tbody>
+      </table>
+      <div class="callout">项目的核心判断：多 CLI 协作不是多开几个窗口，而是要有一个外部、可审计、可停止的控制面。</div>
+    </section>
+
+    <section id="concepts">
+      <h2>2. 核心概念</h2>
+      <div class="grid-3">
+        <div class="card"><h3>CLI Workstation</h3><p>外部 AI Coding CLI。它可以接收任务、输出产物，但必须被 adapter、sandbox、timeout、quota 和 evidence gate 管住。</p></div>
+        <div class="card"><h3>Task Workspace</h3><p>每个任务的本地事实空间，包含 <code>LOOP_SPEC.json</code>、<code>RUN_LEDGER.json</code>、<code>plan.json</code>、dispatch 和 artifacts。</p></div>
+        <div class="card"><h3>Workflow Gate</h3><p>阶段推进条件，例如文件存在、artifact 已登记、dispatch 全部结束、无失败、需要用户决策等。</p></div>
+        <div class="card"><h3>Sandbox Contract</h3><p>定义 worker 的读写范围、凭据边界、端口、网络、执行权限和产物要求。</p></div>
+        <div class="card"><h3>Run Ledger</h3><p>可回放运行账本。记录任务、dispatch、决策、证据、失败和最终 verdict。</p></div>
+        <div class="card"><h3>Boss Dashboard</h3><p>面向人的控制台，回答谁在干活、什么阻塞、是否需要拍板、证据在哪里。</p></div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>3. 系统架构</h2>
+      <div class="diagram">User / Boss
+  -> mco CLI
+  -> Task Lifecycle Core
+  -> LOOP_SPEC.json / SANDBOX_CONTRACT.json
+  -> Workflow Gates
+  -> Dispatch Queue
+  -> CLI Adapters
+  -> Evidence Artifacts
+  -> RUN_LEDGER.json
+  -> Boss Dashboard
+  -> User / Boss</div>
+      <table>
+        <thead><tr><th>分层</th><th>职责</th></tr></thead>
+        <tbody>
+          <tr><td>CLI 层</td><td><code>mco</code> 命令入口、任务创建、状态查询、workflow 操作。</td></tr>
+          <tr><td>Task Core</td><td>创建任务、登记事件、管理 artifact、读取任务事实。</td></tr>
+          <tr><td>Workflow Core</td><td>计算 phase、评估 gate、给出下一步建议。</td></tr>
+          <tr><td>Dispatch Core</td><td>queue、claim、complete、wave、execute。</td></tr>
+          <tr><td>Adapter Layer</td><td>描述和执行不同 CLI 的能力边界。</td></tr>
+          <tr><td>Evidence Layer</td><td>保存报告、日志、截图、usage snapshot、执行结果。</td></tr>
+          <tr><td>Dashboard</td><td>可视化状态、门禁、证据、风险和升级点。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="capabilities">
+      <h2>4. v5.0 已实现能力</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>任务与证据</h3>
+          <span class="tag blue">mco init</span><span class="tag blue">task create/list/status</span><span class="tag blue">artifact register</span><span class="tag green">audit</span><span class="tag green">release check</span>
+        </div>
+        <div class="card">
+          <h3>Dispatch</h3>
+          <span class="tag blue">queue</span><span class="tag blue">claim</span><span class="tag blue">complete</span><span class="tag blue">wave</span><span class="tag amber">execute --dry-run</span><span class="tag amber">execute --command-json</span>
+        </div>
+        <div class="card">
+          <h3>Adapter</h3>
+          <span class="tag blue">capabilities</span><span class="tag blue">doctor</span><span class="tag blue">matrix</span><span class="tag blue">scaffold</span><span class="tag green">validate-kit</span><span class="tag amber">smoke</span>
+        </div>
+        <div class="card">
+          <h3>Workflow 与复盘</h3>
+          <span class="tag green">workflow observe</span><span class="tag green">workflow loop</span><span class="tag green">dashboard</span><span class="tag green">run replay</span><span class="tag green">usage snapshot</span>
+        </div>
+      </div>
+      <h3>Adapter 当前姿态</h3>
+      <table>
+        <thead><tr><th>CLI</th><th>v5.0 姿态</th></tr></thead>
+        <tbody>
+          <tr><td>generic-cli</td><td>已实现，自动派发前建议 doctor/probe。</td></tr>
+          <tr><td>Claude Code</td><td>supervised non-interactive adapter 已实现。</td></tr>
+          <tr><td>Kimi Code</td><td>supervised non-interactive adapter 已实现。</td></tr>
+          <tr><td>Mimo Code</td><td>manual only，不自动派发。</td></tr>
+          <tr><td>CodeWhale / DeepSeek</td><td>manual only，不自动派发。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="workflow">
+      <h2>5. 严格门禁自闭环</h2>
+      <p>v5.0 的关键突破是 <code>workflow observe</code> 和 <code>workflow loop</code>。系统不是无限自动跑，而是在每一步读取任务证据，给出 <code>advance</code>、<code>wait</code>、<code>escalate</code> 或 <code>complete</code>。</p>
+      <div class="flow">
+        <div>plan</div>
+        <div>execute</div>
+        <div>verify</div>
+        <div>close</div>
+        <div>replay</div>
+      </div>
+      <table>
+        <thead><tr><th>推荐动作</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td><code>advance</code></td><td>当前阶段 gate 已通过，可以推进。</td></tr>
+          <tr><td><code>wait</code></td><td>证据不足、dispatch 未完成或条件未满足。</td></tr>
+          <tr><td><code>escalate</code></td><td>出现失败、阻塞或用户决策门。</td></tr>
+          <tr><td><code>complete</code></td><td>工作流已经闭环完成。</td></tr>
+        </tbody>
+      </table>
+      <pre><code>mco orchestrate-start "Strict product task" \
+  --template strict-self-closing \
+  --workspace .mco-workspace
+
+mco workflow observe &lt;task_id&gt; --workspace .mco-workspace
+mco workflow loop &lt;task_id&gt; --workspace .mco-workspace --max-steps 1</code></pre>
+    </section>
+
+    <section id="safety">
+      <h2>6. 安全边界</h2>
+      <table>
+        <thead><tr><th>边界</th><th>v5.0 策略</th></tr></thead>
+        <tbody>
+          <tr><td>任意 shell</td><td>不支持无约束任意 shell。</td></tr>
+          <tr><td>generic execution</td><td>只允许窄范围安全命令。</td></tr>
+          <tr><td>Claude Code</td><td><code>claude --print</code>、禁用 tools、禁用 session persistence、timeout、output limit、budget cap。</td></tr>
+          <tr><td>Kimi Code</td><td><code>kimi --prompt</code>、timeout、output limit、transcript artifact。</td></tr>
+          <tr><td>manual-only CLI</td><td>未通过 readiness 的 CLI 不进入自动派发链路。</td></tr>
+          <tr><td>workflow loop</td><td>必须有 <code>--max-steps</code>，遇到缺证据、失败、阻塞、用户决策门即停。</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn">自动化不是越多越好，而是证明过边界的自动化才进入闭环。</div>
+    </section>
+
+    <section id="quickstart">
+      <h2>7. 快速体验</h2>
+      <pre><code>git clone https://github.com/god0618-cloud/multi-cli-orchestrator.git
+cd multi-cli-orchestrator
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+
+mco init --workspace .mco-workspace
+mco doctor --workspace .mco-workspace
+mco orchestrate-start "Strict product task" \
+  --template strict-self-closing \
+  --workspace .mco-workspace
+
+mco workflow observe &lt;task_id&gt; --workspace .mco-workspace
+mco dashboard &lt;task_id&gt; --workspace .mco-workspace</code></pre>
+    </section>
+
+    <section id="comparison">
+      <h2>8. 和普通 subagent 的区别</h2>
+      <table>
+        <thead><tr><th>维度</th><th>普通 subagent</th><th>Multi-CLI Orchestrator</th></tr></thead>
+        <tbody>
+          <tr><td>执行边界</td><td>同一框架内部</td><td>多个真实 CLI 工位</td></tr>
+          <tr><td>模型多样性</td><td>受同一 runtime 限制</td><td>可以接入不同 CLI 和模型体系</td></tr>
+          <tr><td>状态保存</td><td>常在上下文里</td><td>任务工作区文件</td></tr>
+          <tr><td>交接方式</td><td>prompt 内部交接</td><td>dispatch queue + artifact</td></tr>
+          <tr><td>验收依据</td><td>回答描述为主</td><td>gate + ledger + artifact</td></tr>
+          <tr><td>复盘能力</td><td>依赖聊天记录</td><td>run replay</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="validation">
+      <h2>9. 验证状态</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>v5.0 发布验证</h3>
+          <p><span class="tag green">41 tests OK</span><span class="tag green">compileall OK</span><span class="tag green">release check PASS=27 WARN=0 FAIL=0</span><span class="tag green">audit PASS=101 WARN=0 FAIL=0</span></p>
+        </div>
+        <div class="card">
+          <h3>外发材料验证</h3>
+          <p><span class="tag green">HTML parser pass</span><span class="tag green">Feishu dry-run pass</span><span class="tag green">GitHub CI success</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <h2>10. 路线图</h2>
+      <table>
+        <thead><tr><th>阶段</th><th>方向</th></tr></thead>
+        <tbody>
+          <tr><td>v5.x</td><td>更多 workflow template、更清晰 user decision gate、更强 dashboard 摘要、adapter smoke 结果对比。</td></tr>
+          <tr><td>v6.0</td><td>更成熟的非交互式 CLI adapter 生命周期、quota/cost/cancel/timeout 策略、并发 worker 冲突治理。</td></tr>
+          <tr><td>v7.0</td><td>从本地 CLI 控制面走向可复用 Agent OS 基础设施，多端控制台和组织级治理策略。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="summary">
+      <h2>11. 项目定位总结</h2>
+      <p>Multi-CLI Orchestrator 的价值不是“让 AI 更像人”，而是“让 AI CLI 的协作更像工程”。</p>
+      <div class="diagram">目标 -> 计划 -> 派发 -> 执行 -> 证据 -> 验证 -> 门禁 -> 回放 -> 复盘</div>
+      <p>它不接管你的 CLI，不污染你的记忆，不承诺魔法。它只把协作、门禁、证据和停止条件变成工程对象。这就是 v5.0 的核心：严格门禁下的多 CLI 自闭环。</p>
+    </section>
+
+    <div class="footer">Multi-CLI Orchestrator v5.0 · Complete Project Overview · Apache-2.0</div>
+  </main>
+</body>
+</html>
