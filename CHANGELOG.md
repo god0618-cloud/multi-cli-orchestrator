@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.1.0
+
+- Added `mco demo walkthrough` to generate a complete public walkthrough bundle.
+- The walkthrough writes a replay transcript, dashboard reference, generated adapter kit, README, and summary JSON.
+- Added regression coverage that the generated walkthrough adapter contract test passes.
+
 ## 3.0.0
 
 - Promoted the project to an open-source MVP release baseline.

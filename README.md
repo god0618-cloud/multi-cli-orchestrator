@@ -44,6 +44,7 @@ mco dispatch queue <task_id> --agent kimi-code --title "Frontend pass" --instruc
 mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
 mco adapter smoke kimi-code --workspace .mco-workspace
 mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
+mco demo walkthrough --workspace .mco-walkthrough --output-dir .mco-walkthrough-output
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
@@ -124,6 +125,7 @@ mco release check .
 | `mco serve` | implemented |
 | `mco audit` | implemented |
 | `mco demo hello-multi-cli` | implemented |
+| `mco demo walkthrough` | complete public walkthrough bundle with replay transcript, dashboard, and adapter kit |
 | `mco run replay` | implemented |
 | `mco release check` | implemented |
 | arbitrary shell execution | intentionally not implemented |

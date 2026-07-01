@@ -15,6 +15,7 @@ from .audit.safety import audit_tree
 from .config import init_workspace, read_workspace_config, resolve_workspace
 from .dashboard.static import render_dashboard
 from .demo.hello import run_hello_demo
+from .demo.walkthrough import run_walkthrough_demo
 from .dispatch.queue import claim_dispatch, complete_dispatch, list_dispatches, queue_dispatch
 from .dispatch.execute import execute_dispatch_claude_prompt, execute_dispatch_command, execute_dispatch_dry_run, execute_dispatch_kimi_prompt
 from .monitor import run_monitor
@@ -387,6 +388,13 @@ def cmd_demo_hello(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_demo_walkthrough(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    result = run_walkthrough_demo(config, Path(args.output_dir))
+    print(json.dumps(result, indent=2))
+    return 0
+
+
 def cmd_run_replay(args: argparse.Namespace) -> int:
     path = Path(args.ledger).expanduser().resolve()
     if not path.exists():
@@ -633,6 +641,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_demo_hello = demo_sub.add_parser("hello-multi-cli", help="run sanitized hello multi-CLI demo")
     p_demo_hello.add_argument("--workspace", default=".mco-demo", help="workspace root")
     p_demo_hello.set_defaults(func=cmd_demo_hello)
+    p_demo_walkthrough = demo_sub.add_parser("walkthrough", help="generate a complete public walkthrough bundle")
+    p_demo_walkthrough.add_argument("--workspace", default=".mco-walkthrough", help="workspace root")
+    p_demo_walkthrough.add_argument("--output-dir", default=".mco-walkthrough-output", help="walkthrough output directory")
+    p_demo_walkthrough.set_defaults(func=cmd_demo_walkthrough)
 
     p_run = sub.add_parser("run", help="run read-only replay utilities")
     run_sub = p_run.add_subparsers(dest="run_command", required=True)

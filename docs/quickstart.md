@@ -30,6 +30,16 @@ TASK_ID="$(find .mco-workspace/tasks -mindepth 1 -maxdepth 1 -type d -exec basen
 mco dashboard "$TASK_ID" --workspace .mco-workspace
 ```
 
+Generate a complete public walkthrough bundle:
+
+```bash
+mco demo walkthrough --workspace .mco-walkthrough --output-dir .mco-walkthrough-output
+cat .mco-walkthrough-output/README.md
+python .mco-walkthrough-output/adapter-kit-demo-cli/test_demo_cli_adapter_contract.py
+```
+
+The walkthrough includes a demo task, replay transcript, dashboard, generated adapter kit, and summary JSON.
+
 Run one supervised safe command:
 
 ```bash

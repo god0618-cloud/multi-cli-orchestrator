@@ -148,6 +148,12 @@
 - Package metadata, release notes, and launch playbook.
 - Source-tree and packaged template synchronization gate.
 
+## v3.1
+
+- Public walkthrough bundle.
+- One-command demo output for README, replay transcript, dashboard, and adapter kit.
+- Regression coverage for generated walkthrough artifacts.
+
 ## Future
 
 - Multi-worker supervised execution.

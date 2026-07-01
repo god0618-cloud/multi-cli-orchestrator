@@ -1246,6 +1246,29 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(parsed["workflow"], "hello-multi-cli")
             self.assertGreaterEqual(parsed["event_count"], 5)
 
+    def test_walkthrough_demo_generates_public_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "walkthrough-workspace"
+            output_dir = Path(tmp) / "walkthrough-output"
+            demo = run_mco("demo", "walkthrough", "--workspace", str(workspace), "--output-dir", str(output_dir))
+            self.assertEqual(demo.returncode, 0, demo.stdout + demo.stderr)
+            payload = json.loads(demo.stdout)
+            self.assertEqual(payload["schema"], "mco.demo_walkthrough.v1.0")
+            self.assertTrue(Path(payload["dashboard"]).exists())
+            self.assertTrue((output_dir / "README.md").exists())
+            self.assertTrue((output_dir / "RUN_REPLAY.txt").exists())
+            self.assertTrue((output_dir / "walkthrough.json").exists())
+            contract_test = output_dir / "adapter-kit-demo-cli" / "test_demo_cli_adapter_contract.py"
+            self.assertTrue(contract_test.exists())
+            contract_check = subprocess.run(
+                [sys.executable, str(contract_test)],
+                cwd=contract_test.parent,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertEqual(contract_check.returncode, 0, contract_check.stdout + contract_check.stderr)
+
     def test_repository_has_no_private_user_paths(self) -> None:
         forbidden = [
             "/" + "Users" + "/" + "liuyang",
