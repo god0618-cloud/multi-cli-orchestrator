@@ -524,6 +524,14 @@ class WorkspaceTests(unittest.TestCase):
             ledger = json.loads((task_dir / "RUN_LEDGER.json").read_text(encoding="utf-8"))
             self.assertIn("dispatch_gate_blocked", [event["type"] for event in ledger["events"]])
 
+            dashboard = run_mco("dashboard", task_id, "--workspace", str(workspace))
+            self.assertEqual(dashboard.returncode, 0, dashboard.stdout + dashboard.stderr)
+            dashboard_html = (task_dir / "dashboard.html").read_text(encoding="utf-8")
+            self.assertIn("Adapter Matrix", dashboard_html)
+            self.assertIn("Dispatch Gate Status", dashboard_html)
+            self.assertIn("mimo-code", dashboard_html)
+            self.assertIn("adapter readiness is DISABLED", dashboard_html)
+
     def test_dispatch_require_ready_allows_ready_supervised_adapter(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

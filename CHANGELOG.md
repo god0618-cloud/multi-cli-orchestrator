@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.0
+
+- Integrated the adapter matrix into the task dashboard.
+- Added a dashboard Dispatch Gate Status section showing `--require-ready` gate evidence.
+- Dashboard now distinguishes policy baseline from local doctor probing to avoid implicit provider checks during page rendering.
+- Added regression coverage for blocked dispatch visibility in dashboard HTML.
+
 ## 2.2.0
 
 - Added adapter gate evaluation for dispatch queueing.

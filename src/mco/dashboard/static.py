@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from mco.adapters.matrix import build_adapter_matrix
 from mco.config import WorkspaceConfig
 
 
@@ -137,6 +138,44 @@ def _html_list(items: list[str], empty: str) -> str:
     return "\n".join(f"<li>{item}</li>" for item in items)
 
 
+def _render_matrix_rows(matrix: dict[str, Any]) -> str:
+    rows = []
+    for item in matrix.get("agents", []):
+        blockers = item.get("promotion_blockers") or []
+        rows.append(
+            "<tr>"
+            f"<td><strong>{html.escape(str(item.get('agent', 'unknown')))}</strong><br><span>{html.escape(str(item.get('adapter_type', 'unknown')))}</span></td>"
+            f"<td><span class=\"pill {_status_class(str(item.get('readiness', 'unknown')))}\">{html.escape(str(item.get('readiness', 'unknown')))}</span></td>"
+            f"<td>{html.escape(str(item.get('non_interactive')))}</td>"
+            f"<td>{html.escape(str(item.get('supervised')))}</td>"
+            f"<td>{html.escape(str(item.get('quota_status', 'unknown')))}<br><span>budget cap: {html.escape(str(item.get('per_run_budget_cap')))}</span></td>"
+            f"<td>{html.escape(str(item.get('smoke_gate')))}</td>"
+            f"<td>{html.escape('; '.join(blockers) if blockers else 'none')}</td>"
+            "</tr>"
+        )
+    return "".join(rows)
+
+
+def _render_gate_rows(dispatches: list[dict[str, Any]]) -> str:
+    rows = []
+    for item in dispatches:
+        gate = item.get("gate") or (item.get("completion") or {}).get("gate") or {}
+        if not gate:
+            continue
+        rows.append(
+            "<tr>"
+            f"<td><strong>{html.escape(str(item.get('dispatch_id', 'dispatch')))}</strong><br><span>{html.escape(str(item.get('title', '')))}</span></td>"
+            f"<td>{html.escape(str(item.get('agent', 'unknown')))}</td>"
+            f"<td><span class=\"pill {_status_class(str(item.get('status', 'unknown')))}\">{html.escape(str(item.get('status', 'unknown')))}</span></td>"
+            f"<td>{html.escape(str(gate.get('readiness', 'unknown')))}</td>"
+            f"<td>{html.escape(str(gate.get('reason', '')))}</td>"
+            "</tr>"
+        )
+    if not rows:
+        return "<tr><td colspan=\"5\">No readiness-gated dispatches yet. Auto-dispatch callers should use <code>--require-ready</code>.</td></tr>"
+    return "".join(rows)
+
+
 def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     task_dir = config.tasks_dir / task_id
     task_json = task_dir / "task.json"
@@ -155,6 +194,7 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
             dispatches.append(_read_json(path))
     reports = _load_artifact_reports(artifacts)
     usage_snapshot = _read_json(task_dir / "USAGE_SNAPSHOT.json")
+    adapter_matrix = build_adapter_matrix(include_doctor=False)
     adapters = _summarize_adapters(dispatches, reports)
     problem_dispatches = [item for item in dispatches if item.get("status") in TERMINAL_PROBLEM_STATUSES]
     pending_dispatches = [item for item in dispatches if item.get("status") in {"queued", "claimed"}]
@@ -306,6 +346,26 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
   <section class="card">
     <h2>Adapter Readiness</h2>
     {adapter_rows}
+  </section>
+  <section class="card">
+    <h2>Adapter Matrix</h2>
+    <p class="small">Policy baseline without provider probing. Run <code>mco adapter matrix --doctor</code> for local doctor status.</p>
+    <table>
+      <thead>
+        <tr><th>Agent</th><th>Readiness</th><th>Non-interactive</th><th>Supervised</th><th>Quota</th><th>Smoke</th><th>Promotion blockers</th></tr>
+      </thead>
+      <tbody>{_render_matrix_rows(adapter_matrix)}</tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>Dispatch Gate Status</h2>
+    <p class="small">Only dispatches queued with <code>--require-ready</code> include gate evidence.</p>
+    <table>
+      <thead>
+        <tr><th>Dispatch</th><th>Agent</th><th>Status</th><th>Readiness</th><th>Reason</th></tr>
+      </thead>
+      <tbody>{_render_gate_rows(dispatches)}</tbody>
+    </table>
   </section>
   <section class="card">
     <h2>Owner Escalations</h2>

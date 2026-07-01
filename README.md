@@ -97,7 +97,7 @@ mco release check .
 | `mco dispatch execute --command-json` | safe command execution with sandbox, allowlist, timeout, and evidence report |
 | `mco dispatch execute --agent claude-code --prompt-file` | bounded Claude Code prompt execution with no tools, no session persistence, budget cap, timeout, and transcript artifact |
 | `mco dispatch execute --agent kimi-code --prompt-file` | bounded Kimi Code prompt execution with timeout, output cap, and transcript artifact |
-| `mco dashboard` | implemented |
+| `mco dashboard` | static boss view with control room, adapter matrix, dispatch gate status, usage, artifacts, and timeline |
 | `mco usage snapshot` | task-local usage/quota evidence rollup |
 | `mco orchestrate-start` | bounded initializer |
 | `mco schema validate` | implemented |

@@ -101,6 +101,12 @@
 - Blocked-dispatch evidence for disabled or non-ready adapters.
 - No inbox file for adapters that fail the gate.
 
+## v2.3
+
+- Adapter matrix embedded in task dashboard.
+- Dispatch gate status embedded in task dashboard.
+- Boss-view visibility for blocked auto-dispatches.
+
 ## Future
 
 - Multi-worker supervised execution.

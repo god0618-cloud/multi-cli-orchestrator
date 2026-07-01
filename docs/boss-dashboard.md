@@ -12,7 +12,7 @@ It should answer:
 - What evidence exists?
 - What gates passed or failed?
 
-v1.6 renders a static, dependency-free control room per task.
+v2.3 renders a static, dependency-free control room per task.
 
 It reads only task-local evidence:
 
@@ -20,11 +20,14 @@ It reads only task-local evidence:
 - `RUN_LEDGER.json`
 - `dispatch/dispatches/*.json`
 - registered JSON artifacts, including Claude Code execution reports
+- adapter matrix policy generated from packaged manifests/templates
 
 The dashboard now includes:
 
 - **Control Room**: task status, completed dispatch count, artifact count, and whether owner action is required.
 - **Adapter Readiness**: one card per agent with dispatch counts, latest dispatch, latest execution summary, transcript label, observed budget, maximum budget, and approximate remaining budget.
+- **Adapter Matrix**: policy baseline for known adapters, including readiness, supervision, quota status, smoke-gate availability, and promotion blockers. This section does not run provider doctor checks.
+- **Dispatch Gate Status**: `--require-ready` gate evidence for auto-dispatch attempts, including blocked adapters and reasons.
 - **Owner Escalations**: blocked/failed dispatches and structured adapter errors, or a clear “No owner action required” line.
 - **Usage Snapshot**: per-agent observed cost, budget caps, remaining budget estimate, quota status, and last error from `USAGE_SNAPSHOT.json`.
 - **Current Evidence**: latest run-ledger event.
