@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Multi-CLI Orchestrator v4.0: 一个本地优先的多 AI Coding CLI 协作控制平面，把 Codex、Claude Code、Kimi Code 等 CLI 组织成可监管、可审计、可回放的小团队。">
+  <title>我把多个 AI Coding CLI 组织成了一个可审计的小团队</title>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --ink: #121826;
+      --muted: #5f6b7a;
+      --soft: #eef3f8;
+      --line: #dbe4ee;
+      --card: #ffffff;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --green: #16a34a;
+      --amber: #d97706;
+      --red: #dc2626;
+      --code: #0f172a;
+      --shadow: 0 18px 45px rgba(15, 23, 42, .08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.72;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      background:
+        linear-gradient(135deg, rgba(15, 23, 42, .96), rgba(30, 64, 175, .90)),
+        radial-gradient(circle at 80% 20%, rgba(34, 211, 238, .35), transparent 34%),
+        radial-gradient(circle at 12% 82%, rgba(34, 197, 94, .22), transparent 30%);
+      padding: 58px 22px 34px;
+    }
+    .hero-inner, main {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .kicker {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.24);
+      background: rgba(255,255,255,.10);
+      border-radius: 999px;
+      padding: 6px 11px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0;
+      max-width: 900px;
+      font-size: 48px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+    .lead {
+      max-width: 780px;
+      color: rgba(255,255,255,.84);
+      font-size: 19px;
+      margin: 18px 0 0;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 750;
+      border: 1px solid rgba(255,255,255,.22);
+      text-decoration: none;
+    }
+    .btn.primary {
+      background: #fff;
+      color: #172554;
+    }
+    .btn.secondary {
+      color: #fff;
+      background: rgba(255,255,255,.10);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 34px;
+    }
+    .hero-stat {
+      min-height: 104px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(15, 23, 42, .36);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .hero-stat strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+    .hero-stat span {
+      color: rgba(255,255,255,.76);
+      font-size: 13px;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: rgba(247,249,252,.92);
+      backdrop-filter: blur(14px);
+    }
+    .nav-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px 18px;
+    }
+    nav a {
+      white-space: nowrap;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 10px;
+    }
+    main {
+      padding: 28px 22px 64px;
+    }
+    section {
+      margin: 34px 0;
+    }
+    .section-title {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+    .section-title .num {
+      color: var(--blue);
+      font-weight: 850;
+      letter-spacing: .08em;
+      font-size: 13px;
+      text-transform: uppercase;
+      padding-top: 8px;
+    }
+    h2 {
+      margin: 0;
+      font-size: 31px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 19px;
+    }
+    p {
+      margin: 0 0 13px;
+      color: #334155;
+      font-size: 16px;
+    }
+    .article-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+    .plain {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+    }
+    .callout {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 18px 0;
+    }
+    .callout strong { color: #1e3a8a; }
+    .callout.warn {
+      border-color: #fed7aa;
+      background: #fff7ed;
+    }
+    .callout.warn strong { color: #9a3412; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+    }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .mini-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .mini-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 16px;
+    }
+    .mini-card p {
+      font-size: 14px;
+      color: var(--muted);
+      margin: 0;
+    }
+    .pain-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .pain {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px 14px;
+      color: #334155;
+      font-weight: 650;
+    }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+    }
+    .step {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+      min-height: 118px;
+    }
+    .step b {
+      display: inline-flex;
+      width: 26px;
+      height: 26px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .step span {
+      display: block;
+      font-weight: 750;
+      margin-bottom: 4px;
+    }
+    .step p {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+    pre {
+      margin: 14px 0;
+      padding: 16px;
+      overflow: auto;
+      border-radius: 8px;
+      background: var(--code);
+      color: #e2e8f0;
+      font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      border: 1px solid #1e293b;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: .92em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      color: #334155;
+    }
+    th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 18px 0;
+    }
+    .compare-box {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 18px;
+    }
+    .compare-box h3 { margin-top: 0; }
+    .compare-box.bad { border-color: #fecaca; background: #fff7f7; }
+    .compare-box.good { border-color: #bbf7d0; background: #f0fdf4; }
+    ul {
+      padding-left: 20px;
+      margin: 8px 0 0;
+      color: #334155;
+    }
+    li { margin: 6px 0; }
+    .quote {
+      font-size: 22px;
+      line-height: 1.45;
+      color: #172554;
+      font-weight: 800;
+      margin: 20px 0;
+      padding: 18px 20px;
+      background: #eff6ff;
+      border-left: 4px solid var(--blue);
+      border-radius: 0 8px 8px 0;
+    }
+    .cta {
+      text-align: center;
+      background:
+        linear-gradient(135deg, #0f172a, #1e3a8a);
+      color: #fff;
+      border-radius: 8px;
+      padding: 34px 20px;
+      margin-top: 36px;
+    }
+    .cta h2 { color: #fff; }
+    .cta p { color: rgba(255,255,255,.82); max-width: 720px; margin-left: auto; margin-right: auto; }
+    .cta .btn { margin-top: 10px; }
+    footer {
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 28px 0 4px;
+    }
+    @media (max-width: 920px) {
+      h1 { font-size: 36px; }
+      .hero { padding-top: 38px; }
+      .hero-grid, .grid, .grid.two, .pain-list, .timeline, .comparison {
+        grid-template-columns: 1fr;
+      }
+      .section-title {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+      table { display: block; overflow-x: auto; }
+      .article-card { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="kicker">Open Source · v4.0.0 · Multi-CLI Agent OS</div>
+      <h1>我把多个 AI Coding CLI 组织成了一个可审计的小团队</h1>
+      <p class="lead">Multi-CLI Orchestrator 是一个本地优先的多 CLI 协作控制平面，把 Codex、Claude Code、Kimi Code 等 AI Coding CLI 组织成可监管、可审计、可回放的“工位”。</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="https://github.com/god0618-cloud/multi-cli-orchestrator">打开 GitHub</a>
+        <a class="btn secondary" href="https://github.com/god0618-cloud/multi-cli-orchestrator/releases/tag/v4.0.0">查看 v4.0 Release</a>
+      </div>
+      <div class="hero-grid">
+        <div class="hero-stat"><strong>v4.0</strong><span>有界多 worker dispatch wave</span></div>
+        <div class="hero-stat"><strong>Local-first</strong><span>任务状态在本地文件系统中持久化</span></div>
+        <div class="hero-stat"><strong>Evidence-first</strong><span>artifact、ledger、dashboard、replay</span></div>
+        <div class="hero-stat"><strong>Gate-first</strong><span>未准备好的 CLI 不会被自动派活</span></div>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="#pain">痛点</a>
+      <a href="#idea">核心想法</a>
+      <a href="#design">设计</a>
+      <a href="#v4">v4.0</a>
+      <a href="#demo">体验</a>
+      <a href="#safety">边界</a>
+      <a href="#roadmap">路线图</a>
+      <a href="#cta">开源地址</a>
+    </div>
+  </nav>
+
+  <main>
+    <section id="pain" class="article-card">
+      <div class="section-title">
+        <div class="num">01 / Pain</div>
+        <h2>同时使用多个 AI CLI 后，真正痛的不是模型不够聪明</h2>
+      </div>
+      <p>过去一段时间，我同时在用很多 AI Coding CLI：Codex、Claude Code、Kimi Code、Mimo Code、CodeWhale、DeepSeek 相关 CLI。</p>
+      <p>它们各有长处。有的更适合架构判断，有的前端审美更好，有的适合搜集资料，有的适合做红队审查，有的在本地工程执行上更稳。</p>
+      <p>但真正做复杂项目时，我发现最大的问题不是“哪个模型更聪明”，而是协作过程会变成一团散落的上下文。</p>
+      <div class="pain-list">
+        <div class="pain">任务状态散在多个聊天窗口里</div>
+        <div class="pain">上下文靠人工复制粘贴</div>
+        <div class="pain">谁做了什么、失败在哪里，很难回放</div>
+        <div class="pain">每个 CLI 的记忆和成长机制可能互相污染</div>
+        <div class="pain">自动化之后容易无限跑、乱消耗额度</div>
+        <div class="pain">未准备好的 CLI 可能被误派任务</div>
+      </div>
+      <p>所以我做了 Multi-CLI Orchestrator。它不是一个新的 AI Coding CLI，而是一个控制平面。</p>
+    </section>
+
+    <section id="idea" class="article-card">
+      <div class="section-title">
+        <div class="num">02 / Idea</div>
+        <h2>CLI 是工位，不是子进程</h2>
+      </div>
+      <p>很多 Agent 框架强调“一个主 Agent 调多个 subagent”。这个思路很有价值，但它通常仍然处在同一个 CLI、同一个模型供应商、同一个运行时边界里。</p>
+      <p>我想要的是另一种结构：让不同 CLI、不同模型、不同工具生态，作为真正独立的工位参与复杂任务。</p>
+      <div class="quote">控制平面负责组织协作；具体干活的 CLI 保留自己的模型、认证、上下文习惯和工具生态。</div>
+      <div class="comparison">
+        <div class="compare-box bad">
+          <h3>散落式多 CLI</h3>
+          <ul>
+            <li>人工复制 prompt</li>
+            <li>任务状态在聊天记录里</li>
+            <li>失败原因难回放</li>
+            <li>靠用户记住下一步</li>
+          </ul>
+        </div>
+        <div class="compare-box good">
+          <h3>受监管的 CLI 工位</h3>
+          <ul>
+            <li>dispatch 明确派棒</li>
+            <li>task workspace 保存状态</li>
+            <li>RUN_LEDGER 可回放</li>
+            <li>dashboard 显示阻断和证据</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="design" class="article-card">
+      <div class="section-title">
+        <div class="num">03 / Design</div>
+        <h2>先把协作变得诚实、可见、可审计，再谈更强自动化</h2>
+      </div>
+      <p>Multi-CLI Orchestrator 的设计顺序很保守：先控制平面，再自动化。</p>
+      <div class="timeline">
+        <div class="step"><b>1</b><span>Workspace</span><p>创建本地任务工作区</p></div>
+        <div class="step"><b>2</b><span>Loop</span><p>用 LOOP_SPEC 定义阶段和门禁</p></div>
+        <div class="step"><b>3</b><span>Dispatch</span><p>把任务派给具体 CLI 工位</p></div>
+        <div class="step"><b>4</b><span>Adapter Gate</span><p>检查工位是否真的准备好</p></div>
+        <div class="step"><b>5</b><span>Artifact</span><p>每个动作留下证据</p></div>
+        <div class="step"><b>6</b><span>Replay</span><p>任务结束后可复盘</p></div>
+      </div>
+      <table>
+        <thead><tr><th>组件</th><th>它解决什么问题</th></tr></thead>
+        <tbody>
+          <tr><td><code>task workspace</code></td><td>任务状态不再依赖聊天上下文。</td></tr>
+          <tr><td><code>RUN_LEDGER.json</code></td><td>记录任务推进过程，支持 replay。</td></tr>
+          <tr><td><code>dispatch/agent-inbox</code></td><td>每个 CLI 工位都有明确收件箱。</td></tr>
+          <tr><td><code>adapter matrix</code></td><td>显性化哪个 CLI 真正可用。</td></tr>
+          <tr><td><code>sandbox contract</code></td><td>定义工位的读写范围和凭证策略。</td></tr>
+          <tr><td><code>dashboard.html</code></td><td>给人看的老板视角。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="v4" class="article-card">
+      <div class="section-title">
+        <div class="num">04 / v4.0</div>
+        <h2>v4.0：有界多 worker dispatch wave</h2>
+      </div>
+      <p>v4.0 新增了一个关键能力：一次派发多个 worker，但仍然保持门禁和证据。</p>
+      <pre>mco dispatch wave &lt;task_id&gt; --spec wave.json --require-ready --workspace .mco-workspace</pre>
+      <p><code>wave.json</code> 示例：</p>
+      <pre>{
+  "title": "Sprint review wave",
+  "workers": [
+    {
+      "agent": "generic-cli",
+      "title": "API drift review",
+      "instructions": "Check API contract drift and report evidence."
+    },
+    {
+      "agent": "kimi-code",
+      "title": "Frontend polish review",
+      "instructions": "Review mobile UI fit and report findings."
+    }
+  ]
+}</pre>
+      <div class="grid">
+        <div class="mini-card"><strong>最多 6 个 workers</strong><p>防止 wave 变成不可控的自动化散射。</p></div>
+        <div class="mini-card"><strong>逐个 adapter gate</strong><p>未达到 READY_SUPERVISED 的工位不会收到任务。</p></div>
+        <div class="mini-card"><strong>阻断也写证据</strong><p>blocked dispatch 会记录原因，便于复盘和修复。</p></div>
+      </div>
+      <div class="callout warn">
+        <strong>重要边界：</strong>v4.0 不是无约束真实并发执行。它先完成可监管的多工位派棒，因为多 Agent 系统真正难的不是跑起来，而是跑起来之后还能看得懂、停得住、审得清。
+      </div>
+    </section>
+
+    <section id="demo" class="article-card">
+      <div class="section-title">
+        <div class="num">05 / Try</div>
+        <h2>最小体验命令</h2>
+      </div>
+      <pre>git clone https://github.com/god0618-cloud/multi-cli-orchestrator.git
+cd multi-cli-orchestrator
+
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+
+mco init --workspace .mco-workspace
+mco doctor --workspace .mco-workspace
+mco demo walkthrough --workspace .mco-walkthrough --output-dir .mco-walkthrough-output</pre>
+      <p>想体验 v4.0 的 dispatch wave：</p>
+      <pre>mco task create "Demo multi-worker wave" --json --workspace .mco-workspace
+mco dispatch wave &lt;task_id&gt; --spec wave.json --require-ready --workspace .mco-workspace</pre>
+      <p>准备好的工位会进入队列；没准备好的工位会被阻断并留下证据。</p>
+    </section>
+
+    <section id="safety" class="article-card">
+      <div class="section-title">
+        <div class="num">06 / Safety</div>
+        <h2>这个项目默认保守</h2>
+      </div>
+      <div class="grid">
+        <div class="mini-card"><strong>不默认污染记忆</strong><p>不默认写稳定知识库，不默认改 CLI 原生 memory / profile。</p></div>
+        <div class="mini-card"><strong>不默认任意执行</strong><p>Generic command 只有严格 allowlist；真实 provider smoke 必须 opt-in。</p></div>
+        <div class="mini-card"><strong>不默认启用新工位</strong><p>新 adapter disabled-by-default，必须靠证据晋升。</p></div>
+      </div>
+      <table>
+        <thead><tr><th>能力</th><th>当前状态</th></tr></thead>
+        <tbody>
+          <tr><td>本地 workspace / task / ledger / artifact</td><td>已实现</td></tr>
+          <tr><td>dashboard / replay</td><td>已实现，静态 HTML + 文本/HTML replay</td></tr>
+          <tr><td>Claude Code / Kimi Code adapter</td><td>已实现，受限执行</td></tr>
+          <tr><td>dispatch wave</td><td>v4.0 已实现</td></tr>
+          <tr><td>Mimo / CodeWhale</td><td>模板或待接入，不默认启用</td></tr>
+          <tr><td>真实并发 provider 执行</td><td>尚未开放</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="article-card">
+      <div class="section-title">
+        <div class="num">07 / Proof</div>
+        <h2>v4.0 发布前的验证</h2>
+      </div>
+      <div class="grid">
+        <div class="mini-card"><strong>36 tests PASS</strong><p>单元测试通过。</p></div>
+        <div class="mini-card"><strong>Release check PASS</strong><p>PASS=27 WARN=0 FAIL=0。</p></div>
+        <div class="mini-card"><strong>Audit PASS</strong><p>PASS=92 WARN=0 FAIL=0。</p></div>
+        <div class="mini-card"><strong>GitHub CI PASS</strong><p>远端 CI 通过。</p></div>
+        <div class="mini-card"><strong>Public clone smoke PASS</strong><p>干净 clone 可运行。</p></div>
+        <div class="mini-card"><strong>v4.0.0 Release</strong><p>GitHub Release 已发布。</p></div>
+      </div>
+    </section>
+
+    <section id="roadmap" class="article-card">
+      <div class="section-title">
+        <div class="num">08 / Roadmap</div>
+        <h2>后续路线</h2>
+      </div>
+      <table>
+        <thead><tr><th>版本</th><th>方向</th></tr></thead>
+        <tbody>
+          <tr><td>v4.1</td><td>Wave execution policy：quota、timeout、cancel、failure handling。</td></tr>
+          <tr><td>v4.2</td><td>更好的 replay / dashboard drill-down。</td></tr>
+          <tr><td>v4.3</td><td>Adapter marketplace seed，更多 CLI adapter kit。</td></tr>
+          <tr><td>v4.4</td><td>Workflow template library，沉淀研发、研究、发布流程。</td></tr>
+          <tr><td>v5.0</td><td>严格门禁下的多 CLI 自闭环执行。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="cta" class="cta">
+      <h2>如果你也同时使用多个 AI Coding CLI，欢迎试试</h2>
+      <p>Multi-CLI Orchestrator 还早，但已经不是玩具形态。它可以被 clone、运行、测试、审计、发布，也已经有 v4.0 的有界多 worker dispatch wave。</p>
+      <a class="btn primary" href="https://github.com/god0618-cloud/multi-cli-orchestrator">去 GitHub 看项目</a>
+    </section>
+
+    <footer>
+      Multi-CLI Orchestrator v4.0 · Local-first Agent OS · Apache-2.0
+    </footer>
+  </main>
+</body>
+</html>

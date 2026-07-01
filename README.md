@@ -16,6 +16,27 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 This repository is at v5.0 strict-gate self-closing loop status. The baseline is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, dynamic workflow gates, bounded observe/advance loops, a strict self-closing workflow template, and contributor-ready adapter kits.
 
+## Start Here
+
+- New to the idea? Read [`docs/project-overview-v5.0.md`](docs/project-overview-v5.0.md).
+- Want the shortest setup path? Run the [Quick Start](#quick-start).
+- Want to see the operator surface? Generate a dashboard with `mco dashboard <task_id>`.
+- Want to add a CLI? Start from [`docs/adapter-contributor-guide.md`](docs/adapter-contributor-guide.md).
+
+## Should You Use It?
+
+Use it when:
+
+- You already use multiple AI coding CLIs and want shared task state instead of copy-pasted prompts.
+- You need evidence artifacts, run replay, and phase gates before accepting AI-generated work.
+- You want a local-first control plane that keeps automation bounded and visible.
+
+Do not use it when:
+
+- You want an all-powerful autonomous agent with unconstrained shell access.
+- You expect every CLI to be auto-dispatched before adapter readiness, quota, sandbox, and smoke evidence exist.
+- You need a hosted SaaS, production secrets manager, or organization-wide permission system today.
+
 ## Core Ideas
 
 - **CLIs are workstations**: Codex, Claude Code, Kimi Code, and generic CLIs can all become supervised workers.
@@ -53,7 +74,7 @@ mco run replay <path-to-RUN_LEDGER.json>
 mco run replay <path-to-RUN_LEDGER.json> --html replay.html
 ```
 
-Implemented in this v4.0 baseline:
+Implemented in this v5.0 baseline:
 
 - `mco init`
 - `mco doctor`

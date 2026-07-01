@@ -407,7 +407,7 @@ Feishu doc fetch verification -> pass
 
 ## 15. 路线图
 
-### v5.x
+### 近期增强
 
 - 更细的 workflow template 库
 - 更明确的 user decision gate 交互
@@ -415,7 +415,7 @@ Feishu doc fetch verification -> pass
 - adapter smoke 结果对比
 - 更完整的贡献者 adapter kit 示例
 
-### v6.0 方向
+### 中期探索
 
 - 更成熟的非交互式 CLI adapter 生命周期
 - 更强的 quota/cost/cancel/timeout 策略
@@ -423,12 +423,14 @@ Feishu doc fetch verification -> pass
 - 可选的长期记忆 promotion gate
 - 更完整的多项目 workspace 管理
 
-### v7.0 方向
+### 长期愿景
 
 - 从本地 CLI 控制面走向可复用 Agent OS 基础设施
 - 多端控制台
 - 更丰富的组织级治理策略
 - 可选团队协作和权限模型
+
+这些方向不是锁死的版本承诺。项目会先把 v5.0 的公开理解、演示链路、真实狗粮流程和贡献者入口打磨扎实，再决定是否扩展自动化权限。
 
 ---
 
@@ -472,4 +474,3 @@ Multi-CLI Orchestrator 的价值不是“让 AI 更像人”，而是“让 AI C
 - 只把协作、门禁、证据和停止条件变成工程对象。
 
 这就是 v5.0 的核心：严格门禁下的多 CLI 自闭环。
-

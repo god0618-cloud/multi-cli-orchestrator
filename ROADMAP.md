@@ -1,215 +1,119 @@
 # Roadmap
 
-## v0.2
+Multi-CLI Orchestrator is currently at the v5.0 strict-gate self-closing loop baseline.
 
-- Clean repository skeleton.
-- Workspace config.
-- `mco init`.
-- `mco doctor`.
-- `mco task create`.
-- Static dashboard seed.
-- Minimal safety audit.
-- Bounded orchestration initializer.
-- Loop spec and run ledger templates.
-- Redaction checklist.
+This roadmap is intentionally capability-led rather than hype-version-led. The project should advance only when a capability is backed by tests, evidence artifacts, and clear safety boundaries.
 
-## v0.5
+## Current Baseline: v5.0
 
-- Installable local MVP.
-- Generic CLI adapter.
-- Task lifecycle.
-- Static dashboard.
-- Hello multi-CLI demo.
+The v5.0 baseline is a credible Alpha release for developers who want to experiment with local-first multi-CLI orchestration.
 
-## v0.8
+Completed capabilities:
 
-- Sandbox contracts.
-- Run replay MVP.
-- Adapter readiness checks.
-- Supervised dry-run dispatch execution.
+- Local task workspace with `LOOP_SPEC.json`, `RUN_LEDGER.json`, `plan.json`, dispatch inboxes, and evidence artifacts.
+- Generic task lifecycle: create, list, status, event, artifact registration, audit, and release check.
+- Dispatch queue: queue, claim, complete, blocked evidence, and bounded dispatch waves.
+- Adapter layer: generic CLI, Claude Code, and Kimi Code supervised paths; Mimo Code and CodeWhale-style CLIs remain manual-only unless future gates prove otherwise.
+- Adapter visibility: capabilities, doctor, matrix, scaffold, validate-kit, and explicit smoke commands.
+- Safety posture: no arbitrary shell execution, no silent native memory writes, no unbounded provider execution, no infinite workflow loop.
+- Workflow gates: task-local files, registered artifacts, ledger events, user decisions, dispatch terminal state, failed/blocked dispatch absence, and dispatch status counts.
+- Bounded workflow automation: `mco workflow observe` and `mco workflow loop --max-steps`.
+- `strict-self-closing` template: `plan -> execute -> verify -> close`.
+- Operator surfaces: `mco status`, `mco monitor`, static boss dashboard, usage snapshot, run replay, and walkthrough demo.
+- CI coverage, release check, and audit gates.
 
-## v1.0
+Known maturity level:
 
-- Safe command execution under sandbox gates.
-- Execution evidence reports.
-- Installable demo and replay.
-- CI smoke gates.
+- Engineering core: Alpha, credible for early adopters.
+- Public onboarding: usable, but still being polished.
+- Production automation: intentionally conservative; not advertised as a fully autonomous execution system.
 
-## v1.1
+## Near-Term Polish
 
-- Git/release hygiene.
-- Public documentation polish.
-- Quota/usage preflight contract.
-- First-party adapter manifests without default execution authority.
-- Control-room dashboard improvements.
+Goal: make the project easier to understand, try, and share without changing the safety posture.
 
-## v1.5
+- Tighten README first-screen positioning.
+- Keep public materials versioned and archive stale launch drafts.
+- Add a clear "when to use / when not to use" section.
+- Add a short demo story that shows the value without requiring users to read every schema document.
+- Add screenshots or generated walkthrough images for dashboard, adapter matrix, and replay.
+- Link the complete project overview from README and launch materials.
 
-- First real supervised first-party adapter: Claude Code.
-- Non-interactive prompt execution through `claude --print`.
-- Host CLI auth preflight.
-- Budget-limited execution.
-- Transcript artifact registration.
-- Structured budget/error fail-safe handling.
+Acceptance bar:
 
-## v1.6
+- A new developer can understand the project in one minute.
+- A new developer can run a local demo in five minutes.
+- Public docs do not mix old v4 wording with v5 capability claims.
 
-- Boss-view control room for task-local run state.
-- Adapter readiness, dispatch counts, and budget surfaces.
-- Clear escalation queue for owner decisions.
-- Static dependency-free HTML output.
+## Demo Story Track
 
-## v1.7
+Goal: make the project visually and operationally demonstrable.
 
-- Durable task-local usage snapshot contract.
-- Per-agent observed cost and budget estimate rollups.
-- Dashboard usage snapshot table.
-- Explicit unknown-provider-quota semantics.
+Target assets:
 
-## v1.8
+- Terminal walkthrough script.
+- Dashboard screenshot.
+- Adapter matrix screenshot.
+- Replay HTML sample.
+- One realistic workflow bundle, not just a hello task.
 
-- Explicit real Claude Code adapter smoke command.
-- Task-local smoke evidence bundle.
-- Fixed sentinel verification.
-- Cost-capped, opt-in adapter regression path.
+Acceptance bar:
 
-## v1.9
+- The demo can be posted with the GitHub link and still communicate the value.
+- The demo can run from a fresh clone without private local paths or business data.
+- The demo shows why the loop advances, waits, escalates, or completes.
 
-- Adapter contributor scaffolding.
-- Disabled-by-default onboarding files.
-- Smoke checklist for future first-party adapters.
-- Overwrite-safe adapter kit generation.
+## Dogfood Workflow Track
 
-## v2.0
+Goal: prove the orchestration model on realistic tasks before adding broader automation.
 
-- Second supervised first-party adapter: Kimi Code.
-- Multiple first-party adapter doctor/smoke paths.
-- Shared task-local evidence contract across Claude Code and Kimi Code.
-- Honest quota semantics per adapter: budget-limited where supported, unknown where unsupported.
+Candidate workflows:
 
-## v2.1
+- Documentation release loop: plan -> write -> verify -> close.
+- Frontend review loop: implement -> screenshot -> visual review -> close.
+- Adapter onboarding loop: scaffold -> validate -> smoke -> promote or reject.
 
-- Adapter matrix and readiness boss view.
-- Machine-readable comparison for implemented and disabled adapters.
-- Optional local doctor probing.
-- Promotion blockers for future adapters.
+Acceptance bar:
 
-## v2.2
+- Each workflow produces `LOOP_SPEC.json`, `RUN_LEDGER.json`, artifacts, dashboard, replay, and close report.
+- At least one real defect or workflow gap is found and fixed through dogfooding.
+- Workflow templates stay bounded and auditable.
 
-- Adapter readiness gate for auto-dispatch.
-- `dispatch queue --require-ready`.
-- Blocked-dispatch evidence for disabled or non-ready adapters.
-- No inbox file for adapters that fail the gate.
+## Contributor Onramp Track
 
-## v2.3
+Goal: make outside contribution practical.
 
-- Adapter matrix embedded in task dashboard.
-- Dispatch gate status embedded in task dashboard.
-- Boss-view visibility for blocked auto-dispatches.
+Planned assets:
 
-## v2.4
+- Good first issues list.
+- Adapter maturity model.
+- Workflow template contribution guide.
+- Example adapter request and review path.
+- Clear promotion gates from disabled adapter to supervised adapter.
 
-- Compact `mco status` operator command.
-- Latest task, dispatch counts, latest dispatch, adapter readiness, quota semantics, and gate posture in one terminal readout.
-- JSON output for scripts and optional audit counts for release/monitor loops.
-- No implicit provider doctor probing during routine status checks.
+Acceptance bar:
 
-## v2.5
+- A contributor can request a new adapter with the right evidence.
+- A contributor can generate and validate an adapter kit locally.
+- Maintainers can reject unsafe adapters with a documented reason instead of a subjective judgment.
 
-- Explicit `mco status --doctor` probe mode.
-- Machine-readable distinction between policy-baseline status and local adapter doctor checks.
-- Doctor check counts and gate posture available in terminal and JSON output.
-- Default status remains lightweight and non-probing.
+## Medium-Term Exploration
 
-## v2.6
+Explore only after the near-term polish and dogfood tracks are stable:
 
-- Bounded `mco monitor <task_id>` status snapshot loop.
-- Task-local status snapshot artifacts registered in the run ledger.
-- Hard cycle and interval caps to avoid accidental long-running daemons.
-- Optional audit and doctor probing remain explicit per run.
+- Stronger quota, cost, cancel, and timeout contracts.
+- Better conflict governance for concurrent worker outputs.
+- Optional long-term memory promotion gates.
+- Multi-project workspace management.
+- More capable dashboards without introducing heavy runtime requirements.
 
-## v2.7
+## Long-Term Vision
 
-- Workflow phase state in generated plans.
-- `mco workflow status` for operator inspection.
-- `mco workflow advance` for phase-gated pass/fail transitions.
-- Fail-stop behavior and optional auto-dispatch to the next phase.
+The long-term direction is a local-first Agent OS control plane:
 
-## v2.8
+- AI CLIs remain independent workstations.
+- The orchestrator manages task state, workflow gates, evidence, replay, safety, and escalation.
+- Human users intervene only at real decision gates.
+- Automation earns more authority only after adapter readiness, sandbox, quota, and smoke evidence prove it is safe.
 
-- Contributor-ready adapter scaffold output.
-- Generated README, fake CLI fixture, and unittest contract template.
-- Adapter contributor guide for promotion gates and review expectations.
-
-## v3.0
-
-- Public open-source MVP release baseline.
-- README first-screen positioning for external users.
-- Package metadata, release notes, and launch playbook.
-- Source-tree and packaged template synchronization gate.
-
-## v3.1
-
-- Public walkthrough bundle.
-- One-command demo output for README, replay transcript, dashboard, and adapter kit.
-- Regression coverage for generated walkthrough artifacts.
-
-## v3.2
-
-- Static replay HTML output.
-- Walkthrough bundles include text and HTML replay artifacts.
-- Replay UI baseline before multi-worker execution.
-
-## v3.3
-
-- Adapter contributor CI harness.
-- `mco adapter validate-kit` checks generated adapter kit health.
-- Fail-fast guard against unsafe manifest promotion.
-
-## v4.0
-
-- Bounded multi-worker dispatch waves.
-- `mco dispatch wave` queues one to six worker dispatches from a machine-readable spec.
-- `mco dispatch wave --require-ready` applies adapter gates per worker and records blocked workers as evidence.
-- Dispatch IDs include microseconds so batch dispatches to the same agent cannot overwrite each other.
-
-## v4.1
-
-- Dynamic workflow gates for task-local files, registered artifacts, ledger events, dispatch terminal state, and dispatch status counts.
-- `mco workflow observe` as the safe loop-control readout.
-- Automation recommendation states: `advance`, `wait`, `escalate`, and `complete`.
-- Non-terminal dispatches force `wait`; blocked or failed dispatches force `escalate`.
-
-## v4.2
-
-- Stop-condition, max-round, and budget guardrails for bounded loop runners.
-- Explicit user-decision gates and escalation artifacts.
-- `mco workflow loop` for a hard-capped observe/advance cycle.
-
-## v4.3
-
-- Boss-view dashboard upgrade around workflow action, blockers, budget posture, and next owner.
-- Dashboard `Workflow Loop Control` section showing current phase, recommended action, reason, and gate details.
-
-## v4.4
-
-- Expanded adapter capability matrix for interactive vs non-interactive execution across Claude Code, Kimi Code, Mimo Code, and CodeWhale-style CLIs.
-- Matrix rows expose `execution_mode`, `automation_posture`, and `recommended_use` to avoid unsafe auto-dispatch assumptions.
-
-## v4.5
-
-- End-to-end validation run on a realistic product task before v5.0.
-- `strict-self-closing` workflow template for plan -> execute -> verify -> close evidence loops.
-
-## v5.0
-
-- Strict-gate multi-CLI self-closing execution loop.
-- Template-driven workflow execution with audit/replay evidence.
-- Safe default posture: no infinite loops, no unbounded provider spend, no silent worker drift.
-- First complete implementation target is the `strict-self-closing` template plus `workflow observe` / `workflow loop`.
-
-## Future
-
-- Wave execution policies after queue-time safety is proven.
-- Real concurrent provider execution with quota and cancellation gates.
-- Policy-driven escalation gates.
+This is a direction, not a locked version promise.

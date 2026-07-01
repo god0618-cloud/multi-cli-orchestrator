@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-CLI Orchestrator 项目设计说明 v4.0</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #111827;
+      --panel2: #151f32;
+      --line: #263244;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --soft: #cbd5e1;
+      --green: #22c55e;
+      --blue: #38bdf8;
+      --amber: #f59e0b;
+      --red: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    main { max-width: 1160px; margin: 0 auto; padding: 32px 24px 56px; }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding: 28px 0 24px;
+      margin-bottom: 22px;
+    }
+    .eyebrow {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 42px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      max-width: 880px;
+      margin: 16px 0 0;
+      color: var(--soft);
+      font-size: 18px;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 18px 0 28px;
+    }
+    nav a {
+      border: 1px solid var(--line);
+      background: #0f172a;
+      color: var(--soft);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    section {
+      padding: 24px 0;
+      border-top: 1px solid var(--line);
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+    h3 {
+      margin: 20px 0 8px;
+      font-size: 18px;
+    }
+    p { margin: 0 0 12px; color: var(--soft); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .card strong {
+      display: block;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+    .metric {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      background: #0f172a;
+      border-radius: 999px;
+      padding: 5px 9px;
+      margin: 4px 6px 4px 0;
+      color: var(--soft);
+      font-size: 13px;
+    }
+    .metric.ok { color: #bbf7d0; border-color: #14532d; background: #052e16; }
+    .metric.warn { color: #fde68a; border-color: #713f12; background: #2a1805; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin: 12px 0 4px;
+      background: var(--panel);
+    }
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      color: var(--soft);
+    }
+    th {
+      color: #e2e8f0;
+      background: #111f35;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    tr:last-child td { border-bottom: 0; }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    code {
+      background: #0f172a;
+      border: 1px solid var(--line);
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #e0f2fe;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #050816;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      color: #dbeafe;
+      overflow: auto;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      margin: 14px 0;
+    }
+    .step {
+      min-height: 82px;
+      background: var(--panel2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .step span {
+      display: inline-block;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .step p { font-size: 13px; margin: 0; }
+    .callout {
+      border-left: 3px solid var(--blue);
+      background: #0f172a;
+      padding: 12px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+    }
+    .callout.warning { border-left-color: var(--amber); }
+    .small { font-size: 13px; color: var(--muted); }
+    footer {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 900px) {
+      h1 { font-size: 32px; }
+      .grid, .grid.two, .flow { grid-template-columns: 1fr; }
+      main { padding: 20px 14px 40px; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">Open Source Demo Brief · v4.0.0</div>
+      <h1>Multi-CLI Orchestrator 项目设计说明</h1>
+      <p class="subtitle">一个本地优先的多 CLI 协作控制平面，把 Codex、Claude Code、Kimi Code 等 AI Coding CLI 组织成可监管、可审计、可回放的“工位”。</p>
+      <p>
+        <span class="metric ok">v4.0.0 Released</span>
+        <span class="metric ok">CI PASS</span>
+        <span class="metric ok">Public Clone Smoke PASS</span>
+        <span class="metric warn">Real concurrent provider execution intentionally gated</span>
+      </p>
+    </header>
+
+    <nav>
+      <a href="#position">项目定位</a>
+      <a href="#why">为什么需要</a>
+      <a href="#architecture">架构</a>
+      <a href="#capabilities">v4.0 能力</a>
+      <a href="#demo">演示主线</a>
+      <a href="#safety">安全治理</a>
+      <a href="#acceptance">验收证据</a>
+      <a href="#article">发文角度</a>
+      <a href="#roadmap">路线图</a>
+    </nav>
+
+    <section id="position">
+      <h2>1. 项目定位</h2>
+      <div class="callout">
+        <strong>一句话：</strong>Multi-CLI Orchestrator 让多个 AI Coding CLI 像一个受监管的小团队一样工作：任务可以被拆分、派发、执行、审计、回放，而不是散落在多个聊天窗口里。
+      </div>
+      <div class="grid">
+        <div class="card"><strong>控制平面</strong><p>任务状态、运行账本、派棒、门禁、artifact 和 dashboard 不绑定任一模型会话。</p></div>
+        <div class="card"><strong>CLI 工位</strong><p>每个 CLI 保留自己的模型、认证、上下文习惯和工具生态，以 adapter 方式受控接入。</p></div>
+        <div class="card"><strong>证据闭环</strong><p>先记录事实和产物，再决定是否沉淀知识，避免直接污染长期记忆。</p></div>
+      </div>
+    </section>
+
+    <section id="why">
+      <h2>2. 为什么不是再做一个 Agent 框架</h2>
+      <table>
+        <thead><tr><th>问题</th><th>传统做法</th><th>MCO 的设计</th></tr></thead>
+        <tbody>
+          <tr><td>不同模型参与</td><td>常在同一 CLI 的 subagent 体系内</td><td>把不同 CLI 当作独立工位，保留差异</td></tr>
+          <tr><td>任务状态</td><td>依赖聊天上下文或复制粘贴</td><td>任务目录、ledger、artifact 本地持久化</td></tr>
+          <tr><td>自动化边界</td><td>容易进入无限跑或隐式执行</td><td>循环、worker 数、门禁、执行命令全部有界</td></tr>
+          <tr><td>能力接入</td><td>容易先宣称可用</td><td>disabled-by-default，证据通过后晋升</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="architecture">
+      <h2>3. 系统架构</h2>
+      <div class="flow">
+        <div class="step"><span>01</span><p>Human / Owner 发起目标</p></div>
+        <div class="step"><span>02</span><p>mco 创建 task workspace</p></div>
+        <div class="step"><span>03</span><p>workflow / dispatch / wave 派棒</p></div>
+        <div class="step"><span>04</span><p>adapter gate 校验工位是否可用</p></div>
+        <div class="step"><span>05</span><p>CLI 工位产出 artifact</p></div>
+        <div class="step"><span>06</span><p>dashboard / replay / audit 收口</p></div>
+      </div>
+      <table>
+        <thead><tr><th>对象</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td><code>LOOP_SPEC.json</code></td><td>定义任务循环、阶段、门禁和停止条件。</td></tr>
+          <tr><td><code>RUN_LEDGER.json</code></td><td>记录任务推进事件，支持 replay。</td></tr>
+          <tr><td><code>dispatch/agent-inbox</code></td><td>每个 CLI 工位领取任务的位置。</td></tr>
+          <tr><td><code>dispatch/waves</code></td><td>v4.0 多 worker 派棒 manifest。</td></tr>
+          <tr><td><code>artifacts/</code></td><td>任务证据和交付产物。</td></tr>
+          <tr><td><code>dashboard.html</code></td><td>老板视角：状态、阻断、证据、时间线。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="capabilities">
+      <h2>4. v4.0 能力</h2>
+      <div class="grid two">
+        <div class="card">
+          <strong>单 worker dispatch</strong>
+          <pre>mco dispatch queue &lt;task_id&gt; \
+  --agent kimi-code \
+  --title "Frontend pass" \
+  --instructions "Polish mobile UI" \
+  --require-ready</pre>
+        </div>
+        <div class="card">
+          <strong>多 worker dispatch wave</strong>
+          <pre>mco dispatch wave &lt;task_id&gt; \
+  --spec wave.json \
+  --require-ready</pre>
+        </div>
+      </div>
+      <h3>Wave Spec</h3>
+      <pre>{
+  "title": "Sprint review wave",
+  "workers": [
+    {
+      "agent": "generic-cli",
+      "title": "API drift review",
+      "instructions": "Check API contract drift and report evidence."
+    },
+    {
+      "agent": "kimi-code",
+      "title": "Frontend polish review",
+      "instructions": "Review mobile UI fit and report findings."
+    }
+  ]
+}</pre>
+      <div class="callout warning">
+        <strong>v4.0 边界：</strong>dispatch wave 是有监督多工位派棒，不是无约束真实并发执行。一个 wave 最多 6 个 workers；每个 worker 仍然经过 adapter gate；不达标的工位只会留下 blocked evidence，不会收到 inbox 文件。
+      </div>
+    </section>
+
+    <section id="demo">
+      <h2>5. 演示主线</h2>
+      <table>
+        <thead><tr><th>步骤</th><th>命令 / 画面</th><th>讲解重点</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>打开 GitHub README</td><td>这是多 CLI 协作控制平面，不是单一 Agent 框架。</td></tr>
+          <tr><td>2</td><td><code>mco init</code> / <code>mco doctor</code></td><td>本地优先，先建立 workspace 和治理入口。</td></tr>
+          <tr><td>3</td><td><code>mco task create --json</code></td><td>复杂任务有独立目录和账本，不靠聊天上下文续命。</td></tr>
+          <tr><td>4</td><td><code>mco adapter matrix --doctor --html</code></td><td>显性化每个 CLI 是否真的可用，避免“什么都能做”的幻觉。</td></tr>
+          <tr><td>5</td><td><code>mco dispatch wave --require-ready</code></td><td>多工位派棒，但每个工位都受 readiness gate 约束。</td></tr>
+          <tr><td>6</td><td><code>mco dashboard</code> / <code>mco run replay --html</code></td><td>老板视角可见，任务过程可回放。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="safety">
+      <h2>6. 安全与治理设计</h2>
+      <div class="grid">
+        <div class="card"><strong>不默认污染记忆</strong><p>不默认写稳定知识库，不默认改 CLI 原生 memory / soul / profile。</p></div>
+        <div class="card"><strong>不默认任意执行</strong><p>Generic command 只有严格 allowlist；真实 provider smoke 明确 opt-in。</p></div>
+        <div class="card"><strong>不默认启用新工位</strong><p>新 adapter disabled-by-default，必须经过 manifest、sandbox、fixture、contract test、smoke evidence。</p></div>
+      </div>
+    </section>
+
+    <section id="acceptance">
+      <h2>7. 验收证据</h2>
+      <p>
+        <span class="metric ok">36 unit tests PASS</span>
+        <span class="metric ok">compileall PASS</span>
+        <span class="metric ok">release check PASS=27 WARN=0 FAIL=0</span>
+        <span class="metric ok">audit PASS=92 WARN=0 FAIL=0</span>
+        <span class="metric ok">GitHub CI PASS</span>
+        <span class="metric ok">Public clone smoke PASS</span>
+      </p>
+      <p>Release: <a href="https://github.com/god0618-cloud/multi-cli-orchestrator/releases/tag/v4.0.0">https://github.com/god0618-cloud/multi-cli-orchestrator/releases/tag/v4.0.0</a></p>
+    </section>
+
+    <section id="article">
+      <h2>8. 发文宣传角度</h2>
+      <div class="grid two">
+        <div class="card">
+          <strong>推荐标题</strong>
+          <p>我把多个 AI Coding CLI 组织成了一个可审计的小团队</p>
+          <p>不再复制粘贴 prompt：一个本地优先的 Multi-CLI Agent OS</p>
+          <p>为什么我不满足于 subagent，而要做 Multi-CLI Orchestrator</p>
+        </div>
+        <div class="card">
+          <strong>推荐开场</strong>
+          <p>我最近一直在用多个 AI Coding CLI：Codex、Claude Code、Kimi Code、Mimo、CodeWhale。它们各有长处，但真正做复杂项目时，最大的问题不是模型够不够聪明，而是协作状态不可见、任务交接靠复制粘贴、证据散在不同会话里。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <h2>9. 后续路线</h2>
+      <table>
+        <thead><tr><th>阶段</th><th>目标</th></tr></thead>
+        <tbody>
+          <tr><td>v4.1</td><td>wave execution policy：从派棒进入有界执行策略，加入 quota / timeout / cancel gate。</td></tr>
+          <tr><td>v4.2</td><td>Replay / dashboard drill-down：更适合演示和调试的可视化。</td></tr>
+          <tr><td>v4.3</td><td>Adapter marketplace seed：更多 CLI adapter kit 和贡献流程。</td></tr>
+          <tr><td>v4.4</td><td>Workflow template library：常见研发、研究、发布流程模板。</td></tr>
+          <tr><td>v5.0</td><td>多 CLI 自闭环执行：严格门禁下的自动分工、执行、回收、审计。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>10. 收束话术</h2>
+      <div class="callout">
+        Multi-CLI Orchestrator 的目标不是制造一个“无所不能的 AI 大脑”，而是把多个已经存在的 AI CLI 组织成一个可监管、可审计、可回放的小团队。它把任务状态从聊天窗口里抽出来，把能力接入做成 adapter，把安全边界写成 sandbox，把协作过程写进 ledger，把结果沉淀为 artifact。v4.0 开始，它已经支持有界多 worker dispatch wave，这意味着多 CLI 协作从“人工复制粘贴”进入了“控制平面派棒”的阶段。
+      </div>
+    </section>
+
+    <footer>
+      Multi-CLI Orchestrator · Project Design Brief v4.0 · Apache-2.0 · <a href="https://github.com/god0618-cloud/multi-cli-orchestrator">GitHub</a>
+    </footer>
+  </main>
+</body>
+</html>

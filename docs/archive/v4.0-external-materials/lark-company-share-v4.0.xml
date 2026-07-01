@@ -1,0 +1,281 @@
+<title>Multi-CLI Orchestrator v4.0｜把多个 AI Coding CLI 组织成可审计的小团队</title>
+
+<h1>Multi-CLI Orchestrator v4.0：把多个 AI Coding CLI 组织成可审计的小团队</h1>
+
+<callout emoji="📌" background-color="light-blue" border-color="blue">
+  <p><b>一句话：</b>Multi-CLI Orchestrator 是一个本地优先的多 CLI 协作控制平面，把 Codex、Claude Code、Kimi Code 等 AI Coding CLI 抽象成受监管的“工位”，让任务可以被拆分、派发、执行、审计和回放，而不是散落在多个聊天窗口里。</p>
+</callout>
+
+<p><b>开源地址：</b><a href="https://github.com/god0618-cloud/multi-cli-orchestrator">https://github.com/god0618-cloud/multi-cli-orchestrator</a></p>
+<p><b>当前版本：</b>v4.0.0</p>
+<p><b>适合阅读对象：</b>关注 AI 编程工具、Agent 工程化、多模型协作、本地知识库治理、研发自动化的同事。</p>
+
+<hr/>
+
+<h2>1. 背景：多 CLI 已经好用，但协作过程容易失控</h2>
+
+<p>现在很多同学会同时使用多个 AI Coding CLI，例如 Codex、Claude Code、Kimi Code、Mimo Code、CodeWhale、DeepSeek 相关 CLI。它们各有优势：有的适合架构设计，有的适合前端实现，有的适合资料调研，有的适合红队审查。</p>
+
+<p>但复杂任务一旦跨多个工具推进，就会出现几个实际问题：</p>
+
+<ul>
+  <li>任务状态散在不同聊天窗口里，缺少统一工作台；</li>
+  <li>上下文靠人工复制粘贴，容易漏信息或版本漂移；</li>
+  <li>谁做了什么、失败在哪里、产物在哪里，很难事后回放；</li>
+  <li>每个 CLI 有自己的记忆和成长机制，多 CLI 组合后容易互相污染；</li>
+  <li>如果直接自动化，容易变成无限跑、乱消耗额度、假装什么都能做。</li>
+</ul>
+
+<callout emoji="💡" background-color="light-yellow" border-color="yellow">
+  <p><b>核心判断：</b>多 CLI 协作的难点不是“让 AI 多跑几步”，而是让协作过程可见、可控、可审计、可回放。</p>
+</callout>
+
+<h2>2. 项目定位：不是替代任何 CLI，而是做控制平面</h2>
+
+<p>Multi-CLI Orchestrator 不替代 Codex、Claude Code、Kimi Code 等工具。它承认每个 CLI 都有自己的模型、认证、上下文习惯、工具链和额度边界，然后把它们组织成受监管的工位。</p>
+
+<table>
+  <thead>
+    <tr>
+      <th background-color="light-gray">概念</th>
+      <th background-color="light-gray">在项目中的含义</th>
+      <th background-color="light-gray">解决的问题</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CLI 工位</td>
+      <td>Codex / Claude Code / Kimi Code 等独立工具</td>
+      <td>保留不同模型和工具生态的差异</td>
+    </tr>
+    <tr>
+      <td>控制平面</td>
+      <td>mco CLI + 本地 workspace</td>
+      <td>统一任务状态、派发、门禁、证据和回放</td>
+    </tr>
+    <tr>
+      <td>Adapter</td>
+      <td>每个 CLI 的能力声明和接入协议</td>
+      <td>判断某个 CLI 是否真的能被自动派活</td>
+    </tr>
+    <tr>
+      <td>Sandbox</td>
+      <td>读写范围、凭证策略、验证产物</td>
+      <td>防止未定义边界的自动执行</td>
+    </tr>
+    <tr>
+      <td>Artifact</td>
+      <td>任务产出的证据文件</td>
+      <td>让结论和交付可验收、可复盘</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>3. 核心设计原则</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th background-color="light-gray">原则</th>
+      <th background-color="light-gray">说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Local-first</td>
+      <td>默认在本机文件系统工作，不依赖云端数据库。</td>
+    </tr>
+    <tr>
+      <td>Evidence-first</td>
+      <td>每次任务推进都留下 ledger、artifact、dashboard 或测试证据。</td>
+    </tr>
+    <tr>
+      <td>Gate-first</td>
+      <td>没有通过门禁，不自动进入下一阶段或下一工位。</td>
+    </tr>
+    <tr>
+      <td>Disabled-by-default</td>
+      <td>新 CLI 接入先禁用，能力、沙箱、测试证据通过后再晋升。</td>
+    </tr>
+    <tr>
+      <td>Bounded automation</td>
+      <td>自动化必须有次数、时间、worker 数量、执行权限等边界。</td>
+    </tr>
+    <tr>
+      <td>Human-visible</td>
+      <td>用户需要能看到谁在干活、哪里卡住、是否需要拍板。</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>4. v4.0 已经实现什么</h2>
+
+<p>当前 v4.0 是一个可以公开 clone、运行、演示和二次开发的开源 MVP。</p>
+
+<h3>4.1 本地任务工作区</h3>
+
+<pre lang="bash" caption="初始化 workspace"><code>mco init --workspace .mco-workspace
+mco doctor --workspace .mco-workspace</code></pre>
+
+<p>每个任务都会生成独立目录，包含：</p>
+
+<ul>
+  <li><code>task.json</code>：任务元信息；</li>
+  <li><code>LOOP_SPEC.json</code>：任务循环、阶段、门禁；</li>
+  <li><code>RUN_LEDGER.json</code>：运行账本；</li>
+  <li><code>dispatch/</code>：工位派棒与收件箱；</li>
+  <li><code>artifacts/</code>：证据产物；</li>
+  <li><code>dashboard.html</code>：老板视角。</li>
+</ul>
+
+<h3>4.2 Adapter Matrix：先判断工位是否真的准备好</h3>
+
+<pre lang="bash" caption="生成工位能力矩阵"><code>mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html</code></pre>
+
+<p>Adapter Matrix 用来回答：这个 CLI 是否已接入、是否支持非交互执行、是否有 sandbox、是否可以读写任务 inbox / artifact、是否通过 smoke gate。</p>
+
+<h3>4.3 单 worker 派棒</h3>
+
+<pre lang="bash" caption="给一个 CLI 工位派任务"><code>mco dispatch queue &lt;task_id&gt; \
+  --agent kimi-code \
+  --title "Frontend pass" \
+  --instructions "Polish mobile UI" \
+  --require-ready \
+  --workspace .mco-workspace</code></pre>
+
+<p>如果目标 CLI 没达到 <code>READY_SUPERVISED</code>，任务不会进入该 CLI 的 inbox，而是会被记录为 blocked evidence。</p>
+
+<h3>4.4 v4.0 新增：多 worker dispatch wave</h3>
+
+<pre lang="bash" caption="有界多工位派发"><code>mco dispatch wave &lt;task_id&gt; --spec wave.json --require-ready --workspace .mco-workspace</code></pre>
+
+<p><code>wave.json</code> 示例：</p>
+
+<pre lang="json" caption="wave.json"><code>{
+  "title": "Sprint review wave",
+  "workers": [
+    {
+      "agent": "generic-cli",
+      "title": "API drift review",
+      "instructions": "Check API contract drift and report evidence."
+    },
+    {
+      "agent": "kimi-code",
+      "title": "Frontend polish review",
+      "instructions": "Review mobile UI fit and report findings."
+    }
+  ]
+}</code></pre>
+
+<callout emoji="✅" background-color="light-green" border-color="green">
+  <p><b>v4.0 的关键价值：</b>一次可以派发多个 worker，但每个 worker 仍然经过 adapter gate。准备好的 CLI 进入队列；未准备好的 CLI 被阻断，并留下原因和证据。</p>
+</callout>
+
+<h3>4.5 Dashboard 与 Replay</h3>
+
+<pre lang="bash" caption="生成老板视角和回放"><code>mco dashboard &lt;task_id&gt; --workspace .mco-workspace
+mco run replay &lt;path-to-RUN_LEDGER.json&gt; --html replay.html</code></pre>
+
+<p>Dashboard 用于查看当前任务状态、dispatch 状态、adapter readiness、usage snapshot、artifact 列表、timeline、blocked / failed escalation。Replay 用于事后复盘任务推进过程。</p>
+
+<h2>5. 和普通 subagent / 自动化脚本的区别</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th background-color="light-gray">对比项</th>
+      <th background-color="light-gray">单 CLI + subagent</th>
+      <th background-color="light-gray">Multi-CLI Orchestrator</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>模型多样性</td>
+      <td>通常仍在同一 CLI 或同一运行时内</td>
+      <td>多个 CLI 可作为独立工位参与</td>
+    </tr>
+    <tr>
+      <td>状态保存</td>
+      <td>依赖会话上下文</td>
+      <td>任务目录、ledger、artifact 本地持久化</td>
+    </tr>
+    <tr>
+      <td>能力边界</td>
+      <td>容易和主 agent 权限绑定</td>
+      <td>adapter manifest + sandbox contract + gate</td>
+    </tr>
+    <tr>
+      <td>失败处理</td>
+      <td>失败散在聊天记录里</td>
+      <td>blocked / failed dispatch 写入证据</td>
+    </tr>
+    <tr>
+      <td>新工具接入</td>
+      <td>容易先宣称可用</td>
+      <td>disabled-by-default，证据通过后晋升</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>6. 当前边界：不是无约束并发执行</h2>
+
+<callout emoji="❗" background-color="light-yellow" border-color="yellow">
+  <p><b>重要边界：</b>v4.0 的 dispatch wave 是“有监督多工位派棒”，不是无约束真实并发执行。项目刻意先把控制面、门禁、证据和回放做扎实，再推进更强自动化。</p>
+</callout>
+
+<p>当前不默认做以下事情：</p>
+
+<ul>
+  <li>不默认写稳定知识库；</li>
+  <li>不默认修改 CLI 原生 memory / profile；</li>
+  <li>不默认任意 shell 执行；</li>
+  <li>不默认启用未完成 adapter；</li>
+  <li>不默认真实并发调用多个 provider。</li>
+</ul>
+
+<h2>7. 发布验证</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th background-color="light-gray">检查项</th>
+      <th background-color="light-gray">结果</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>本地单元测试</td><td>36 tests PASS</td></tr>
+    <tr><td>Python compileall</td><td>PASS</td></tr>
+    <tr><td>Release check</td><td>PASS=27 WARN=0 FAIL=0</td></tr>
+    <tr><td>本地 audit</td><td>PASS=92 WARN=0 FAIL=0</td></tr>
+    <tr><td>GitHub CI</td><td>PASS</td></tr>
+    <tr><td>Public clone smoke</td><td>PASS</td></tr>
+    <tr><td>GitHub Release</td><td>v4.0.0 已发布</td></tr>
+  </tbody>
+</table>
+
+<p><b>Release 地址：</b><a href="https://github.com/god0618-cloud/multi-cli-orchestrator/releases/tag/v4.0.0">https://github.com/god0618-cloud/multi-cli-orchestrator/releases/tag/v4.0.0</a></p>
+
+<h2>8. 后续路线</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th background-color="light-gray">阶段</th>
+      <th background-color="light-gray">目标</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>v4.1</td><td>wave execution policy：quota、timeout、cancel、failure handling。</td></tr>
+    <tr><td>v4.2</td><td>更好的 replay / dashboard drill-down。</td></tr>
+    <tr><td>v4.3</td><td>Adapter marketplace seed，更多 CLI adapter kit。</td></tr>
+    <tr><td>v4.4</td><td>Workflow template library，沉淀研发、研究、发布流程。</td></tr>
+    <tr><td>v5.0</td><td>严格门禁下的多 CLI 自闭环执行。</td></tr>
+  </tbody>
+</table>
+
+<h2>9. 公司群转发摘要</h2>
+
+<blockquote>分享一个我最近开源的小项目：Multi-CLI Orchestrator。它不是新的 AI Coding CLI，而是一个本地优先的多 CLI 协作控制平面，用来把 Codex、Claude Code、Kimi Code 等工具组织成可监管、可审计、可回放的“工位”。v4.0 已支持有界多 worker dispatch wave：准备好的 CLI 进队列，未准备好的 CLI 被阻断并留下证据。项目已通过 CI、release check 和 public clone smoke。欢迎感兴趣的同事试用或交流。</blockquote>
+
+<p><b>GitHub：</b><a href="https://github.com/god0618-cloud/multi-cli-orchestrator">https://github.com/god0618-cloud/multi-cli-orchestrator</a></p>
+
