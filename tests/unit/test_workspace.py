@@ -1257,7 +1257,9 @@ class WorkspaceTests(unittest.TestCase):
             self.assertTrue(Path(payload["dashboard"]).exists())
             self.assertTrue((output_dir / "README.md").exists())
             self.assertTrue((output_dir / "RUN_REPLAY.txt").exists())
+            self.assertTrue((output_dir / "RUN_REPLAY.html").exists())
             self.assertTrue((output_dir / "walkthrough.json").exists())
+            self.assertIn("MCO Run Replay", (output_dir / "RUN_REPLAY.html").read_text(encoding="utf-8"))
             contract_test = output_dir / "adapter-kit-demo-cli" / "test_demo_cli_adapter_contract.py"
             self.assertTrue(contract_test.exists())
             contract_check = subprocess.run(
@@ -1268,6 +1270,21 @@ class WorkspaceTests(unittest.TestCase):
                 check=False,
             )
             self.assertEqual(contract_check.returncode, 0, contract_check.stdout + contract_check.stderr)
+
+    def test_run_replay_writes_static_html(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "demo-workspace"
+            html_path = Path(tmp) / "replay.html"
+            demo = run_mco("demo", "hello-multi-cli", "--workspace", str(workspace))
+            self.assertEqual(demo.returncode, 0, demo.stdout + demo.stderr)
+            payload = json.loads(demo.stdout)
+            ledger = Path(payload["task_dir"]) / "RUN_LEDGER.json"
+            replay = run_mco("run", "replay", str(ledger), "--html", str(html_path))
+            self.assertEqual(replay.returncode, 0, replay.stdout + replay.stderr)
+            self.assertTrue(html_path.exists())
+            html_text = html_path.read_text(encoding="utf-8")
+            self.assertIn("MCO Run Replay", html_text)
+            self.assertIn("dispatch_completed", html_text)
 
     def test_repository_has_no_private_user_paths(self) -> None:
         forbidden = [

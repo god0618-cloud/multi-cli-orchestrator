@@ -154,6 +154,12 @@
 - One-command demo output for README, replay transcript, dashboard, and adapter kit.
 - Regression coverage for generated walkthrough artifacts.
 
+## v3.2
+
+- Static replay HTML output.
+- Walkthrough bundles include text and HTML replay artifacts.
+- Replay UI baseline before multi-worker execution.
+
 ## Future
 
 - Multi-worker supervised execution.

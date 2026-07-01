@@ -6,7 +6,7 @@ from pathlib import Path
 from mco.adapters.scaffold import scaffold_adapter
 from mco.config import WorkspaceConfig
 from mco.demo.hello import run_hello_demo
-from mco.replay.readout import replay_ledger
+from mco.replay.readout import render_replay_html, replay_ledger
 
 
 def run_walkthrough_demo(config: WorkspaceConfig, output_dir: Path) -> dict:
@@ -18,6 +18,7 @@ def run_walkthrough_demo(config: WorkspaceConfig, output_dir: Path) -> dict:
     ledger_path = task_dir / "RUN_LEDGER.json"
     replay_path = output_dir / "RUN_REPLAY.txt"
     replay_path.write_text(replay_ledger(ledger_path), encoding="utf-8")
+    replay_html_path = render_replay_html(ledger_path, output_dir / "RUN_REPLAY.html")
 
     adapter_kit_dir = output_dir / "adapter-kit-demo-cli"
     adapter = scaffold_adapter("demo-cli", adapter_kit_dir, force=True)
@@ -36,6 +37,7 @@ def run_walkthrough_demo(config: WorkspaceConfig, output_dir: Path) -> dict:
                 f"- Task directory: `{hello['task_dir']}`",
                 f"- Dashboard: `{hello['dashboard']}`",
                 f"- Replay transcript: `{replay_path}`",
+                f"- Replay HTML: `{replay_html_path}`",
                 f"- Adapter kit: `{adapter_kit_dir}`",
                 "",
                 "## Inspect",
@@ -58,6 +60,7 @@ def run_walkthrough_demo(config: WorkspaceConfig, output_dir: Path) -> dict:
         "task_dir": hello["task_dir"],
         "dashboard": hello["dashboard"],
         "run_replay": str(replay_path),
+        "run_replay_html": str(replay_html_path),
         "adapter_kit": str(adapter_kit_dir),
         "adapter_files": adapter["files"],
         "readme": str(readme_path),

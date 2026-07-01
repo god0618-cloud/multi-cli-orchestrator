@@ -39,6 +39,7 @@ python .mco-walkthrough-output/adapter-kit-demo-cli/test_demo_cli_adapter_contra
 ```
 
 The walkthrough includes a demo task, replay transcript, dashboard, generated adapter kit, and summary JSON.
+Open `.mco-walkthrough-output/RUN_REPLAY.html` for a static replay page.
 
 Run one supervised safe command:
 

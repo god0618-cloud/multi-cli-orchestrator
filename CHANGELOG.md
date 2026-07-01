@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.0
+
+- Added `mco run replay --html <path>` for dependency-free static replay pages.
+- Walkthrough bundles now include `RUN_REPLAY.html`.
+- Added regression coverage for replay HTML generation.
+
 ## 3.1.0
 
 - Added `mco demo walkthrough` to generate a complete public walkthrough bundle.

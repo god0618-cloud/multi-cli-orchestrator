@@ -20,7 +20,7 @@ from .dispatch.queue import claim_dispatch, complete_dispatch, list_dispatches, 
 from .dispatch.execute import execute_dispatch_claude_prompt, execute_dispatch_command, execute_dispatch_dry_run, execute_dispatch_kimi_prompt
 from .monitor import run_monitor
 from .replay.ledger import append_event, register_artifact, set_workflow
-from .replay.readout import replay_ledger
+from .replay.readout import render_replay_html, replay_ledger
 from .release.check import check_release
 from .schemas import (
     default_loop_spec,
@@ -399,6 +399,10 @@ def cmd_run_replay(args: argparse.Namespace) -> int:
     path = Path(args.ledger).expanduser().resolve()
     if not path.exists():
         raise FileNotFoundError(f"ledger not found: {path}")
+    if args.html:
+        out = render_replay_html(path, Path(args.html))
+        print(f"replay html: {out}")
+        return 0
     print(replay_ledger(path, json_output=args.json))
     return 0
 
@@ -651,6 +655,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_run_replay = run_sub.add_parser("replay", help="read RUN_LEDGER.json and print a replay timeline")
     p_run_replay.add_argument("ledger", help="path to RUN_LEDGER.json")
     p_run_replay.add_argument("--json", action="store_true", help="print structured JSON")
+    p_run_replay.add_argument("--html", help="write static HTML replay to this path")
     p_run_replay.set_defaults(func=cmd_run_replay)
 
     p_usage = sub.add_parser("usage", help="usage and quota evidence utilities")

@@ -46,6 +46,7 @@ mco adapter smoke kimi-code --workspace .mco-workspace
 mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco demo walkthrough --workspace .mco-walkthrough --output-dir .mco-walkthrough-output
 mco run replay <path-to-RUN_LEDGER.json>
+mco run replay <path-to-RUN_LEDGER.json> --html replay.html
 ```
 
 Implemented in this v3.0 baseline:
@@ -126,7 +127,7 @@ mco release check .
 | `mco audit` | implemented |
 | `mco demo hello-multi-cli` | implemented |
 | `mco demo walkthrough` | complete public walkthrough bundle with replay transcript, dashboard, and adapter kit |
-| `mco run replay` | implemented |
+| `mco run replay` | text, JSON, and static HTML replay |
 | `mco release check` | implemented |
 | arbitrary shell execution | intentionally not implemented |
 | first-party CLI adapters | Claude Code and Kimi Code implemented; Mimo/CodeWhale still disabled |
