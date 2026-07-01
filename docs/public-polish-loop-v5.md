@@ -51,3 +51,11 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 - Adapter maturity levels and promotion gates are explicit.
 - Workflow template contribution rules are explicit.
 - Issue templates cover adapter requests, workflow requests, bugs, and safety concerns.
+
+## v5.4-open-source-facade Acceptance
+
+- README first screen includes a visual proof asset.
+- README links to dashboard, replay, and adapter matrix visual walkthrough assets.
+- Launch playbook reflects the current v5 public Alpha posture.
+- GitHub topics and repo description match the project positioning.
+- Public launch language avoids unsafe automation claims.

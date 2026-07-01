@@ -1,10 +1,12 @@
 # Launch Playbook
 
-This playbook is for the v3.0 public MVP launch.
+This playbook is for the v5 public Alpha launch track.
 
 ## Positioning
 
-Multi-CLI Orchestrator is a local-first control plane for coordinating multiple AI coding CLIs as supervised workstations. It is not a replacement for Codex, Claude Code, Kimi Code, or other coding CLIs. It gives them a shared task bus, workflow gates, evidence artifacts, replayable run history, and a boss dashboard.
+Multi-CLI Orchestrator is a local-first control plane for coordinating multiple AI coding CLIs as supervised workstations.
+
+It is not a replacement for Codex, Claude Code, Kimi Code, Mimo Code, CodeWhale, or other coding CLIs. It gives them a shared task workspace, workflow gates, evidence artifacts, replayable run history, adapter readiness visibility, and a boss dashboard.
 
 ## Ideal First Users
 
@@ -12,6 +14,7 @@ Multi-CLI Orchestrator is a local-first control plane for coordinating multiple 
 - Teams that want auditable handoffs instead of long prompt chains.
 - Operators who need to see which CLI is ready, blocked, or waiting for a decision.
 - Contributors who want to add a new CLI adapter safely.
+- People experimenting with Agent OS patterns who care about evidence and safety boundaries.
 
 ## Demo Script
 
@@ -21,27 +24,35 @@ cd multi-cli-orchestrator
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .
-mco init --workspace .mco-workspace
-mco doctor --workspace .mco-workspace
-mco demo hello-multi-cli --workspace .mco-demo
-TASK_ID="$(find .mco-demo/tasks -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | head -1)"
-mco run replay ".mco-demo/tasks/$TASK_ID/RUN_LEDGER.json"
-mco dashboard "$TASK_ID" --workspace .mco-demo
+
+mco demo walkthrough \
+  --workspace /tmp/mco-public-demo \
+  --output-dir /tmp/mco-public-demo-output
+
+open /tmp/mco-public-demo-output/RUN_REPLAY.html
 ```
 
 Expected outcome:
 
-- A task directory is created.
+- A task directory is created in `/tmp`.
 - `LOOP_SPEC.json`, `RUN_LEDGER.json`, `plan.json`, and evidence artifacts exist.
-- Replay prints the run ledger.
-- Dashboard HTML renders without external services.
+- Replay HTML renders without external services.
+- The walkthrough also generates a disabled adapter kit.
+
+## Visual Assets
+
+- Dashboard screenshot: `docs/assets/demo-dashboard-v5.1.png`
+- Run replay screenshot: `docs/assets/demo-run-replay-v5.1.png`
+- Adapter matrix screenshot: `docs/assets/demo-adapter-matrix-v5.1.png`
+- Demo story: `docs/demo-story-v5.1.md`
 
 ## Adapter Contributor Demo
 
 ```bash
-mco adapter scaffold my-cli --output-dir adapter-kits/my-cli
-cd adapter-kits/my-cli
+mco adapter scaffold my-cli --output-dir /tmp/adapter-kits/my-cli
+cd /tmp/adapter-kits/my-cli
 python test_my_cli_adapter_contract.py
+mco adapter validate-kit .
 ```
 
 This proves that new adapters start fake-fixture-first and disabled by default.
@@ -51,10 +62,10 @@ This proves that new adapters start fake-fixture-first and disabled by default.
 Before publishing a tag or release:
 
 ```bash
-python -m unittest discover -s tests -p 'test_*.py' -v
-python -m compileall -q src tests
-python -m mco.cli release check . --json
-python -m mco.cli audit .
+PYTHONPATH=src python3 -m unittest tests.unit.test_workspace
+python3 -m compileall -q src tests
+PYTHONPATH=src python3 -m mco.cli release check . --json
+PYTHONPATH=src python3 -m mco.cli audit .
 ```
 
 Then perform a public clone smoke in a fresh directory using Python 3.10+.
@@ -67,6 +78,7 @@ Lead with:
 - "Loops beat prompts."
 - "Evidence before claims."
 - "Sandboxes before parallelism."
+- "Automation earns authority through gates."
 
 Avoid claiming:
 
@@ -74,7 +86,10 @@ Avoid claiming:
 - arbitrary shell execution
 - provider-account quota visibility
 - adapter readiness without doctor/smoke evidence
+- real concurrent provider execution
+- organization-wide permission management
 
 ## Recommended GitHub Topics
 
-`ai-agents`, `cli`, `orchestration`, `multi-agent`, `local-first`, `codex`, `claude-code`, `kimi-code`, `developer-tools`, `automation`
+`ai-agents`, `ai-coding`, `agent-os`, `cli`, `orchestration`, `multi-agent`, `local-first`, `codex`, `claude-code`, `kimi-code`, `developer-tools`, `workflow-automation`, `automation`
+
