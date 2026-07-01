@@ -94,6 +94,13 @@
 - Optional local doctor probing.
 - Promotion blockers for future adapters.
 
+## v2.2
+
+- Adapter readiness gate for auto-dispatch.
+- `dispatch queue --require-ready`.
+- Blocked-dispatch evidence for disabled or non-ready adapters.
+- No inbox file for adapters that fail the gate.
+
 ## Future
 
 - Multi-worker supervised execution.

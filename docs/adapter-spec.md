@@ -44,6 +44,18 @@ mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.h
 
 The matrix compares implemented and disabled-template adapters by readiness, non-interactive support, supervision, inbox/artifact participation, quota semantics, per-run budget-cap support, smoke-gate availability, sandbox template, and promotion blockers. `--doctor` probes implemented adapters only; disabled templates stay non-executable.
 
+Auto-dispatch should use the readiness gate:
+
+```bash
+mco dispatch queue <task_id> \
+  --agent kimi-code \
+  --title "Implementation pass" \
+  --instructions "Use task-local evidence only." \
+  --require-ready
+```
+
+The queue gate admits only adapters whose matrix readiness is `READY_SUPERVISED`. Non-ready adapters become blocked dispatch evidence and do not receive inbox files.
+
 `generic-cli` remains a supervised generic adapter. It does not run arbitrary shell commands.
 
 The v1.0 execution surface is intentionally narrow:

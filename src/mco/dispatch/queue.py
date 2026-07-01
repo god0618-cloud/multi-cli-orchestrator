@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from mco.adapters.gate import evaluate_adapter_gate
 from mco.replay.ledger import append_event
 
 
@@ -19,32 +20,45 @@ def dispatch_path(task_dir: Path, dispatch_id: str) -> Path:
     return dispatch_root(task_dir) / "dispatches" / f"{dispatch_id}.json"
 
 
-def queue_dispatch(task_dir: Path, agent: str, title: str, instructions: str) -> dict:
+def queue_dispatch(
+    task_dir: Path,
+    agent: str,
+    title: str,
+    instructions: str,
+    require_ready: bool = False,
+    sandbox_path: Path | None = None,
+) -> dict:
     root = dispatch_root(task_dir)
     (root / "dispatches").mkdir(parents=True, exist_ok=True)
-    inbox = inbox_dir(task_dir, agent)
-    inbox.mkdir(parents=True, exist_ok=True)
     dispatch_id = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S") + f"-{agent}"
+    gate = evaluate_adapter_gate(agent, sandbox_path) if require_ready else None
+    status = "queued" if gate is None or gate.allowed else "blocked"
     payload = {
         "schema": "mco.dispatch.v0.5",
         "dispatch_id": dispatch_id,
         "agent": agent,
         "title": title,
         "instructions": instructions,
-        "status": "queued",
+        "status": status,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "claimed_at": None,
-        "completed_at": None,
-        "completion": None,
+        "completed_at": datetime.now(timezone.utc).isoformat() if status == "blocked" else None,
+        "completion": {"error": gate.reason, "gate": gate.to_dict()} if gate is not None and not gate.allowed else None,
+        "gate": gate.to_dict() if gate is not None else None,
     }
     dispatch_json = dispatch_path(task_dir, dispatch_id)
     dispatch_json.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    inbox_file = inbox / f"{dispatch_id}.md"
-    inbox_file.write_text(
-        f"# {title}\n\nDispatch: `{dispatch_id}`\n\nAgent: `{agent}`\n\n## Instructions\n\n{instructions}\n",
-        encoding="utf-8",
-    )
-    append_event(task_dir, "dispatch_queued", f"Dispatch queued for {agent}: {title}", {"dispatch_id": dispatch_id})
+    if status == "queued":
+        inbox = inbox_dir(task_dir, agent)
+        inbox.mkdir(parents=True, exist_ok=True)
+        inbox_file = inbox / f"{dispatch_id}.md"
+        inbox_file.write_text(
+            f"# {title}\n\nDispatch: `{dispatch_id}`\n\nAgent: `{agent}`\n\n## Instructions\n\n{instructions}\n",
+            encoding="utf-8",
+        )
+        append_event(task_dir, "dispatch_queued", f"Dispatch queued for {agent}: {title}", {"dispatch_id": dispatch_id, "gate": payload["gate"]})
+    else:
+        append_event(task_dir, "dispatch_gate_blocked", f"Dispatch blocked by adapter gate for {agent}: {gate.reason}", {"dispatch_id": dispatch_id, "gate": gate.to_dict()})
     return payload
 
 

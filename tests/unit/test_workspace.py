@@ -494,6 +494,71 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(doctor_agents["kimi-code"]["doctor_status"], "READY_SUPERVISED")
             self.assertIn("Adapter Matrix", out_html.read_text(encoding="utf-8"))
 
+    def test_dispatch_require_ready_blocks_disabled_adapters(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Gated Dispatch", "--workspace", str(workspace))
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            blocked = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "mimo-code",
+                "--title",
+                "Disabled work",
+                "--instructions",
+                "Should not enter inbox.",
+                "--require-ready",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertNotEqual(blocked.returncode, 0)
+            payload = json.loads(blocked.stdout)
+            self.assertEqual(payload["status"], "blocked")
+            self.assertEqual(payload["gate"]["readiness"], "DISABLED")
+            self.assertFalse((task_dir / "dispatch" / "agent-inbox" / "mimo-code" / f"{payload['dispatch_id']}.md").exists())
+            ledger = json.loads((task_dir / "RUN_LEDGER.json").read_text(encoding="utf-8"))
+            self.assertIn("dispatch_gate_blocked", [event["type"] for event in ledger["events"]])
+
+    def test_dispatch_require_ready_allows_ready_supervised_adapter(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            fake_claude = tmp_path / "claude"
+            fake_kimi = tmp_path / "kimi"
+            write_fake_claude(fake_claude)
+            write_fake_kimi(fake_kimi)
+            env = {"CLAUDE_CODE_BIN": str(fake_claude), "KIMI_CODE_BIN": str(fake_kimi)}
+            workspace = tmp_path / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Ready Dispatch", "--workspace", str(workspace))
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            queued = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "kimi-code",
+                "--title",
+                "Ready work",
+                "--instructions",
+                "May enter inbox.",
+                "--require-ready",
+                "--workspace",
+                str(workspace),
+                env_extra=env,
+            )
+            self.assertEqual(queued.returncode, 0, queued.stdout + queued.stderr)
+            payload = json.loads(queued.stdout)
+            self.assertEqual(payload["status"], "queued")
+            self.assertEqual(payload["gate"]["readiness"], "READY_SUPERVISED")
+            self.assertTrue((task_dir / "dispatch" / "agent-inbox" / "kimi-code" / f"{payload['dispatch_id']}.md").exists())
+
     def test_claude_code_adapter_records_budget_failure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -603,6 +668,7 @@ class WorkspaceTests(unittest.TestCase):
             ("adapter", "scaffold", "--help"),
             ("adapter", "smoke", "--help"),
             ("dispatch", "--help"),
+            ("dispatch", "queue", "--help"),
             ("schema", "--help"),
             ("orchestrate-start", "--help"),
             ("demo", "--help"),

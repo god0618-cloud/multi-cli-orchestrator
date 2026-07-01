@@ -27,6 +27,7 @@ mco orchestrate-start <task_id> --template frontend-review-loop
 mco dashboard <task_id>
 mco usage snapshot <task_id>
 mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html
+mco dispatch queue <task_id> --agent kimi-code --title "Frontend pass" --instructions "..." --require-ready
 mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
 mco adapter smoke kimi-code --workspace .mco-workspace
 mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
@@ -91,6 +92,7 @@ mco release check .
 | `mco adapter scaffold` | disabled adapter onboarding kit |
 | `mco adapter smoke` | explicit opt-in real Claude Code or Kimi Code smoke test |
 | `mco dispatch queue/list/claim/complete` | generic local queue |
+| `mco dispatch queue --require-ready` | blocks auto-dispatch unless adapter readiness is `READY_SUPERVISED` |
 | `mco dispatch execute --dry-run` | sandbox/capability gate validation |
 | `mco dispatch execute --command-json` | safe command execution with sandbox, allowlist, timeout, and evidence report |
 | `mco dispatch execute --agent claude-code --prompt-file` | bounded Claude Code prompt execution with no tools, no session persistence, budget cap, timeout, and transcript artifact |
@@ -136,6 +138,7 @@ Useful docs:
 - Kimi Code execution is bounded to `kimi --prompt`, task-local prompt files, timeout/output limits, and transcript artifacts.
 - Kimi Code smoke testing is explicit opt-in via `mco adapter smoke kimi-code`; it may consume provider budget. Provider quota remains `unknown` because Kimi Code does not expose a Claude-style per-run budget cap in the current command contract.
 - New adapter onboarding starts disabled via `mco adapter scaffold`; promotion requires capability, sandbox, quota, execution evidence, and smoke gates.
+- Auto-dispatch paths should use `mco dispatch queue --require-ready`; non-ready adapters become blocked evidence and do not receive inbox files.
 - Usage snapshots are evidence-derived. They aggregate task-local execution reports and dispatch records; they do not claim provider-account quota unless that evidence exists.
 - No private local paths or business data should be committed.
 

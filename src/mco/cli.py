@@ -195,9 +195,17 @@ def cmd_dispatch_queue(args: argparse.Namespace) -> int:
     config = resolve_workspace(args.workspace)
     read_workspace_config(config)
     directory = task_dir(config, args.task_id)
-    dispatch = queue_dispatch(directory, args.agent, args.title, args.instructions)
+    sandbox_path = Path(args.sandbox).expanduser().resolve() if args.sandbox else None
+    dispatch = queue_dispatch(
+        directory,
+        args.agent,
+        args.title,
+        args.instructions,
+        require_ready=args.require_ready,
+        sandbox_path=sandbox_path,
+    )
     print(json.dumps(dispatch, indent=2))
-    return 0
+    return 1 if args.require_ready and dispatch["status"] == "blocked" else 0
 
 
 def cmd_dispatch_list(args: argparse.Namespace) -> int:
@@ -465,6 +473,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_dispatch_queue.add_argument("--agent", default="generic-cli")
     p_dispatch_queue.add_argument("--title", required=True)
     p_dispatch_queue.add_argument("--instructions", required=True)
+    p_dispatch_queue.add_argument("--require-ready", action="store_true", help="block queueing unless adapter matrix readiness is READY_SUPERVISED")
+    p_dispatch_queue.add_argument("--sandbox", help="optional sandbox contract reference for gate context")
     p_dispatch_queue.add_argument("--workspace", default=".", help="workspace root")
     p_dispatch_queue.set_defaults(func=cmd_dispatch_queue)
 

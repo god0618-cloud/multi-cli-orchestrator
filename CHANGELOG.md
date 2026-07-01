@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0
+
+- Added adapter gate evaluation for dispatch queueing.
+- Added `mco dispatch queue --require-ready` to block auto-dispatch unless the adapter matrix reports `READY_SUPERVISED`.
+- Blocked dispatches now write durable evidence with `status=blocked`, gate reason, and no inbox file.
+- Added tests proving disabled adapters do not enter an inbox and ready supervised adapters do.
+
 ## 2.1.0
 
 - Added `mco adapter matrix` to show a machine-readable readiness and promotion matrix for known adapters.
