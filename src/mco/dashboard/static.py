@@ -8,6 +8,7 @@ from typing import Any
 
 from mco.adapters.matrix import build_adapter_matrix
 from mco.config import WorkspaceConfig
+from mco.workflow.engine import observe_workflow
 
 
 TERMINAL_PROBLEM_STATUSES = {"blocked", "failed"}
@@ -58,11 +59,11 @@ def _display_money(value: Any) -> str:
 
 def _status_class(status: str) -> str:
     normalized = status.lower()
-    if normalized in {"completed", "ready", "ready_supervised", "pass"}:
+    if normalized in {"advance", "complete", "completed", "ready", "ready_supervised", "pass"}:
         return "ok"
-    if normalized in {"queued", "claimed", "running", "unknown"}:
+    if normalized in {"queued", "claimed", "running", "unknown", "wait"}:
         return "warn"
-    if normalized in TERMINAL_PROBLEM_STATUSES:
+    if normalized in TERMINAL_PROBLEM_STATUSES or normalized == "escalate":
         return "bad"
     return "muted"
 
@@ -146,11 +147,12 @@ def _render_matrix_rows(matrix: dict[str, Any]) -> str:
             "<tr>"
             f"<td><strong>{html.escape(str(item.get('agent', 'unknown')))}</strong><br><span>{html.escape(str(item.get('adapter_type', 'unknown')))}</span></td>"
             f"<td><span class=\"pill {_status_class(str(item.get('readiness', 'unknown')))}\">{html.escape(str(item.get('readiness', 'unknown')))}</span></td>"
+            f"<td>{html.escape(str(item.get('execution_mode', 'unknown')))}<br><span>{html.escape(str(item.get('automation_posture', 'unknown')))}</span></td>"
             f"<td>{html.escape(str(item.get('non_interactive')))}</td>"
             f"<td>{html.escape(str(item.get('supervised')))}</td>"
             f"<td>{html.escape(str(item.get('quota_status', 'unknown')))}<br><span>budget cap: {html.escape(str(item.get('per_run_budget_cap')))}</span></td>"
             f"<td>{html.escape(str(item.get('smoke_gate')))}</td>"
-            f"<td>{html.escape('; '.join(blockers) if blockers else 'none')}</td>"
+            f"<td>{html.escape(str(item.get('recommended_use', 'unknown')))}<br><span>{html.escape('; '.join(blockers) if blockers else 'none')}</span></td>"
             "</tr>"
         )
     return "".join(rows)
@@ -176,6 +178,37 @@ def _render_gate_rows(dispatches: list[dict[str, Any]]) -> str:
     return "".join(rows)
 
 
+def _workflow_observation(task_dir: Path) -> dict[str, Any]:
+    if not (task_dir / "plan.json").exists():
+        return {
+            "schema": "mco.workflow_observe.v1.0",
+            "workflow": "none",
+            "status": "not_initialized",
+            "current_phase": None,
+            "recommended_action": "wait",
+            "reason": "workflow plan not initialized",
+            "dispatch_counts": {},
+            "gate_results": [],
+        }
+    return observe_workflow(task_dir)
+
+
+def _render_workflow_gate_rows(observation: dict[str, Any]) -> str:
+    rows = []
+    for item in observation.get("gate_results", []):
+        status = "pass" if item.get("ok") else "blocked"
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(str(item.get('gate', 'gate')))}</td>"
+            f"<td><span class=\"pill {_status_class(status)}\">{html.escape(status)}</span></td>"
+            f"<td>{html.escape(str(item.get('detail', '')))}</td>"
+            "</tr>"
+        )
+    if not rows:
+        return "<tr><td colspan=\"3\">No current gate details. The workflow may be waiting on dispatches, completed, or not initialized.</td></tr>"
+    return "".join(rows)
+
+
 def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     task_dir = config.tasks_dir / task_id
     task_json = task_dir / "task.json"
@@ -195,6 +228,7 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     reports = _load_artifact_reports(artifacts)
     usage_snapshot = _read_json(task_dir / "USAGE_SNAPSHOT.json")
     adapter_matrix = build_adapter_matrix(include_doctor=False)
+    workflow_observation = _workflow_observation(task_dir)
     adapters = _summarize_adapters(dispatches, reports)
     problem_dispatches = [item for item in dispatches if item.get("status") in TERMINAL_PROBLEM_STATUSES]
     pending_dispatches = [item for item in dispatches if item.get("status") in {"queued", "claimed"}]
@@ -207,6 +241,7 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
             f"<div class=\"metric\"><span>Dispatches</span><strong>{len(completed_dispatches)}/{len(dispatches)} done</strong></div>",
             f"<div class=\"metric\"><span>Artifacts</span><strong>{len(artifacts)}</strong></div>",
             f"<div class=\"metric {_status_class('failed' if problem_dispatches else 'completed')}\"><span>Owner action</span><strong>{'Required' if problem_dispatches else 'None'}</strong></div>",
+            f"<div class=\"metric {_status_class(str(workflow_observation.get('recommended_action', 'wait')))}\"><span>Workflow action</span><strong>{html.escape(str(workflow_observation.get('recommended_action', 'wait')))}</strong></div>",
         ]
     )
 
@@ -344,6 +379,21 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     <p class="label">Generated {html.escape(datetime.now(timezone.utc).isoformat())}</p>
   </section>
   <section class="card">
+    <h2>Workflow Loop Control</h2>
+    <div class="metrics">
+      <div class="metric"><span>Workflow</span><strong>{html.escape(str(workflow_observation.get('workflow', 'none')))}</strong></div>
+      <div class="metric"><span>Current phase</span><strong>{html.escape(str(workflow_observation.get('current_phase') or 'n/a'))}</strong></div>
+      <div class="metric {_status_class(str(workflow_observation.get('recommended_action', 'wait')))}"><span>Recommended action</span><strong>{html.escape(str(workflow_observation.get('recommended_action', 'wait')))}</strong></div>
+      <div class="metric"><span>Reason</span><strong>{html.escape(str(workflow_observation.get('reason', '')))}</strong></div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Gate</th><th>Status</th><th>Detail</th></tr>
+      </thead>
+      <tbody>{_render_workflow_gate_rows(workflow_observation)}</tbody>
+    </table>
+  </section>
+  <section class="card">
     <h2>Adapter Readiness</h2>
     {adapter_rows}
   </section>
@@ -352,7 +402,7 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     <p class="small">Policy baseline without provider probing. Run <code>mco adapter matrix --doctor</code> for local doctor status.</p>
     <table>
       <thead>
-        <tr><th>Agent</th><th>Readiness</th><th>Non-interactive</th><th>Supervised</th><th>Quota</th><th>Smoke</th><th>Promotion blockers</th></tr>
+        <tr><th>Agent</th><th>Readiness</th><th>Execution mode</th><th>Non-interactive</th><th>Supervised</th><th>Quota</th><th>Smoke</th><th>Use / blockers</th></tr>
       </thead>
       <tbody>{_render_matrix_rows(adapter_matrix)}</tbody>
     </table>

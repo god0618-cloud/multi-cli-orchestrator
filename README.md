@@ -14,7 +14,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is at v4.0 open-source MVP release status. The baseline is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, phase-gated workflow advancement, and contributor-ready adapter kits.
+This repository is at v5.0 strict-gate self-closing loop status. The baseline is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, dynamic workflow gates, bounded observe/advance loops, a strict self-closing workflow template, and contributor-ready adapter kits.
 
 ## Core Ideas
 
@@ -36,6 +36,8 @@ mco status --doctor
 mco monitor <task_id> --cycles 3 --interval-seconds 10
 mco orchestrate-start <task_id> --template frontend-review-loop
 mco workflow status <task_id>
+mco workflow observe <task_id>
+mco workflow loop <task_id> --max-steps 1
 mco workflow advance <task_id> --phase plan --verdict pass --summary "Plan checked" --auto-dispatch
 mco dashboard <task_id>
 mco usage snapshot <task_id>
@@ -92,12 +94,13 @@ mco task create "Hello multi-CLI" --workspace .mco-workspace
 mco status --workspace .mco-workspace
 mco task list --workspace .mco-workspace
 mco orchestrate-start "Hello orchestrated task" --template hello-multi-cli --workspace .mco-workspace
+mco orchestrate-start "Strict product task" --template strict-self-closing --workspace .mco-workspace
 mco demo hello-multi-cli --workspace .mco-demo
 mco audit .
 mco release check .
 ```
 
-## v4.0 Command Matrix
+## v5.0 Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -113,7 +116,7 @@ mco release check .
 | `mco artifact register` | implemented |
 | `mco adapter capabilities` | `generic-cli`, `claude-code`, `kimi-code` |
 | `mco adapter doctor` | generic, Claude Code, and Kimi Code readiness checks |
-| `mco adapter matrix` | adapter readiness, quota, smoke, and promotion-blocker matrix |
+| `mco adapter matrix` | adapter readiness, execution mode, automation posture, quota, smoke, and promotion-blocker matrix |
 | `mco adapter scaffold` | disabled adapter onboarding kit with README, fake CLI fixture, and unittest template |
 | `mco adapter validate-kit` | CI-friendly validation for generated adapter contributor kits |
 | `mco adapter smoke` | explicit opt-in real Claude Code or Kimi Code smoke test |
@@ -128,7 +131,7 @@ mco release check .
 | `mco dashboard` | static boss view with control room, adapter matrix, dispatch gate status, usage, artifacts, and timeline |
 | `mco usage snapshot` | task-local usage/quota evidence rollup |
 | `mco orchestrate-start` | bounded initializer |
-| `mco workflow status/advance` | phase-gated workflow state and fail-stop advancement |
+| `mco workflow status/observe/loop/advance` | phase state, machine next-action recommendation, bounded self-closing loop, and fail-stop advancement |
 | `mco schema validate` | implemented |
 | `mco serve` | implemented |
 | `mco audit` | implemented |
@@ -137,8 +140,9 @@ mco release check .
 | `mco run replay` | text, JSON, and static HTML replay |
 | `mco release check` | implemented |
 | arbitrary shell execution | intentionally not implemented |
-| first-party CLI adapters | Claude Code and Kimi Code implemented; Mimo/CodeWhale still disabled |
-| real concurrent provider execution | intentionally not implemented; v4.0 queues supervised waves before execution |
+| strict self-closing workflow | `strict-self-closing` template with plan -> execute -> verify -> close evidence gates |
+| first-party CLI adapters | Claude Code and Kimi Code implemented; Mimo/CodeWhale still manual-only/disabled for auto-dispatch |
+| real concurrent provider execution | intentionally not implemented; v5.0 keeps execution bounded by adapter gates, workflow gates, and explicit loop caps |
 
 ## Repository Layout
 
@@ -157,6 +161,7 @@ Useful docs:
 - `docs/adapter-templates.md`
 - `docs/adapter-contributor-guide.md`
 - `docs/launch-playbook.md`
+- `docs/release-notes-v5.0.md`
 - `docs/release-notes-v3.0.md`
 - `docs/release-checklist.md`
 
@@ -173,6 +178,7 @@ Useful docs:
 - New adapter onboarding starts disabled via `mco adapter scaffold`; promotion requires capability, sandbox, quota, execution evidence, and smoke gates.
 - Auto-dispatch paths should use `mco dispatch queue --require-ready`; non-ready adapters become blocked evidence and do not receive inbox files.
 - Multi-worker paths should use `mco dispatch wave --require-ready`; the wave is capped at six workers and each worker still passes through the same adapter gates.
+- Workflow automation should use `mco workflow observe` or `mco workflow loop`; loops are bounded by `--max-steps`, wait on missing evidence, and escalate on blocked/failed dispatches or missing user decisions.
 - Usage snapshots are evidence-derived. They aggregate task-local execution reports and dispatch records; they do not claim provider-account quota unless that evidence exists.
 - No private local paths or business data should be committed.
 

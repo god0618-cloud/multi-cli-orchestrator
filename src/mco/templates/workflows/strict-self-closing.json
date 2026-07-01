@@ -1,0 +1,56 @@
+{
+  "schema": "mco.workflow.v0.2",
+  "name": "strict-self-closing",
+  "description": "Strict-gate product-task workflow: plan, evidence, verification, close. Designed for bounded multi-CLI self-closing loops.",
+  "phases": [
+    {
+      "id": "plan",
+      "role": "planner",
+      "preferred_agent": "generic-cli",
+      "gates": ["loop_spec_exists"],
+      "outputs": ["plan.json", "acceptance-criteria"],
+      "on_pass": "execute",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "execute",
+      "role": "executor",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:implementation-report.md",
+        "all_dispatches_terminal",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["implementation-report.md"],
+      "on_pass": "verify",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "verify",
+      "role": "verifier",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:verification-report.md",
+        "ledger_event:verification",
+        "dashboard_exists"
+      ],
+      "outputs": ["verification-report.md", "dashboard.html"],
+      "on_pass": "close",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "close",
+      "role": "controller",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:close-report.md",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["close-report.md"],
+      "on_pass": "complete",
+      "on_fail": "human_review"
+    }
+  ]
+}

@@ -35,7 +35,7 @@ from .status import build_status_snapshot, render_status_text
 from .task.lifecycle import create_task, list_tasks, read_task, task_dir
 from .usage.snapshot import write_usage_snapshot
 from .workflow.templates import load_workflow_template, write_plan
-from .workflow.engine import advance_workflow, workflow_status
+from .workflow.engine import advance_workflow, observe_workflow, run_workflow_loop, workflow_status
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -357,6 +357,29 @@ def cmd_workflow_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_workflow_observe(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    directory = task_dir(config, args.task_id)
+    result = observe_workflow(directory)
+    print(json.dumps(result, indent=2))
+    return 1 if result["recommended_action"] == "escalate" else 0
+
+
+def cmd_workflow_loop(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    directory = task_dir(config, args.task_id)
+    result = run_workflow_loop(
+        directory,
+        max_steps=args.max_steps,
+        auto_dispatch=args.auto_dispatch,
+        require_ready=args.require_ready,
+    )
+    print(json.dumps(result, indent=2))
+    return 1 if result["final_action"] in {"escalate", "blocked"} else 0
+
+
 def cmd_workflow_advance(args: argparse.Namespace) -> int:
     config = resolve_workspace(args.workspace)
     read_workspace_config(config)
@@ -646,6 +669,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_workflow_status.add_argument("task_id")
     p_workflow_status.add_argument("--workspace", default=".", help="workspace root")
     p_workflow_status.set_defaults(func=cmd_workflow_status)
+    p_workflow_observe = workflow_sub.add_parser("observe", help="recommend the next workflow action from gates and dispatch state")
+    p_workflow_observe.add_argument("task_id")
+    p_workflow_observe.add_argument("--workspace", default=".", help="workspace root")
+    p_workflow_observe.set_defaults(func=cmd_workflow_observe)
+    p_workflow_loop = workflow_sub.add_parser("loop", help="run a bounded observe/advance loop")
+    p_workflow_loop.add_argument("task_id")
+    p_workflow_loop.add_argument("--max-steps", type=int, default=1, help="maximum observe/advance steps; 1-24")
+    p_workflow_loop.add_argument("--auto-dispatch", action="store_true", help="queue the next phase dispatch after each passing phase")
+    p_workflow_loop.add_argument("--require-ready", action="store_true", help="apply adapter readiness gate to auto-dispatch")
+    p_workflow_loop.add_argument("--workspace", default=".", help="workspace root")
+    p_workflow_loop.set_defaults(func=cmd_workflow_loop)
     p_workflow_advance = workflow_sub.add_parser("advance", help="advance the current workflow phase")
     p_workflow_advance.add_argument("task_id")
     p_workflow_advance.add_argument("--phase", required=True)

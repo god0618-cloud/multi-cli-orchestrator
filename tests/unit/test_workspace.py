@@ -303,6 +303,9 @@ class WorkspaceTests(unittest.TestCase):
             task_dir = workspace / "tasks" / task_id
             self.assertTrue((task_dir / "plan.json").exists())
             self.assertTrue((task_dir / "dashboard.html").exists())
+            dashboard_html = (task_dir / "dashboard.html").read_text(encoding="utf-8")
+            self.assertIn("Workflow Loop Control", dashboard_html)
+            self.assertIn("Recommended action", dashboard_html)
 
             loop_check = run_mco("schema", "validate", "loop-spec", str(task_dir / "LOOP_SPEC.json"))
             self.assertEqual(loop_check.returncode, 0, loop_check.stdout + loop_check.stderr)
@@ -338,6 +341,235 @@ class WorkspaceTests(unittest.TestCase):
             self.assertEqual(plan_payload["current_phase"], "evidence")
             self.assertEqual(plan_payload["phase_states"]["plan"]["status"], "completed")
             self.assertEqual(plan_payload["phase_states"]["evidence"]["status"], "ready")
+
+    def test_workflow_observe_recommends_wait_advance_and_escalate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+
+            started = run_mco(
+                "orchestrate-start",
+                "Observe Task",
+                "--template",
+                "hello-multi-cli",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(started.returncode, 0, started.stderr)
+            task_id = next(line.split(": ", 1)[1] for line in started.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            observe = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(observe.returncode, 0, observe.stdout + observe.stderr)
+            payload = json.loads(observe.stdout)
+            self.assertEqual(payload["schema"], "mco.workflow_observe.v1.0")
+            self.assertEqual(payload["recommended_action"], "advance")
+
+            plan_path = task_dir / "plan.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan["phases"][0]["gates"] = ["artifact_registered:required-evidence.md"]
+            plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+
+            missing = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(missing.returncode, 0, missing.stdout + missing.stderr)
+            missing_payload = json.loads(missing.stdout)
+            self.assertEqual(missing_payload["recommended_action"], "wait")
+            self.assertFalse(missing_payload["gate_results"][0]["ok"])
+
+            artifact_path = task_dir / "required-evidence.md"
+            artifact_path.write_text("# Required Evidence\n", encoding="utf-8")
+            registered = run_mco(
+                "artifact",
+                "register",
+                task_id,
+                str(artifact_path),
+                "--label",
+                "required-evidence.md",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(registered.returncode, 0, registered.stdout + registered.stderr)
+
+            ready = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(ready.returncode, 0, ready.stdout + ready.stderr)
+            ready_payload = json.loads(ready.stdout)
+            self.assertEqual(ready_payload["recommended_action"], "advance")
+
+            blocked = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "mimo-code",
+                "--title",
+                "Blocked worker",
+                "--instructions",
+                "Adapter must be ready.",
+                "--require-ready",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertNotEqual(blocked.returncode, 0)
+            escalated = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertNotEqual(escalated.returncode, 0)
+            escalated_payload = json.loads(escalated.stdout)
+            self.assertEqual(escalated_payload["recommended_action"], "escalate")
+
+    def test_workflow_observe_waits_for_non_terminal_dispatches(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            started = run_mco(
+                "orchestrate-start",
+                "Dispatch Wait Task",
+                "--template",
+                "hello-multi-cli",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(started.returncode, 0, started.stderr)
+            task_id = next(line.split(": ", 1)[1] for line in started.stdout.splitlines() if line.startswith("created task:"))
+
+            queued = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "generic-cli",
+                "--title",
+                "Worker phase",
+                "--instructions",
+                "Write evidence.",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(queued.returncode, 0, queued.stdout + queued.stderr)
+            observe = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(observe.returncode, 0, observe.stdout + observe.stderr)
+            payload = json.loads(observe.stdout)
+            self.assertEqual(payload["recommended_action"], "wait")
+            self.assertEqual(payload["dispatch_counts"]["queued"], 1)
+
+    def test_workflow_loop_is_bounded_and_records_stop(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            started = run_mco(
+                "orchestrate-start",
+                "Bounded Loop Task",
+                "--template",
+                "hello-multi-cli",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(started.returncode, 0, started.stderr)
+            task_id = next(line.split(": ", 1)[1] for line in started.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            looped = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+            self.assertEqual(looped.returncode, 0, looped.stdout + looped.stderr)
+            payload = json.loads(looped.stdout)
+            self.assertEqual(payload["schema"], "mco.workflow_loop.v1.0")
+            self.assertEqual(payload["steps_taken"], 1)
+            self.assertEqual(payload["advances"][0]["phase"], "plan")
+
+            plan_payload = json.loads((task_dir / "plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(plan_payload["current_phase"], "evidence")
+            ledger = json.loads((task_dir / "RUN_LEDGER.json").read_text(encoding="utf-8"))
+            self.assertIn("workflow_loop_stopped", [event["type"] for event in ledger["events"]])
+            self.assertIn("workflow_loop_observed", [event["type"] for event in ledger["events"]])
+
+            too_many = run_mco("workflow", "loop", task_id, "--max-steps", "25", "--workspace", str(workspace))
+            self.assertNotEqual(too_many.returncode, 0)
+            self.assertIn("--max-steps must be between 1 and 24", too_many.stderr)
+
+    def test_workflow_user_decision_gate_escalates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            started = run_mco(
+                "orchestrate-start",
+                "User Gate Task",
+                "--template",
+                "hello-multi-cli",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(started.returncode, 0, started.stderr)
+            task_id = next(line.split(": ", 1)[1] for line in started.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            plan_path = task_dir / "plan.json"
+            plan = json.loads(plan_path.read_text(encoding="utf-8"))
+            plan["phases"][0]["gates"] = ["user_decision:approve-provider-spend"]
+            plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+
+            observe = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertNotEqual(observe.returncode, 0)
+            payload = json.loads(observe.stdout)
+            self.assertEqual(payload["recommended_action"], "escalate")
+            self.assertIn("user decision", payload["reason"])
+
+    def test_strict_self_closing_workflow_completes_with_evidence_gates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            started = run_mco(
+                "orchestrate-start",
+                "Strict Product Task",
+                "--template",
+                "strict-self-closing",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(started.returncode, 0, started.stdout + started.stderr)
+            task_id = next(line.split(": ", 1)[1] for line in started.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            first = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            self.assertEqual(json.loads(first.stdout)["advances"][0]["next_phase"], "execute")
+
+            waiting = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(waiting.returncode, 0, waiting.stdout + waiting.stderr)
+            self.assertEqual(json.loads(waiting.stdout)["recommended_action"], "wait")
+
+            implementation = task_dir / "implementation-report.md"
+            implementation.write_text("# Implementation\n", encoding="utf-8")
+            self.assertEqual(
+                run_mco("artifact", "register", task_id, str(implementation), "--label", "implementation-report.md", "--workspace", str(workspace)).returncode,
+                0,
+            )
+            second = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+            self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+            self.assertEqual(json.loads(second.stdout)["advances"][0]["next_phase"], "verify")
+
+            verification = task_dir / "verification-report.md"
+            verification.write_text("# Verification\n", encoding="utf-8")
+            self.assertEqual(
+                run_mco("artifact", "register", task_id, str(verification), "--label", "verification-report.md", "--workspace", str(workspace)).returncode,
+                0,
+            )
+            self.assertEqual(
+                run_mco("task", "event", task_id, "--type", "verification", "--message", "Verification passed.", "--workspace", str(workspace)).returncode,
+                0,
+            )
+            third = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+            self.assertEqual(third.returncode, 0, third.stdout + third.stderr)
+            self.assertEqual(json.loads(third.stdout)["advances"][0]["next_phase"], "close")
+
+            close = task_dir / "close-report.md"
+            close.write_text("# Close\n", encoding="utf-8")
+            self.assertEqual(
+                run_mco("artifact", "register", task_id, str(close), "--label", "close-report.md", "--workspace", str(workspace)).returncode,
+                0,
+            )
+            final = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+            self.assertEqual(final.returncode, 0, final.stdout + final.stderr)
+            final_payload = json.loads(final.stdout)
+            self.assertEqual(final_payload["advances"][0]["status"], "completed")
+            completed = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(json.loads(completed.stdout)["recommended_action"], "complete")
 
     def test_workflow_advance_fail_stops_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -700,6 +932,9 @@ class WorkspaceTests(unittest.TestCase):
             self.assertTrue(agents["kimi-code"]["implemented"])
             self.assertFalse(agents["mimo-code"]["implemented"])
             self.assertEqual(agents["mimo-code"]["readiness"], "DISABLED")
+            self.assertEqual(agents["mimo-code"]["automation_posture"], "manual_only_do_not_auto_dispatch")
+            self.assertEqual(agents["codewhale"]["execution_mode"], "manual_interactive")
+            self.assertIn("research/ammo", agents["mimo-code"]["recommended_use"])
             self.assertEqual(agents["kimi-code"]["quota_status"], "unknown")
             self.assertTrue(agents["claude-code"]["per_run_budget_cap"])
             self.assertFalse(agents["kimi-code"]["per_run_budget_cap"])
@@ -724,7 +959,10 @@ class WorkspaceTests(unittest.TestCase):
             doctor_agents = {item["agent"]: item for item in matrix_payload["agents"]}
             self.assertEqual(doctor_agents["claude-code"]["doctor_status"], "READY_SUPERVISED")
             self.assertEqual(doctor_agents["kimi-code"]["doctor_status"], "READY_SUPERVISED")
-            self.assertIn("Adapter Matrix", out_html.read_text(encoding="utf-8"))
+            self.assertEqual(doctor_agents["claude-code"]["automation_posture"], "auto_dispatch_allowed_with_require_ready")
+            html_output = out_html.read_text(encoding="utf-8")
+            self.assertIn("Adapter Matrix", html_output)
+            self.assertIn("Execution Mode", html_output)
 
     def test_dispatch_require_ready_blocks_disabled_adapters(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

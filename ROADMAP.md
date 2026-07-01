@@ -173,6 +173,41 @@
 - `mco dispatch wave --require-ready` applies adapter gates per worker and records blocked workers as evidence.
 - Dispatch IDs include microseconds so batch dispatches to the same agent cannot overwrite each other.
 
+## v4.1
+
+- Dynamic workflow gates for task-local files, registered artifacts, ledger events, dispatch terminal state, and dispatch status counts.
+- `mco workflow observe` as the safe loop-control readout.
+- Automation recommendation states: `advance`, `wait`, `escalate`, and `complete`.
+- Non-terminal dispatches force `wait`; blocked or failed dispatches force `escalate`.
+
+## v4.2
+
+- Stop-condition, max-round, and budget guardrails for bounded loop runners.
+- Explicit user-decision gates and escalation artifacts.
+- `mco workflow loop` for a hard-capped observe/advance cycle.
+
+## v4.3
+
+- Boss-view dashboard upgrade around workflow action, blockers, budget posture, and next owner.
+- Dashboard `Workflow Loop Control` section showing current phase, recommended action, reason, and gate details.
+
+## v4.4
+
+- Expanded adapter capability matrix for interactive vs non-interactive execution across Claude Code, Kimi Code, Mimo Code, and CodeWhale-style CLIs.
+- Matrix rows expose `execution_mode`, `automation_posture`, and `recommended_use` to avoid unsafe auto-dispatch assumptions.
+
+## v4.5
+
+- End-to-end validation run on a realistic product task before v5.0.
+- `strict-self-closing` workflow template for plan -> execute -> verify -> close evidence loops.
+
+## v5.0
+
+- Strict-gate multi-CLI self-closing execution loop.
+- Template-driven workflow execution with audit/replay evidence.
+- Safe default posture: no infinite loops, no unbounded provider spend, no silent worker drift.
+- First complete implementation target is the `strict-self-closing` template plus `workflow observe` / `workflow loop`.
+
 ## Future
 
 - Wave execution policies after queue-time safety is proven.

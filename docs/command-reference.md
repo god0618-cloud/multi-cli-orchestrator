@@ -30,6 +30,8 @@ Command surface:
 | `mco usage snapshot` | Write a task-local usage/quota evidence snapshot |
 | `mco orchestrate-start` | Create a task and initialize a workflow plan |
 | `mco workflow status` | Inspect workflow phase state |
+| `mco workflow observe` | Recommend `advance`, `wait`, `escalate`, or `complete` from gates and dispatch state |
+| `mco workflow loop` | Run a bounded observe/advance loop with a hard max-step cap |
 | `mco workflow advance` | Advance the current phase with gates, pass/fail verdict, and optional auto-dispatch |
 | `mco schema validate` | Validate loop spec, adapter manifest, sandbox contract, or run ledger |
 | `mco serve` | Serve a workspace directory over HTTP |
@@ -56,16 +58,20 @@ mco monitor "$TASK_ID" --workspace .mco-workspace --cycles 3 --interval-seconds 
 mco monitor "$TASK_ID" --workspace .mco-workspace --audit --doctor
 ```
 
-`mco workflow status <task_id>` and `mco workflow advance <task_id>` make workflow phases executable without hiding control flow in prompts. `advance` checks the current phase gates before moving to the next phase; a failed verdict or failed gate blocks the workflow.
+`mco workflow status <task_id>`, `mco workflow observe <task_id>`, and `mco workflow advance <task_id>` make workflow phases executable without hiding control flow in prompts. `observe` is the loop-control readout: it recommends `advance`, `wait`, `escalate`, or `complete` from the current gates and dispatch state. `advance` checks the current phase gates before moving to the next phase; a failed verdict or failed gate blocks the workflow.
 
 ```bash
 mco workflow status "$TASK_ID" --workspace .mco-workspace
+mco workflow observe "$TASK_ID" --workspace .mco-workspace
+mco workflow loop "$TASK_ID" --workspace .mco-workspace --max-steps 1
 mco workflow advance "$TASK_ID" --workspace .mco-workspace \
   --phase plan \
   --verdict pass \
   --summary "Plan checked." \
   --auto-dispatch
 ```
+
+`mco workflow loop` is intentionally bounded. It calls `observe`, advances only when `recommended_action=advance`, and stops immediately on `wait`, `escalate`, or `complete`. `--max-steps` must be between 1 and 24.
 
 `mco dispatch queue <task_id> --agent kimi-code --title "Work" --instructions "..." --require-ready` is the queueing mode intended for auto-dispatch. It probes the adapter matrix and only writes an inbox file when readiness is `READY_SUPERVISED`. If the adapter is disabled, unknown, manual-only, or blocked, the dispatch is written as `status=blocked` with gate evidence and no inbox file.
 
@@ -102,7 +108,7 @@ Each worker still passes through the normal dispatch queue and, with `--require-
 
 `mco adapter smoke kimi-code --workspace .mco-workspace` creates the same smoke-test evidence bundle through the real Kimi Code adapter. This command is opt-in and may consume provider budget; it has timeout/output caps but no per-run provider budget flag.
 
-`mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html` writes a machine-readable adapter comparison plus static HTML. Without `--doctor`, the command does not probe local CLI binaries. With `--doctor`, implemented adapters are probed and disabled template adapters remain non-executable.
+`mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html` writes a machine-readable adapter comparison plus static HTML. Without `--doctor`, the command does not probe local CLI binaries. With `--doctor`, implemented adapters are probed and disabled template adapters remain non-executable. Matrix rows include `execution_mode`, `automation_posture`, and `recommended_use` so operators can distinguish auto-dispatch-ready adapters from manual-only CLI workstations.
 
 `mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code` writes a disabled adapter onboarding kit: manifest, sandbox contract draft, smoke checklist, README, deterministic fake CLI fixture, and unittest contract template. Scaffolded adapters are not executable until their gates are implemented and reviewed.
 

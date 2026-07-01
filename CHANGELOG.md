@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.0.0
+
+- Added `mco workflow observe <task_id>` to recommend `advance`, `wait`, `escalate`, or `complete` from workflow gates and dispatch state.
+- Added dynamic workflow gates for task-local files, registered artifacts, ledger events, dispatch terminal state, failed/blocked dispatch absence, and status-count thresholds.
+- Added `mco workflow loop <task_id>` for a hard-capped observe/advance cycle with `--max-steps` bounded to 1-24.
+- Added `user_decision:<decision-id>` gates that escalate until an approved run-ledger decision exists.
+- Added a dashboard `Workflow Loop Control` section with current phase, recommended action, reason, and gate details.
+- Expanded adapter matrix rows with `execution_mode`, `automation_posture`, and `recommended_use` for manual-only vs auto-dispatch-ready CLI decisions.
+- Added the `strict-self-closing` workflow template for plan -> execute -> verify -> close evidence loops.
+- Added regression coverage proving missing evidence waits, registered evidence advances, non-terminal dispatches wait, and blocked dispatches escalate.
+
 ## 4.0.0
 
 - Added `mco dispatch wave <task_id> --spec wave.json` for bounded multi-worker dispatch waves.

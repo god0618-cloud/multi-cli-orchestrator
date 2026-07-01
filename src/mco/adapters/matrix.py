@@ -14,6 +14,14 @@ IMPLEMENTED_AGENTS = {"generic-cli", "claude-code", "kimi-code"}
 SMOKE_AGENTS = {"claude-code", "kimi-code"}
 BUDGET_CAPABLE_AGENTS = {"claude-code"}
 
+RECOMMENDED_USE = {
+    "generic-cli": "deterministic local commands inside sandbox contracts",
+    "claude-code": "supervised non-interactive reasoning, controller, and implementation tasks",
+    "kimi-code": "supervised non-interactive frontend and UI implementation tasks",
+    "mimo-code": "manual research/ammo collection until non-interactive evidence exists",
+    "codewhale": "manual red-team or DeepSeek-style review until adapter evidence exists",
+}
+
 
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
@@ -81,6 +89,22 @@ def _promotion_blockers(agent: str, manifest: dict[str, Any], doctor_status: str
     return blockers
 
 
+def _execution_mode(manifest: dict[str, Any]) -> str:
+    if manifest.get("non_interactive") is True and manifest.get("supervised") is True:
+        return "supervised_non_interactive"
+    if manifest.get("interactive") is True:
+        return "manual_interactive"
+    return "disabled"
+
+
+def _automation_posture(agent: str, manifest: dict[str, Any], doctor_status: str | None) -> str:
+    if doctor_status == "READY_SUPERVISED":
+        return "auto_dispatch_allowed_with_require_ready"
+    if agent in IMPLEMENTED_AGENTS and manifest.get("non_interactive") is True:
+        return "implemented_but_probe_before_auto_dispatch"
+    return "manual_only_do_not_auto_dispatch"
+
+
 def build_adapter_matrix(include_doctor: bool = False) -> dict[str, Any]:
     rows = []
     for agent in KNOWN_AGENTS:
@@ -102,6 +126,9 @@ def build_adapter_matrix(include_doctor: bool = False) -> dict[str, Any]:
             "adapter_type": manifest.get("adapter_type", "unknown"),
             "implemented": agent in IMPLEMENTED_AGENTS,
             "readiness": _readiness(manifest, doctor_status),
+            "execution_mode": _execution_mode(manifest),
+            "automation_posture": _automation_posture(agent, manifest, doctor_status),
+            "recommended_use": RECOMMENDED_USE.get(agent, "unknown"),
             "interactive": manifest.get("interactive"),
             "non_interactive": manifest.get("non_interactive"),
             "supervised": manifest.get("supervised"),
@@ -127,6 +154,7 @@ def build_adapter_matrix(include_doctor: bool = False) -> dict[str, Any]:
         "claims": [
             "Implemented means the adapter has an executable code path in this package.",
             "READY_SUPERVISED requires doctor probing and sandbox validation.",
+            "manual_only_do_not_auto_dispatch means the CLI can still participate through a human-run window, but should not receive automated dispatches.",
             "quota_status=unknown is preserved unless adapter-specific evidence proves a narrower claim.",
             "Real smoke commands are always explicit opt-in and are not part of release checks.",
         ],
@@ -164,11 +192,12 @@ def render_adapter_matrix_html(matrix: dict[str, Any]) -> str:
             "<tr>"
             f"<td><strong>{html.escape(item['agent'])}</strong><br><span>{html.escape(item['adapter_type'])}</span></td>"
             f"<td>{_pill(item['readiness'])}</td>"
+            f"<td>{html.escape(item['execution_mode'])}<br><small>{html.escape(item['automation_posture'])}</small></td>"
             f"<td>{_pill(item['non_interactive'])}</td>"
             f"<td>{_pill(item['supervised'])}</td>"
             f"<td>{_pill(item['quota_status'])}<br><small>budget cap: {html.escape(str(item['per_run_budget_cap']))}</small></td>"
             f"<td>{_pill(item['smoke_gate'])}</td>"
-            f"<td>{html.escape('; '.join(blockers) if blockers else 'none')}</td>"
+            f"<td>{html.escape(item['recommended_use'])}<br><small>{html.escape('; '.join(blockers) if blockers else 'none')}</small></td>"
             "</tr>"
         )
     return f"""<!doctype html>
@@ -198,7 +227,7 @@ def render_adapter_matrix_html(matrix: dict[str, Any]) -> str:
     <h1>Adapter Matrix</h1>
     <p>Generated at {html.escape(matrix['generated_at'])}. Doctor probing: {html.escape(str(matrix['include_doctor']))}.</p>
     <table>
-      <thead><tr><th>Agent</th><th>Readiness</th><th>Non-interactive</th><th>Supervised</th><th>Quota</th><th>Smoke</th><th>Promotion Blockers</th></tr></thead>
+      <thead><tr><th>Agent</th><th>Readiness</th><th>Execution Mode</th><th>Non-interactive</th><th>Supervised</th><th>Quota</th><th>Smoke</th><th>Use / Promotion Blockers</th></tr></thead>
       <tbody>{''.join(rows)}</tbody>
     </table>
   </main>
