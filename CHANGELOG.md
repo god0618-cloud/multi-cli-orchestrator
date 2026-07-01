@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.7.0
+
+- Added workflow phase state to generated `plan.json` files.
+- Added `mco workflow status <task_id>` to inspect current phase and phase states.
+- Added `mco workflow advance <task_id>` with gate evaluation, pass/fail verdicts, fail-stop behavior, and optional `--auto-dispatch`.
+- Auto-dispatch can reuse adapter readiness gates through `--require-ready`.
+
 ## 2.6.0
 
 - Added `mco monitor <task_id>` to write bounded task status snapshots as evidence.

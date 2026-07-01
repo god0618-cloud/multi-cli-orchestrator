@@ -33,6 +33,7 @@ from .status import build_status_snapshot, render_status_text
 from .task.lifecycle import create_task, list_tasks, read_task, task_dir
 from .usage.snapshot import write_usage_snapshot
 from .workflow.templates import load_workflow_template, write_plan
+from .workflow.engine import advance_workflow, workflow_status
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -330,6 +331,30 @@ def cmd_orchestrate_start(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_workflow_status(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    directory = task_dir(config, args.task_id)
+    print(json.dumps(workflow_status(directory), indent=2))
+    return 0
+
+
+def cmd_workflow_advance(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    directory = task_dir(config, args.task_id)
+    result = advance_workflow(
+        directory,
+        args.phase,
+        args.verdict,
+        args.summary,
+        auto_dispatch=args.auto_dispatch,
+        require_ready=args.require_ready,
+    )
+    print(json.dumps(result, indent=2))
+    return 1 if result["status"] == "blocked" else 0
+
+
 def cmd_schema_validate(args: argparse.Namespace) -> int:
     payload = json.loads(Path(args.path).read_text(encoding="utf-8"))
     if args.kind == "loop-spec":
@@ -575,6 +600,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_orchestrate.add_argument("--template", default="hello-multi-cli")
     p_orchestrate.add_argument("--workspace", default=".", help="workspace root")
     p_orchestrate.set_defaults(func=cmd_orchestrate_start)
+
+    p_workflow = sub.add_parser("workflow", help="inspect and advance workflow plans")
+    workflow_sub = p_workflow.add_subparsers(dest="workflow_command", required=True)
+    p_workflow_status = workflow_sub.add_parser("status", help="show workflow phase state")
+    p_workflow_status.add_argument("task_id")
+    p_workflow_status.add_argument("--workspace", default=".", help="workspace root")
+    p_workflow_status.set_defaults(func=cmd_workflow_status)
+    p_workflow_advance = workflow_sub.add_parser("advance", help="advance the current workflow phase")
+    p_workflow_advance.add_argument("task_id")
+    p_workflow_advance.add_argument("--phase", required=True)
+    p_workflow_advance.add_argument("--verdict", required=True, choices=["pass", "fail"])
+    p_workflow_advance.add_argument("--summary", required=True)
+    p_workflow_advance.add_argument("--auto-dispatch", action="store_true", help="queue the next phase dispatch after a passing phase")
+    p_workflow_advance.add_argument("--require-ready", action="store_true", help="apply adapter readiness gate to auto-dispatch")
+    p_workflow_advance.add_argument("--workspace", default=".", help="workspace root")
+    p_workflow_advance.set_defaults(func=cmd_workflow_advance)
 
     p_schema = sub.add_parser("schema", help="schema utilities")
     schema_sub = p_schema.add_subparsers(dest="schema_command", required=True)

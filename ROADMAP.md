@@ -128,6 +128,13 @@
 - Hard cycle and interval caps to avoid accidental long-running daemons.
 - Optional audit and doctor probing remain explicit per run.
 
+## v2.7
+
+- Workflow phase state in generated plans.
+- `mco workflow status` for operator inspection.
+- `mco workflow advance` for phase-gated pass/fail transitions.
+- Fail-stop behavior and optional auto-dispatch to the next phase.
+
 ## Future
 
 - Multi-worker supervised execution.

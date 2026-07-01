@@ -6,7 +6,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 ## Status
 
-This repository is in v2.6 multi-adapter control-plane stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, a compact operator status command with explicit doctor probing, and bounded monitor snapshots.
+This repository is in v2.7 multi-adapter control-plane stage. The current baseline is a clean open-source MVP with no private paths, no private business data, a runnable hello workflow, generic dispatch primitives, replayable evidence, adapter sandbox gates, scriptable CLI output, CI smoke gates, release checks, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, a compact operator status command with explicit doctor probing, bounded monitor snapshots, and phase-gated workflow advancement.
 
 ## Core Ideas
 
@@ -27,6 +27,8 @@ mco status
 mco status --doctor
 mco monitor <task_id> --cycles 3 --interval-seconds 10
 mco orchestrate-start <task_id> --template frontend-review-loop
+mco workflow status <task_id>
+mco workflow advance <task_id> --phase plan --verdict pass --summary "Plan checked" --auto-dispatch
 mco dashboard <task_id>
 mco usage snapshot <task_id>
 mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html
@@ -37,7 +39,7 @@ mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
 mco run replay <path-to-RUN_LEDGER.json>
 ```
 
-Implemented in this v2.6 baseline:
+Implemented in this v2.7 baseline:
 
 - `mco init`
 - `mco doctor`
@@ -60,6 +62,7 @@ Implemented in this v2.6 baseline:
 - `mco dispatch execute --agent kimi-code --prompt-file`
 - `mco dashboard`
 - `mco orchestrate-start`
+- `mco workflow status/advance`
 - `mco schema validate`
 - `mco audit`
 
@@ -80,7 +83,7 @@ mco audit .
 mco release check .
 ```
 
-## v2.6 Command Matrix
+## v2.7 Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -108,6 +111,7 @@ mco release check .
 | `mco dashboard` | static boss view with control room, adapter matrix, dispatch gate status, usage, artifacts, and timeline |
 | `mco usage snapshot` | task-local usage/quota evidence rollup |
 | `mco orchestrate-start` | bounded initializer |
+| `mco workflow status/advance` | phase-gated workflow state and fail-stop advancement |
 | `mco schema validate` | implemented |
 | `mco serve` | implemented |
 | `mco audit` | implemented |

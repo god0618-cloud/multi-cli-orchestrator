@@ -27,6 +27,8 @@ Command surface:
 | `mco dashboard` | Render a static task dashboard |
 | `mco usage snapshot` | Write a task-local usage/quota evidence snapshot |
 | `mco orchestrate-start` | Create a task and initialize a workflow plan |
+| `mco workflow status` | Inspect workflow phase state |
+| `mco workflow advance` | Advance the current phase with gates, pass/fail verdict, and optional auto-dispatch |
 | `mco schema validate` | Validate loop spec, adapter manifest, sandbox contract, or run ledger |
 | `mco serve` | Serve a workspace directory over HTTP |
 | `mco audit` | Run minimal safety audit |
@@ -50,6 +52,17 @@ mco status --workspace .mco-workspace --doctor --json
 mco monitor "$TASK_ID" --workspace .mco-workspace
 mco monitor "$TASK_ID" --workspace .mco-workspace --cycles 3 --interval-seconds 10
 mco monitor "$TASK_ID" --workspace .mco-workspace --audit --doctor
+```
+
+`mco workflow status <task_id>` and `mco workflow advance <task_id>` make workflow phases executable without hiding control flow in prompts. `advance` checks the current phase gates before moving to the next phase; a failed verdict or failed gate blocks the workflow.
+
+```bash
+mco workflow status "$TASK_ID" --workspace .mco-workspace
+mco workflow advance "$TASK_ID" --workspace .mco-workspace \
+  --phase plan \
+  --verdict pass \
+  --summary "Plan checked." \
+  --auto-dispatch
 ```
 
 `mco dispatch queue <task_id> --agent kimi-code --title "Work" --instructions "..." --require-ready` is the queueing mode intended for auto-dispatch. It probes the adapter matrix and only writes an inbox file when readiness is `READY_SUPERVISED`. If the adapter is disabled, unknown, manual-only, or blocked, the dispatch is written as `status=blocked` with gate evidence and no inbox file.

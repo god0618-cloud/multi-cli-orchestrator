@@ -35,11 +35,21 @@ def validate_workflow_template(payload: dict) -> None:
 
 
 def write_plan(task_dir: Path, template: dict) -> Path:
+    first_phase = template["phases"][0]["id"]
     plan = {
         "schema": "mco.plan.v0.2",
         "workflow": template["name"],
         "phases": template["phases"],
         "status": "initialized",
+        "current_phase": first_phase,
+        "phase_states": {
+            phase["id"]: {
+                "status": "ready" if phase["id"] == first_phase else "pending",
+                "summary": None,
+                "gate_results": [],
+            }
+            for phase in template["phases"]
+        },
     }
     out = task_dir / "plan.json"
     out.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")

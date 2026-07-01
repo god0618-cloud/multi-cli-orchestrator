@@ -309,6 +309,88 @@ class WorkspaceTests(unittest.TestCase):
             ledger_check = run_mco("schema", "validate", "run-ledger", str(task_dir / "RUN_LEDGER.json"))
             self.assertEqual(ledger_check.returncode, 0, ledger_check.stdout + ledger_check.stderr)
 
+            workflow_status = run_mco("workflow", "status", task_id, "--workspace", str(workspace))
+            self.assertEqual(workflow_status.returncode, 0, workflow_status.stdout + workflow_status.stderr)
+            status_payload = json.loads(workflow_status.stdout)
+            self.assertEqual(status_payload["current_phase"], "plan")
+            self.assertEqual(status_payload["phase_states"]["plan"]["status"], "ready")
+
+            advanced = run_mco(
+                "workflow",
+                "advance",
+                task_id,
+                "--phase",
+                "plan",
+                "--verdict",
+                "pass",
+                "--summary",
+                "Plan checked.",
+                "--auto-dispatch",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(advanced.returncode, 0, advanced.stdout + advanced.stderr)
+            advanced_payload = json.loads(advanced.stdout)
+            self.assertEqual(advanced_payload["next_phase"], "evidence")
+            self.assertEqual(advanced_payload["dispatch"]["status"], "queued")
+
+            plan_payload = json.loads((task_dir / "plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(plan_payload["current_phase"], "evidence")
+            self.assertEqual(plan_payload["phase_states"]["plan"]["status"], "completed")
+            self.assertEqual(plan_payload["phase_states"]["evidence"]["status"], "ready")
+
+    def test_workflow_advance_fail_stops_plan(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            started = run_mco(
+                "orchestrate-start",
+                "Fail Stop Task",
+                "--template",
+                "hello-multi-cli",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(started.returncode, 0, started.stderr)
+            task_id = next(line.split(": ", 1)[1] for line in started.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            failed = run_mco(
+                "workflow",
+                "advance",
+                task_id,
+                "--phase",
+                "plan",
+                "--verdict",
+                "fail",
+                "--summary",
+                "Planner rejected scope.",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertNotEqual(failed.returncode, 0)
+            payload = json.loads(failed.stdout)
+            self.assertEqual(payload["status"], "blocked")
+            plan_payload = json.loads((task_dir / "plan.json").read_text(encoding="utf-8"))
+            self.assertEqual(plan_payload["status"], "blocked")
+            self.assertEqual(plan_payload["blocked_by"], "plan")
+
+            retry = run_mco(
+                "workflow",
+                "advance",
+                task_id,
+                "--phase",
+                "plan",
+                "--verdict",
+                "pass",
+                "--summary",
+                "Try again.",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertNotEqual(retry.returncode, 0)
+            self.assertIn("workflow cannot advance from status: blocked", retry.stderr)
+
     def test_disabled_adapter_templates_validate_and_do_not_execute(self) -> None:
         for path in sorted((ROOT / "templates" / "adapters").glob("*.json")):
             with self.subTest(path=path.name):

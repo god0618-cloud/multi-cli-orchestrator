@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi-cli-orchestrator"
-version = "2.6.0"
+version = "2.7.0"
 description = "Local-first Agent OS for coordinating multiple AI coding CLIs as supervised workstations."
 readme = "README.md"
 requires-python = ">=3.10"
