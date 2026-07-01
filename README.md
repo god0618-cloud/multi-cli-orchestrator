@@ -23,6 +23,7 @@ This repository is at v5.0 strict-gate self-closing loop status. The baseline is
 - Want a shareable demo narrative? Open [`docs/demo-story-v5.1.md`](docs/demo-story-v5.1.md).
 - Want to see the operator surface? Generate a dashboard with `mco dashboard <task_id>`.
 - Want to add a CLI? Start from [`docs/adapter-contributor-guide.md`](docs/adapter-contributor-guide.md).
+- Want to contribute? Start with [`docs/GOOD_FIRST_ISSUES.md`](docs/GOOD_FIRST_ISSUES.md).
 
 ## Should You Use It?
 
@@ -182,6 +183,9 @@ Useful docs:
 - `docs/diagrams.md`
 - `docs/adapter-templates.md`
 - `docs/adapter-contributor-guide.md`
+- `docs/ADAPTER_MATURITY_MODEL.md`
+- `docs/WORKFLOW_TEMPLATE_CONTRIBUTING.md`
+- `docs/GOOD_FIRST_ISSUES.md`
 - `docs/launch-playbook.md`
 - `docs/release-notes-v5.0.md`
 - `docs/release-notes-v3.0.md`

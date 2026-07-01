@@ -1,0 +1,33 @@
+name: Safety concern
+description: Report a safety, privacy, quota, or execution-boundary concern.
+title: "[Safety]: "
+labels: ["safety", "needs-triage"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - adapter execution
+        - workflow loop
+        - sandbox boundary
+        - quota or cost
+        - private path or credential exposure
+        - native CLI memory/profile
+        - stable knowledge base
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: concern
+    attributes:
+      label: Concern
+      description: Describe the risk and include sanitized evidence.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction or evidence
+      description: Include exact commands when possible. Do not include secrets.
+

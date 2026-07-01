@@ -43,3 +43,11 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 - A realistic workflow examples README explains how to run and close one workflow with placeholder evidence.
 - All three templates have been dogfooded to `recommended_action=complete` with placeholder evidence in a temporary workspace.
 - No new provider execution authority is added.
+
+## v5.3-contributor-onramp Acceptance
+
+- Contribution docs reflect the current v5 posture.
+- Good-first issue guidance exists.
+- Adapter maturity levels and promotion gates are explicit.
+- Workflow template contribution rules are explicit.
+- Issue templates cover adapter requests, workflow requests, bugs, and safety concerns.

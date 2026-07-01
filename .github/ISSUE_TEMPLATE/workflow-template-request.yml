@@ -1,0 +1,30 @@
+name: Workflow template request
+description: Request or propose a new bounded workflow template.
+title: "[Workflow]: "
+labels: ["workflow", "needs-triage"]
+body:
+  - type: input
+    id: scenario
+    attributes:
+      label: Scenario
+      description: What recurring workflow should this template support?
+      placeholder: "Example: frontend visual review"
+    validations:
+      required: true
+  - type: textarea
+    id: phases
+    attributes:
+      label: Proposed phases and gates
+      description: List phases, expected evidence, and stop/escalation conditions.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety acknowledgement
+      options:
+        - label: This request does not require unbounded provider execution.
+          required: true
+        - label: Each phase can be verified through files, artifacts, ledger events, dispatch state, or explicit user decisions.
+          required: true
+
