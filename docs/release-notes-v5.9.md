@@ -14,6 +14,7 @@ It does not add broader automation authority. It packages the v5 control-plane w
   - adapter onboarding.
 - Adapter extension roadmap defines how Mimo Code and CodeWhale can move from manual-only to supervised readiness without skipping gates.
 - Dashboard first screen now includes an Operator Brief and a next-command hint.
+- Boss dashboard now has dependency-free Chinese/English switching, with README screenshots for both views.
 - Trial feedback issue template and maintainer loop make external feedback reproducible and safe to triage.
 
 ## Safety Posture
@@ -42,7 +43,8 @@ Additional v5.9 evidence:
 - documentation, frontend, and adapter onboarding tutorials reached `recommended_action=complete` in temporary local workspaces,
 - Mimo Code and CodeWhale scaffold kits passed generated contract tests and `mco adapter validate-kit`,
 - issue template YAML files parsed successfully,
-- dashboard smoke confirmed the Operator Brief and Next Command labels render.
+- dashboard smoke confirmed the Operator Brief, Next Command, and Chinese/English toggle render,
+- GitHub Actions CI passed on the release-candidate commit.
 
 ## Known Limits
 
