@@ -252,6 +252,194 @@ def _owner_brief(
     }
 
 
+def _language_script(owner_brief: dict[str, str], workflow_observation: dict[str, Any]) -> str:
+    phase = str(workflow_observation.get("current_phase") or "n/a")
+    action = str(workflow_observation.get("recommended_action", "wait"))
+    owner_brief_zh = {
+        "Decision required": {
+            "status": "需要决策",
+            "headline": "有一个派发任务已阻塞或失败。",
+            "detail": "继续推进前，先查看 Owner Escalations。",
+        },
+        "Work in progress": {
+            "status": "执行中",
+            "headline": "已有任务正在排队或执行。",
+            "detail": "当前不需要老板拍板。继续观察终态或超时即可。",
+        },
+        "Ready to close": {
+            "status": "可收口",
+            "headline": "工作流门禁已完成。",
+            "detail": "对外声明前，先复核 close evidence 和 replay ledger。",
+        },
+        "Advance available": {
+            "status": "可推进",
+            "headline": f"当前阶段 {phase} 可以推进。",
+            "detail": str(workflow_observation.get("reason") or owner_brief.get("detail", "")),
+        },
+        "Review required": {
+            "status": "需要复核",
+            "headline": f"工作流在 {phase} 阶段阻塞。",
+            "detail": str(workflow_observation.get("reason") or owner_brief.get("detail", "")),
+        },
+        "Waiting": {
+            "status": "等待中",
+            "headline": f"工作流正在 {phase} 阶段等待。",
+            "detail": str(workflow_observation.get("reason") or owner_brief.get("detail", "")),
+        },
+    }.get(owner_brief.get("status", ""), {})
+
+    dictionary = {
+        "en": {
+            "boss_dashboard_control_room": "Boss Dashboard Control Room",
+            "task": "Task",
+            "operator_brief": "Operator Brief",
+            "next_command": "Next Command",
+            "hint_disclaimer": "This is a hint, not automatic authority. Use workflow gates and evidence before advancing.",
+            "control_room": "Control Room",
+            "generated": "Generated",
+            "workflow_loop_control": "Workflow Loop Control",
+            "workflow": "Workflow",
+            "current_phase": "Current phase",
+            "recommended_action": "Recommended action",
+            "reason": "Reason",
+            "gate": "Gate",
+            "status": "Status",
+            "detail": "Detail",
+            "adapter_readiness": "Adapter Readiness",
+            "adapter": "Adapter",
+            "latest_dispatch": "Latest dispatch",
+            "budget": "Budget",
+            "remaining": "Remaining",
+            "adapter_matrix": "Adapter Matrix",
+            "matrix_hint": "Policy baseline without provider probing. Run <code>mco adapter matrix --doctor</code> for local doctor status.",
+            "agent": "Agent",
+            "readiness": "Readiness",
+            "execution_mode": "Execution mode",
+            "non_interactive": "Non-interactive",
+            "supervised": "Supervised",
+            "quota": "Quota",
+            "smoke": "Smoke",
+            "use_blockers": "Use / blockers",
+            "dispatch_gate_status": "Dispatch Gate Status",
+            "dispatch_gate_hint": "Only dispatches queued with <code>--require-ready</code> include gate evidence.",
+            "dispatch": "Dispatch",
+            "owner_escalations": "Owner Escalations",
+            "usage_snapshot": "Usage Snapshot",
+            "quota_status": "Quota status",
+            "dispatches": "Dispatches",
+            "observed": "Observed",
+            "last_error": "Last error",
+            "current_evidence": "Current Evidence",
+            "latest_event": "Latest event",
+            "artifacts": "Artifacts",
+            "timeline": "Timeline",
+            "task_status": "Task status",
+            "owner_action": "Owner action",
+            "workflow_action": "Workflow action",
+            "done": "done",
+            "required": "Required",
+            "none": "None",
+            "language_toggle": "中文",
+            "language_label": "Language",
+            "brief_status": owner_brief.get("status", ""),
+            "brief_headline": owner_brief.get("headline", ""),
+            "brief_detail": owner_brief.get("detail", ""),
+        },
+        "zh": {
+            "boss_dashboard_control_room": "老板视角控制室",
+            "task": "任务",
+            "operator_brief": "操作摘要",
+            "next_command": "下一条建议命令",
+            "hint_disclaimer": "这是提示，不是自动授权。推进前仍需以工作流门禁和证据为准。",
+            "control_room": "控制室",
+            "generated": "生成时间",
+            "workflow_loop_control": "工作流循环控制",
+            "workflow": "工作流",
+            "current_phase": "当前阶段",
+            "recommended_action": "建议动作",
+            "reason": "原因",
+            "gate": "门禁",
+            "status": "状态",
+            "detail": "详情",
+            "adapter_readiness": "适配器就绪度",
+            "adapter": "适配器",
+            "latest_dispatch": "最近派发",
+            "budget": "预算",
+            "remaining": "剩余",
+            "adapter_matrix": "适配器矩阵",
+            "matrix_hint": "不探测供应商的策略基线。本机 doctor 状态请运行 <code>mco adapter matrix --doctor</code>。",
+            "agent": "Agent",
+            "readiness": "就绪度",
+            "execution_mode": "执行模式",
+            "non_interactive": "非交互",
+            "supervised": "受监管",
+            "quota": "额度",
+            "smoke": "冒烟",
+            "use_blockers": "用途 / 阻断",
+            "dispatch_gate_status": "派发门禁状态",
+            "dispatch_gate_hint": "只有通过 <code>--require-ready</code> 排队的派发任务才包含门禁证据。",
+            "dispatch": "派发",
+            "owner_escalations": "老板拍板事项",
+            "usage_snapshot": "用量快照",
+            "quota_status": "额度状态",
+            "dispatches": "派发数",
+            "observed": "已观测",
+            "last_error": "最近错误",
+            "current_evidence": "当前证据",
+            "latest_event": "最近事件",
+            "artifacts": "产物",
+            "timeline": "时间线",
+            "task_status": "任务状态",
+            "owner_action": "老板动作",
+            "workflow_action": "工作流动作",
+            "done": "完成",
+            "required": "需要",
+            "none": "无",
+            "language_toggle": "English",
+            "language_label": "语言",
+            "brief_status": owner_brief_zh.get("status", owner_brief.get("status", "")),
+            "brief_headline": owner_brief_zh.get("headline", owner_brief.get("headline", "")),
+            "brief_detail": owner_brief_zh.get("detail", owner_brief.get("detail", "")),
+        },
+    }
+    dynamic = {
+        "recommended_action": action,
+    }
+    payload = json.dumps({"dictionary": dictionary, "dynamic": dynamic}, ensure_ascii=False)
+    return f"""
+  <script>
+    const MCO_DASHBOARD_I18N = {payload};
+    function setDashboardLanguage(lang) {{
+      const nextLang = lang === "zh" ? "zh" : "en";
+      const dict = MCO_DASHBOARD_I18N.dictionary[nextLang];
+      document.documentElement.lang = nextLang === "zh" ? "zh-CN" : "en";
+      document.querySelectorAll("[data-i18n]").forEach((node) => {{
+        const key = node.getAttribute("data-i18n");
+        if (dict[key] !== undefined) {{
+          node.innerHTML = dict[key];
+        }}
+      }});
+      document.querySelectorAll("[data-i18n-title]").forEach((node) => {{
+        const key = node.getAttribute("data-i18n-title");
+        if (dict[key] !== undefined) {{
+          node.setAttribute("title", dict[key]);
+          node.setAttribute("aria-label", dict[key]);
+        }}
+      }});
+      localStorage.setItem("mco.dashboard.language", nextLang);
+    }}
+    document.addEventListener("DOMContentLoaded", () => {{
+      const stored = localStorage.getItem("mco.dashboard.language");
+      setDashboardLanguage(stored || "en");
+      document.querySelector("[data-language-toggle]")?.addEventListener("click", () => {{
+        const current = document.documentElement.lang === "zh-CN" ? "zh" : "en";
+        setDashboardLanguage(current === "zh" ? "en" : "zh");
+      }});
+    }});
+  </script>
+"""
+
+
 def _render_workflow_gate_rows(observation: dict[str, Any]) -> str:
     rows = []
     for item in observation.get("gate_results", []):
@@ -297,11 +485,11 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
 
     control_cards = "\n".join(
         [
-            f"<div class=\"metric\"><span>Task status</span><strong>{html.escape(task.get('status', 'unknown'))}</strong></div>",
-            f"<div class=\"metric\"><span>Dispatches</span><strong>{len(completed_dispatches)}/{len(dispatches)} done</strong></div>",
-            f"<div class=\"metric\"><span>Artifacts</span><strong>{len(artifacts)}</strong></div>",
-            f"<div class=\"metric {_status_class('failed' if problem_dispatches else 'completed')}\"><span>Owner action</span><strong>{'Required' if problem_dispatches else 'None'}</strong></div>",
-            f"<div class=\"metric {_status_class(str(workflow_observation.get('recommended_action', 'wait')))}\"><span>Workflow action</span><strong>{html.escape(str(workflow_observation.get('recommended_action', 'wait')))}</strong></div>",
+            f"<div class=\"metric\"><span data-i18n=\"task_status\">Task status</span><strong>{html.escape(task.get('status', 'unknown'))}</strong></div>",
+            f"<div class=\"metric\"><span data-i18n=\"dispatches\">Dispatches</span><strong>{len(completed_dispatches)}/{len(dispatches)} <span data-i18n=\"done\">done</span></strong></div>",
+            f"<div class=\"metric\"><span data-i18n=\"artifacts\">Artifacts</span><strong>{len(artifacts)}</strong></div>",
+            f"<div class=\"metric {_status_class('failed' if problem_dispatches else 'completed')}\"><span data-i18n=\"owner_action\">Owner action</span><strong data-i18n=\"{'required' if problem_dispatches else 'none'}\">{'Required' if problem_dispatches else 'None'}</strong></div>",
+            f"<div class=\"metric {_status_class(str(workflow_observation.get('recommended_action', 'wait')))}\"><span data-i18n=\"workflow_action\">Workflow action</span><strong>{html.escape(str(workflow_observation.get('recommended_action', 'wait')))}</strong></div>",
         ]
     )
 
@@ -316,10 +504,10 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
             <span class="pill {_status_class(adapter['readiness'])}">{html.escape(adapter['readiness'])}</span>
           </div>
           <div class="adapter-grid">
-            <div><span>Latest dispatch</span><strong>{html.escape(adapter['latest_dispatch'].get('title', 'n/a'))}</strong></div>
-            <div><span>Status</span><strong>{html.escape(adapter['latest_dispatch'].get('status', 'unknown'))}</strong></div>
-            <div><span>Budget</span><strong>{_display_money(adapter['observed_cost'])} / {_display_money(adapter['max_budget'])}</strong></div>
-            <div><span>Remaining</span><strong>{_display_money(adapter['remaining_budget'])}</strong></div>
+            <div><span data-i18n="latest_dispatch">Latest dispatch</span><strong>{html.escape(adapter['latest_dispatch'].get('title', 'n/a'))}</strong></div>
+            <div><span data-i18n="status">Status</span><strong>{html.escape(adapter['latest_dispatch'].get('status', 'unknown'))}</strong></div>
+            <div><span data-i18n="budget">Budget</span><strong>{_display_money(adapter['observed_cost'])} / {_display_money(adapter['max_budget'])}</strong></div>
+            <div><span data-i18n="remaining">Remaining</span><strong>{_display_money(adapter['remaining_budget'])}</strong></div>
           </div>
           <p>{html.escape(adapter['latest_report'].get('summary', adapter['problem'] or 'No execution report yet.'))}</p>
           <p class="small">Counts: {html.escape(json.dumps(adapter['status_counts'], sort_keys=True))}</p>
@@ -421,6 +609,9 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     .bad {{ color: #fb7185; background: rgba(251,113,133,.12); border-color: rgba(251,113,133,.35); }}
     .muted {{ color: #94a3b8; background: rgba(148,163,184,.12); border-color: rgba(148,163,184,.35); }}
     .small {{ color: #94a3b8; font-size: 13px; word-break: break-word; }}
+    .topbar {{ display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }}
+    .lang-toggle {{ background: #1f2937; color: #f8fafc; border: 1px solid #334155; border-radius: 999px; padding: 8px 12px; font-weight: 700; cursor: pointer; }}
+    .lang-toggle:hover {{ border-color: #60a5fa; color: #bfdbfe; }}
     ul {{ padding-left: 20px; }}
     li {{ margin-bottom: 12px; }}
     li p {{ margin: 4px 0 0; color: #94a3b8; }}
@@ -433,100 +624,106 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
 <body>
 <main>
   <header>
-    <div class="label">Boss Dashboard Control Room</div>
-    <h1>{html.escape(task.get("title", task_id))}</h1>
-    <div>Task: <code>{html.escape(task_id)}</code></div>
+    <div class="topbar">
+      <div>
+        <div class="label" data-i18n="boss_dashboard_control_room">Boss Dashboard Control Room</div>
+        <h1>{html.escape(task.get("title", task_id))}</h1>
+        <div><span data-i18n="task">Task</span>: <code>{html.escape(task_id)}</code></div>
+      </div>
+      <button class="lang-toggle" type="button" data-language-toggle data-i18n="language_toggle" data-i18n-title="language_label" title="Language" aria-label="Language">中文</button>
+    </div>
   </header>
   <section class="card">
     <div class="brief">
       <div class="brief-panel">
-        <div class="label">Operator Brief</div>
-        <h2>{html.escape(owner_brief["headline"])}</h2>
-        <span class="pill {html.escape(owner_brief["class"])}">{html.escape(owner_brief["status"])}</span>
-        <p>{html.escape(owner_brief["detail"])}</p>
+        <div class="label" data-i18n="operator_brief">Operator Brief</div>
+        <h2 data-i18n="brief_headline">{html.escape(owner_brief["headline"])}</h2>
+        <span class="pill {html.escape(owner_brief["class"])}" data-i18n="brief_status">{html.escape(owner_brief["status"])}</span>
+        <p data-i18n="brief_detail">{html.escape(owner_brief["detail"])}</p>
       </div>
       <div class="brief-panel">
-        <div class="label">Next Command</div>
+        <div class="label" data-i18n="next_command">Next Command</div>
         <p><code>{html.escape(owner_brief["next_command"])}</code></p>
-        <p class="small">This is a hint, not automatic authority. Use workflow gates and evidence before advancing.</p>
+        <p class="small" data-i18n="hint_disclaimer">This is a hint, not automatic authority. Use workflow gates and evidence before advancing.</p>
       </div>
     </div>
   </section>
   <section class="card">
-    <h2>Control Room</h2>
+    <h2 data-i18n="control_room">Control Room</h2>
     <div class="metrics">{control_cards}</div>
-    <p class="label">Generated {html.escape(datetime.now(timezone.utc).isoformat())}</p>
+    <p class="label"><span data-i18n="generated">Generated</span> {html.escape(datetime.now(timezone.utc).isoformat())}</p>
   </section>
   <section class="card">
-    <h2>Workflow Loop Control</h2>
+    <h2 data-i18n="workflow_loop_control">Workflow Loop Control</h2>
     <div class="metrics">
-      <div class="metric"><span>Workflow</span><strong>{html.escape(str(workflow_observation.get('workflow', 'none')))}</strong></div>
-      <div class="metric"><span>Current phase</span><strong>{html.escape(str(workflow_observation.get('current_phase') or 'n/a'))}</strong></div>
-      <div class="metric {_status_class(str(workflow_observation.get('recommended_action', 'wait')))}"><span>Recommended action</span><strong>{html.escape(str(workflow_observation.get('recommended_action', 'wait')))}</strong></div>
-      <div class="metric"><span>Reason</span><strong>{html.escape(str(workflow_observation.get('reason', '')))}</strong></div>
+      <div class="metric"><span data-i18n="workflow">Workflow</span><strong>{html.escape(str(workflow_observation.get('workflow', 'none')))}</strong></div>
+      <div class="metric"><span data-i18n="current_phase">Current phase</span><strong>{html.escape(str(workflow_observation.get('current_phase') or 'n/a'))}</strong></div>
+      <div class="metric {_status_class(str(workflow_observation.get('recommended_action', 'wait')))}"><span data-i18n="recommended_action">Recommended action</span><strong>{html.escape(str(workflow_observation.get('recommended_action', 'wait')))}</strong></div>
+      <div class="metric"><span data-i18n="reason">Reason</span><strong>{html.escape(str(workflow_observation.get('reason', '')))}</strong></div>
     </div>
     <table>
       <thead>
-        <tr><th>Gate</th><th>Status</th><th>Detail</th></tr>
+        <tr><th data-i18n="gate">Gate</th><th data-i18n="status">Status</th><th data-i18n="detail">Detail</th></tr>
       </thead>
       <tbody>{_render_workflow_gate_rows(workflow_observation)}</tbody>
     </table>
   </section>
   <section class="card">
-    <h2>Adapter Readiness</h2>
+    <h2 data-i18n="adapter_readiness">Adapter Readiness</h2>
     {adapter_rows}
   </section>
   <section class="card">
-    <h2>Adapter Matrix</h2>
-    <p class="small">Policy baseline without provider probing. Run <code>mco adapter matrix --doctor</code> for local doctor status.</p>
+    <h2 data-i18n="adapter_matrix">Adapter Matrix</h2>
+    <p class="small" data-i18n="matrix_hint">Policy baseline without provider probing. Run <code>mco adapter matrix --doctor</code> for local doctor status.</p>
     <table>
       <thead>
-        <tr><th>Agent</th><th>Readiness</th><th>Execution mode</th><th>Non-interactive</th><th>Supervised</th><th>Quota</th><th>Smoke</th><th>Use / blockers</th></tr>
+        <tr><th data-i18n="agent">Agent</th><th data-i18n="readiness">Readiness</th><th data-i18n="execution_mode">Execution mode</th><th data-i18n="non_interactive">Non-interactive</th><th data-i18n="supervised">Supervised</th><th data-i18n="quota">Quota</th><th data-i18n="smoke">Smoke</th><th data-i18n="use_blockers">Use / blockers</th></tr>
       </thead>
       <tbody>{_render_matrix_rows(adapter_matrix)}</tbody>
     </table>
   </section>
   <section class="card">
-    <h2>Dispatch Gate Status</h2>
-    <p class="small">Only dispatches queued with <code>--require-ready</code> include gate evidence.</p>
+    <h2 data-i18n="dispatch_gate_status">Dispatch Gate Status</h2>
+    <p class="small" data-i18n="dispatch_gate_hint">Only dispatches queued with <code>--require-ready</code> include gate evidence.</p>
     <table>
       <thead>
-        <tr><th>Dispatch</th><th>Agent</th><th>Status</th><th>Readiness</th><th>Reason</th></tr>
+        <tr><th data-i18n="dispatch">Dispatch</th><th data-i18n="agent">Agent</th><th data-i18n="status">Status</th><th data-i18n="readiness">Readiness</th><th data-i18n="reason">Reason</th></tr>
       </thead>
       <tbody>{_render_gate_rows(dispatches)}</tbody>
     </table>
   </section>
   <section class="card">
-    <h2>Owner Escalations</h2>
+    <h2 data-i18n="owner_escalations">Owner Escalations</h2>
     <ul>{_html_list(escalation_items, "No owner action required.")}</ul>
   </section>
   <section class="card">
-    <h2>Usage Snapshot</h2>
+    <h2 data-i18n="usage_snapshot">Usage Snapshot</h2>
     <p class="small">Source: {html.escape(usage_snapshot.get("source", "not generated"))}</p>
     <table>
       <thead>
-        <tr><th>Agent</th><th>Quota status</th><th>Dispatches</th><th>Observed</th><th>Budget</th><th>Remaining</th><th>Last error</th></tr>
+        <tr><th data-i18n="agent">Agent</th><th data-i18n="quota_status">Quota status</th><th data-i18n="dispatches">Dispatches</th><th data-i18n="observed">Observed</th><th data-i18n="budget">Budget</th><th data-i18n="remaining">Remaining</th><th data-i18n="last_error">Last error</th></tr>
       </thead>
       <tbody>{usage_rows}</tbody>
     </table>
   </section>
   <section class="card">
-    <h2>Current Evidence</h2>
-    <p>Latest event: <strong>{html.escape(latest_event.get("type", "none"))}</strong> {html.escape(latest_event.get("message", ""))}</p>
+    <h2 data-i18n="current_evidence">Current Evidence</h2>
+    <p><span data-i18n="latest_event">Latest event</span>: <strong>{html.escape(latest_event.get("type", "none"))}</strong> {html.escape(latest_event.get("message", ""))}</p>
   </section>
   <section class="card">
-    <h2>Artifacts</h2>
+    <h2 data-i18n="artifacts">Artifacts</h2>
     <ul>{artifact_rows}</ul>
   </section>
   <section class="card">
-    <h2>Dispatches</h2>
+    <h2 data-i18n="dispatches">Dispatches</h2>
     <ul>{dispatch_rows}</ul>
   </section>
   <section class="card">
-    <h2>Timeline</h2>
+    <h2 data-i18n="timeline">Timeline</h2>
     <ul>{rows}</ul>
   </section>
 </main>
+{_language_script(owner_brief, workflow_observation)}
 </body>
 </html>
 """

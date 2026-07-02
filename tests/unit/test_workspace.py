@@ -132,6 +132,8 @@ class WorkspaceTests(unittest.TestCase):
             self.assertIn("Boss Dashboard Control Room", dashboard_html)
             self.assertIn("Operator Brief", dashboard_html)
             self.assertIn("Next Command", dashboard_html)
+            self.assertIn("data-language-toggle", dashboard_html)
+            self.assertIn("老板视角控制室", dashboard_html)
 
     def test_task_create_json_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

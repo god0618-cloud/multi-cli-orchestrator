@@ -11,6 +11,7 @@
 - Added v5.9 release notes and release-candidate evidence docs.
 - Added regression coverage proving all three public tutorial workflows complete with documented evidence gates.
 - Updated CI to Node 24-compatible GitHub Actions versions.
+- Added a local Chinese/English language toggle to the static boss dashboard.
 
 ## 5.0.0
 
