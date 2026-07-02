@@ -11,7 +11,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 - A local task workspace with `LOOP_SPEC.json`, `RUN_LEDGER.json`, `plan.json`, dispatch inboxes, and artifact evidence.
 - Supervised CLI workstations instead of hidden subagents: Claude Code and Kimi Code can run through bounded adapters when installed and authenticated.
 - Fail-stop workflow gates so phases advance only after evidence is written.
-- A dependency-free boss dashboard for status, adapter readiness, dispatch gates, usage snapshots, artifacts, and timeline.
+- A dependency-free boss dashboard for status, adapter readiness, dispatch gates, usage snapshots, artifacts, timeline, and Chinese/English viewing.
 - Disabled-by-default adapter kits for adding new CLIs without pretending they are production-ready on day one.
 
 ## Status

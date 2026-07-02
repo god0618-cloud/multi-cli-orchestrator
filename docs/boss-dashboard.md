@@ -12,7 +12,7 @@ It should answer:
 - What evidence exists?
 - What gates passed or failed?
 
-v2.3 renders a static, dependency-free control room per task. v2.4 adds `mco status` as the fast terminal readout for the same operating posture when opening HTML would be too heavy. v2.5 adds explicit `mco status --doctor` probing for moments when local adapter readiness needs to be checked from the same surface. v2.6 adds bounded `mco monitor` snapshots so status can become durable task evidence.
+The current dashboard renders a static, dependency-free control room per task. It also includes a local Chinese/English toggle so the same evidence page can be reviewed by bilingual operators without regenerating the dashboard or running a web service. `mco status` remains the fast terminal readout for the same operating posture when opening HTML would be too heavy. `mco status --doctor` probes local adapter readiness from the same surface, and `mco monitor` can create bounded snapshots so status becomes durable task evidence.
 
 It reads only task-local evidence:
 
@@ -25,6 +25,7 @@ It reads only task-local evidence:
 The dashboard now includes:
 
 - **Control Room**: task status, completed dispatch count, artifact count, and whether owner action is required.
+- **Language Toggle**: switches the static page between English and Chinese and stores the preference in browser-local storage.
 - **Adapter Readiness**: one card per agent with dispatch counts, latest dispatch, latest execution summary, transcript label, observed budget, maximum budget, and approximate remaining budget.
 - **Adapter Matrix**: policy baseline for known adapters, including readiness, supervision, quota status, smoke-gate availability, and promotion blockers. This section does not run provider doctor checks.
 - **Dispatch Gate Status**: `--require-ready` gate evidence for auto-dispatch attempts, including blocked adapters and reasons.

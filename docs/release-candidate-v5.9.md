@@ -11,6 +11,7 @@ v5.9.0rc1 includes:
 - v5.6 adapter extension readiness planning,
 - v5.7 dashboard Operator Brief,
 - v5.8 trial feedback intake,
+- bilingual Chinese/English boss dashboard viewing,
 - package version alignment for `5.9.0rc1`.
 
 ## Release Candidate Claim
@@ -50,6 +51,7 @@ Before creating a public tag or GitHub release:
 - The regression test completes `documentation-release-loop`, `frontend-review-loop`, and `adapter-onboarding-loop` with the same evidence labels documented in the tutorials.
 - This prevents workflow template gates and tutorial commands from drifting silently.
 - GitHub Actions workflow now uses Node 24-compatible `actions/checkout@v5` and `actions/setup-python@v6`.
+- The boss dashboard now includes a dependency-free Chinese/English language toggle for local static HTML review.
 
 ## Recommended Next Step
 
