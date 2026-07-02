@@ -2,6 +2,12 @@
 
 The boss dashboard is the human-facing control room.
 
+![Boss dashboard English view](assets/demo-dashboard-v5.9-en.png)
+
+Chinese view:
+
+![Boss dashboard Chinese view](assets/demo-dashboard-v5.9-zh.png)
+
 It should answer:
 
 - Is user action required?

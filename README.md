@@ -4,7 +4,7 @@ Local-first Agent OS for coordinating multiple AI coding CLIs as supervised work
 
 Multi-CLI Orchestrator is not another single-runtime agent framework. It is a coordination layer for people who already use multiple AI coding CLIs and want them to share task state, workflow gates, evidence artifacts, run replay, and a boss dashboard.
 
-![Multi-CLI Orchestrator dashboard demo](docs/assets/demo-dashboard-v5.1.png)
+![Multi-CLI Orchestrator dashboard demo](docs/assets/demo-dashboard-v5.9-en.png)
 
 ## What It Gives You
 
@@ -33,7 +33,8 @@ This repository is at v5.9.0rc1 public Alpha release-candidate status. The v5 co
 
 | Surface | What it proves |
 | --- | --- |
-| [Dashboard](docs/assets/demo-dashboard-v5.1.png) | Owner-visible workflow action, adapter posture, artifacts, and timeline. |
+| [Dashboard](docs/assets/demo-dashboard-v5.9-en.png) | Owner-visible workflow action, adapter posture, artifacts, timeline, and bilingual review. |
+| [Dashboard Chinese view](docs/assets/demo-dashboard-v5.9-zh.png) | The same static evidence page after switching to Chinese. |
 | [Run replay](docs/assets/demo-run-replay-v5.1.png) | The run can be reconstructed from `RUN_LEDGER.json`. |
 | [Adapter matrix](docs/assets/demo-adapter-matrix-v5.1.png) | Manual-only and supervised adapters are explicit, not guessed. |
 

@@ -41,7 +41,8 @@ Expected outcome:
 
 ## Visual Assets
 
-- Dashboard screenshot: `docs/assets/demo-dashboard-v5.1.png`
+- Dashboard screenshot: `docs/assets/demo-dashboard-v5.9-en.png`
+- Dashboard Chinese screenshot: `docs/assets/demo-dashboard-v5.9-zh.png`
 - Run replay screenshot: `docs/assets/demo-run-replay-v5.1.png`
 - Adapter matrix screenshot: `docs/assets/demo-adapter-matrix-v5.1.png`
 - Demo story: `docs/demo-story-v5.1.md`
@@ -92,4 +93,3 @@ Avoid claiming:
 ## Recommended GitHub Topics
 
 `ai-agents`, `ai-coding`, `agent-os`, `cli`, `orchestration`, `multi-agent`, `local-first`, `codex`, `claude-code`, `kimi-code`, `developer-tools`, `workflow-automation`, `automation`
-
