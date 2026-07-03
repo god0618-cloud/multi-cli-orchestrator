@@ -12,6 +12,7 @@
 - Added a compact four-section community-note absorption template.
 - Updated README, Roadmap, workflow schema, tutorials, and release docs for the v6.0 Alpha posture.
 - Added regression coverage for manifest persistence, invalid manifest metadata, plan-review gates, and browser/visual evidence gates.
+- Added a GPT-Image generated share image for the README and social sharing.
 
 ## 5.9.0rc1
 

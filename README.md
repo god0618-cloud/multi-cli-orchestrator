@@ -6,7 +6,7 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 
 It is also useful with one CLI. Single-agent workflows are the default path; multiple CLIs are an enhancement when the task justifies fanout.
 
-![Multi-CLI Orchestrator dashboard demo](docs/assets/demo-dashboard-v5.9-en.png)
+![Multi-CLI Orchestrator share image](docs/assets/mco-share-v6.0.png)
 
 ## What It Gives You
 
