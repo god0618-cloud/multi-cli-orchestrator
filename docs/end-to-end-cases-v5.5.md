@@ -1,6 +1,6 @@
-# End-to-End Cases v5.5
+# End-to-End Cases
 
-v5.5 turns the v5.2 dogfood workflow templates into three runnable user-facing tutorials.
+The dogfood workflow templates are available as runnable user-facing tutorials.
 
 The goal is simple: a new user should be able to understand what kind of work fits Multi-CLI Orchestrator, run a bounded local version, inspect evidence, and see the close condition without needing the original development history.
 
@@ -9,7 +9,8 @@ The goal is simple: a new user should be able to understand what kind of work fi
 | Tutorial | Best For | Template |
 | --- | --- | --- |
 | [Documentation release loop](tutorials/documentation-release-loop.md) | Release notes, public docs, launch posts | `documentation-release-loop` |
-| [Frontend review loop](tutorials/frontend-review-loop.md) | UI implementation review with screenshots | `frontend-review-loop` |
+| [Frontend review loop](tutorials/frontend-review-loop.md) | UI implementation review with prototype brief, plan review, and browser/visual evidence | `frontend-review-loop` |
+| [Prototype brief loop](prototype-brief-loop.md) | Spec-first product prototype work | `prototype-brief-loop` |
 | [Adapter onboarding loop](tutorials/adapter-onboarding-loop.md) | Adding a new CLI adapter safely | `adapter-onboarding-loop` |
 
 ## Shared Pattern
@@ -25,7 +26,7 @@ Each tutorial follows the same loop:
 
 ## Why This Matters
 
-Before v5.5, the repository could prove the machinery worked, but the path was still too close to maintainer knowledge. v5.5 makes the project easier to evaluate from the outside:
+Before the tutorial track, the repository could prove the machinery worked, but the path was still too close to maintainer knowledge. The current tutorial set makes the project easier to evaluate from the outside:
 
 - operators can see what a good loop looks like,
 - contributors can copy a known shape,

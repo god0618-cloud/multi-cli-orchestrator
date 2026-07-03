@@ -92,6 +92,8 @@ Do not increase automation authority in this loop. Improve clarity, demos, evide
 
 ## v5.9-release-candidate Acceptance
 
+Historical note: this section records the v5.9 release-candidate gate. Current release work should use `docs/release-candidate-v6.0.md`.
+
 - Package version, `src/mco/__init__.py`, README, ROADMAP, and CHANGELOG align on `5.9.0rc1`.
 - Release notes and release-candidate scope docs exist.
 - Full release checks pass locally.

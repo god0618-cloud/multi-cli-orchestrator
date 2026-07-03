@@ -16,6 +16,8 @@ Use this checklist before publishing the repository.
 - [ ] Confirm no private paths, credentials, screenshots, or business data are present.
 - [ ] Confirm `README.md`, `CHANGELOG.md`, and `ROADMAP.md` match the package version.
 - [ ] Confirm the current `docs/release-notes-*.md` file matches the release tag.
+- [ ] For v6+ workflow releases, confirm manifests declare `stack`, `evidence_level`, and token `budget` when public templates need them.
+- [ ] For v6+ workflow releases, confirm single-agent paths remain documented unless the template explicitly declares `stack: dual`.
 - [ ] Confirm source-tree templates and packaged templates contain the same JSON filenames.
 - [ ] Confirm first-party adapter templates are disabled by default.
 - [ ] Confirm no command grants arbitrary shell execution.
@@ -39,3 +41,8 @@ Do not publish if any of these are true:
 - private machine paths appear in repository files
 - command examples require private local infrastructure
 - CI cannot run without secrets
+
+Current Alpha reference:
+
+- `docs/release-candidate-v6.0.md`
+- `docs/release-notes-v6.0.md`

@@ -2,6 +2,7 @@
 
 Workflow schema v0.2 is a minimal DAG-like phase list with:
 
+- optional manifest
 - role
 - preferred agent
 - inputs
@@ -12,6 +13,39 @@ Workflow schema v0.2 is a minimal DAG-like phase list with:
 - user decision gates
 
 No worker should start a phase unless required inputs and gates are satisfied.
+
+## Manifest
+
+Workflow templates may include a `manifest` block. The manifest is the operator-facing contract that explains when the workflow should be used, what inputs it needs, which evidence artifacts it will produce, and where it must stop instead of pretending to continue.
+
+Required manifest fields:
+
+| Field | Meaning |
+| --- | --- |
+| `trigger` | The situation that should activate this workflow |
+| `scope` | What the workflow covers and what it intentionally does not cover |
+| `required_inputs` | Inputs the first owner must clarify before worker fanout |
+| `artifacts` | Durable outputs expected across the loop |
+| `verification` | Evidence and gates that prove the workflow is complete |
+| `stop_conditions` | Conditions that must pause or escalate the loop |
+| `failure_modes` | Common ways this workflow can produce misleading progress |
+| `plan_review_required` | Optional boolean; when true, fanout should wait for review |
+| `fanout_policy` | Optional machine-readable worker fanout limits |
+| `stack` | Optional `single` or `dual`; default design posture should be `single` |
+| `evidence_level` | Optional `L1`, `L2`, or `L3`; default should be `L1` |
+| `budget` | Optional token budget with `avg_token_cost`, `hard_cap`, and `defer_policy` |
+
+The manifest is copied into `plan.json` by `mco orchestrate-start`, so dashboards and future automation can explain not only the current phase but also the workflow's intent.
+
+### Evidence Levels
+
+| Level | Intended Use | Minimum Evidence |
+| --- | --- | --- |
+| `L1` | Default local workflow | Final-state screenshot or compact browser/visual evidence manifest |
+| `L2` | Reviewable product work | Actions log plus screenshots or state notes |
+| `L3` | Audit-heavy work | Actions log, screenshots or recording, and explicit final-state assertions |
+
+Use the lowest level that proves the claim. Raising the evidence level should be a review decision, not a default tax on every user.
 
 v2.7 generated plans also include runtime phase state:
 
@@ -36,6 +70,10 @@ v4.1 gates are intentionally small and evidence-oriented. They are evaluated aga
 | `artifact_registered:<label-or-filename>` | A run-ledger artifact label or filename exists |
 | `ledger_event:<event-type>` | At least one run-ledger event of that type exists |
 | `user_decision:<decision-id>` | A run-ledger decision with this id has `status=approved` |
+| `prototype_brief_exists` | `prototype-brief.md` is registered as a task artifact |
+| `plan_review_passed` | `plan-review-report.md` is registered and a `plan_review_passed` ledger event exists |
+| `browser_visual_evidence_registered` | `browser-visual-evidence.json` is registered as a task artifact |
+| `skill_evaluation_rubric_exists` | `skill-evaluation-rubric.md` is registered as a task artifact |
 | `all_dispatches_terminal` | No dispatch is still `queued` or `claimed` |
 | `no_failed_dispatches` | No dispatch has `status=failed` |
 | `no_blocked_dispatches` | No dispatch has `status=blocked` |

@@ -60,6 +60,16 @@ def _artifact_matches(artifact: dict[str, Any], expected: str) -> bool:
     return artifact.get("label") == expected or Path(str(artifact.get("path", ""))).name == expected
 
 
+def _artifact_registered(ledger: dict[str, Any], expected: str) -> bool:
+    artifacts = ledger.get("artifacts") or []
+    return any(isinstance(item, dict) and _artifact_matches(item, expected) for item in artifacts)
+
+
+def _event_count(ledger: dict[str, Any], expected: str) -> int:
+    events = ledger.get("events") or []
+    return sum(1 for item in events if isinstance(item, dict) and item.get("type") == expected)
+
+
 def _gate_result(task_dir: Path, gate: str) -> dict[str, Any]:
     ledger = _ledger(task_dir)
     dispatches = list_dispatches(task_dir)
@@ -89,15 +99,25 @@ def _gate_result(task_dir: Path, gate: str) -> dict[str, Any]:
         detail = f"{expected} exists" if ok else f"{expected} missing"
     elif gate.startswith("artifact_registered:"):
         expected = gate.split(":", 1)[1]
-        artifacts = ledger.get("artifacts") or []
-        ok = any(isinstance(item, dict) and _artifact_matches(item, expected) for item in artifacts)
+        ok = _artifact_registered(ledger, expected)
         detail = f"artifact registered: {expected}" if ok else f"artifact not registered: {expected}"
     elif gate.startswith("ledger_event:"):
         expected = gate.split(":", 1)[1]
-        events = ledger.get("events") or []
-        count = sum(1 for item in events if isinstance(item, dict) and item.get("type") == expected)
+        count = _event_count(ledger, expected)
         ok = count > 0
         detail = f"{expected} events={count}"
+    elif gate == "prototype_brief_exists":
+        ok = _artifact_registered(ledger, "prototype-brief.md")
+        detail = "prototype-brief.md registered" if ok else "prototype-brief.md not registered"
+    elif gate == "plan_review_passed":
+        ok = _artifact_registered(ledger, "plan-review-report.md") and _event_count(ledger, "plan_review_passed") > 0
+        detail = "plan review passed" if ok else "requires plan-review-report.md and plan_review_passed event"
+    elif gate == "browser_visual_evidence_registered":
+        ok = _artifact_registered(ledger, "browser-visual-evidence.json")
+        detail = "browser-visual-evidence.json registered" if ok else "browser-visual-evidence.json not registered"
+    elif gate == "skill_evaluation_rubric_exists":
+        ok = _artifact_registered(ledger, "skill-evaluation-rubric.md")
+        detail = "skill-evaluation-rubric.md registered" if ok else "skill-evaluation-rubric.md not registered"
     elif gate.startswith("user_decision:"):
         expected = gate.split(":", 1)[1]
         decisions = ledger.get("decisions") or []

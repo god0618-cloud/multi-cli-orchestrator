@@ -1,0 +1,91 @@
+{
+  "schema": "mco.workflow.v0.2",
+  "name": "prototype-brief-loop",
+  "description": "Spec-first product prototype workflow: brief, plan review, bounded prototype, browser/visual verification, close.",
+  "manifest": {
+    "trigger": "A product idea or rough UI direction must become a reviewable prototype without drifting into an unbounded demo.",
+    "scope": "Prototype or product-surface work where page goals, roles, state matrix, interactions, and evidence must be explicit before fanout.",
+    "required_inputs": ["problem statement", "target users or roles", "primary flow", "known constraints", "non-goals"],
+    "artifacts": ["prototype-brief.md", "plan-review-report.md", "prototype-implementation-report.md", "browser-visual-evidence.json", "visual-verification-report.md", "close-report.md"],
+    "verification": ["prototype_brief_exists", "plan_review_passed", "browser_visual_evidence_registered", "ledger_event:verification", "dashboard_exists"],
+    "stop_conditions": ["prototype brief missing", "plan review fails", "dispatch failed or blocked", "browser/visual evidence missing", "user decision gate is required"],
+    "failure_modes": ["prototype starts from taste instead of business flow", "parallel workers fan out before review", "only static screenshots are provided", "visual verification does not name viewport and states"],
+    "stack": "single",
+    "evidence_level": "L1",
+    "budget": {
+      "avg_token_cost": 5000,
+      "hard_cap": 12000,
+      "defer_policy": "If the brief or review would exceed the hard cap, defer research or implementation to a bounded worker and keep the controller summary compact."
+    },
+    "plan_review_required": true,
+    "fanout_policy": {
+      "requires_plan_review": true,
+      "max_workers_before_review": 0,
+      "max_workers_after_review": 3
+    }
+  },
+  "phases": [
+    {
+      "id": "brief",
+      "role": "product-designer",
+      "preferred_agent": "generic-cli",
+      "gates": ["loop_spec_exists"],
+      "outputs": ["prototype-brief.md"],
+      "on_pass": "plan_review",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "plan_review",
+      "role": "reviewer",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "prototype_brief_exists",
+        "plan_review_passed"
+      ],
+      "outputs": ["plan-review-report.md"],
+      "on_pass": "prototype",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "prototype",
+      "role": "frontend",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:prototype-implementation-report.md",
+        "browser_visual_evidence_registered",
+        "all_dispatches_terminal",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["prototype-implementation-report.md", "browser-visual-evidence.json"],
+      "on_pass": "visual_verify",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "visual_verify",
+      "role": "verifier",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:visual-verification-report.md",
+        "ledger_event:verification",
+        "dashboard_exists"
+      ],
+      "outputs": ["visual-verification-report.md", "dashboard.html"],
+      "on_pass": "close",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "close",
+      "role": "controller",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "artifact_registered:close-report.md",
+        "no_failed_dispatches",
+        "no_blocked_dispatches"
+      ],
+      "outputs": ["close-report.md"],
+      "on_pass": "complete",
+      "on_fail": "human_review"
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 # Roadmap
 
-Multi-CLI Orchestrator is currently at the v5.9.0rc1 public Alpha release-candidate baseline.
+Multi-CLI Orchestrator is currently at the v6.0.0a1 public Alpha baseline.
 
 This roadmap is intentionally capability-led rather than hype-version-led. The project should advance only when a capability is backed by tests, evidence artifacts, and clear safety boundaries.
 
-## Current Baseline: v5.9 RC
+## Current Baseline: v6.0 Alpha
 
-The v5.9 RC baseline is a credible Alpha release candidate for developers who want to experiment with local-first multi-CLI orchestration.
+The v6.0 Alpha baseline is a credible public Alpha for developers who want local-first multi-CLI orchestration without forcing every workflow into multi-agent complexity.
 
 Completed capabilities:
 
@@ -17,20 +17,46 @@ Completed capabilities:
 - Adapter visibility: capabilities, doctor, matrix, scaffold, validate-kit, and explicit smoke commands.
 - Safety posture: no arbitrary shell execution, no silent native memory writes, no unbounded provider execution, no infinite workflow loop.
 - Workflow gates: task-local files, registered artifacts, ledger events, user decisions, dispatch terminal state, failed/blocked dispatch absence, and dispatch status counts.
+- Expert workflow gates: prototype brief existence, plan review pass evidence, browser/visual evidence, and skill evaluation rubric registration.
+- Lower-friction workflow metadata: single-agent-first posture, evidence levels, and token budget declarations.
 - Bounded workflow automation: `mco workflow observe` and `mco workflow loop --max-steps`.
 - `strict-self-closing` template: `plan -> execute -> verify -> close`.
+- `prototype-brief-loop` template: `brief -> plan_review -> prototype -> visual_verify -> close`.
 - Operator surfaces: `mco status`, `mco monitor`, static boss dashboard, usage snapshot, run replay, and walkthrough demo.
 - CI coverage, release check, and audit gates.
 - Public launch facade with visual walkthrough assets.
 - Three end-to-end tutorials: documentation release, frontend review, and adapter onboarding.
 - Adapter extension roadmap for manual-only CLIs such as Mimo Code and CodeWhale.
 - Trial feedback loop and GitHub issue template for external evaluation.
+- Expert workflow productization: manifests, prototype brief loop, plan review before fanout, browser/visual evidence, and L1/L2 skill evaluation.
+- Lower-friction user posture: single-agent-first workflows, evidence levels, token budgets, and compact note absorption.
 
 Known maturity level:
 
 - Engineering core: Alpha, credible for early adopters.
 - Public onboarding: usable, but still being polished.
 - Production automation: intentionally conservative; not advertised as a fully autonomous execution system.
+
+## Completed v6 Alpha Direction
+
+Goal: keep the evidence-gated orchestration core while lowering the daily-use burden.
+
+Completed capabilities:
+
+- `workflow manifest` blocks describe trigger, scope, required inputs, artifacts, verification, stop conditions, and failure modes.
+- Manifest metadata captures `stack`, `evidence_level`, and token `budget`.
+- `prototype-brief-loop` makes product/UI prototype work start with a brief and plan review, not immediate implementation.
+- `frontend-review-loop` now requires prototype brief and plan review before implementation.
+- Browser/visual evidence is represented by `browser-visual-evidence.json`.
+- Skill evaluation is split into L1 admission and L2 promotion review.
+- Community note absorption is compressed to four sections: what it says, reality check, signal, decision.
+
+Acceptance bar:
+
+- A workflow can run with one agent unless it explicitly declares `stack: dual`.
+- A worker cannot fan out before planning evidence passes.
+- UI/prototype work can use L1 evidence by default and escalate to L2/L3 only when review needs it.
+- Token budget is visible before the loop burns the controller context.
 
 ## Completed v5 Public Polish
 
@@ -74,7 +100,8 @@ Goal: prove the orchestration model on realistic tasks before adding broader aut
 Candidate workflows:
 
 - Documentation release loop: plan -> write -> verify -> close.
-- Frontend review loop: implement -> screenshot -> visual review -> close.
+- Frontend review loop: prototype brief -> plan review -> implementation -> browser/visual evidence -> visual review -> close.
+- Prototype brief loop: idea -> brief -> plan review -> prototype -> browser/visual evidence -> close.
 - Adapter onboarding loop: scaffold -> validate -> smoke -> promote or reject.
 
 Acceptance bar:
@@ -82,6 +109,27 @@ Acceptance bar:
 - Each workflow produces `LOOP_SPEC.json`, `RUN_LEDGER.json`, artifacts, dashboard, replay, and close report.
 - At least one real defect or workflow gap is found and fixed through dogfooding.
 - Workflow templates stay bounded and auditable.
+
+## Expert Workflow Productization Track
+
+Goal: absorb the strongest community-practice lesson from agent skill systems: reusable workflows should encode senior judgment, not just longer prompts.
+
+Completed in this track:
+
+- Workflow templates may carry a manifest with trigger, scope, required inputs, artifacts, verification, stop conditions, and failure modes.
+- Workflow manifests may also declare `stack`, `evidence_level`, and token budget.
+- Product/UI work now has `prototype-brief-loop`, a spec-first template that blocks implementation until plan review passes.
+- Browser/visual evidence is now a first-class gate through `browser-visual-evidence.json`.
+- Skill promotion has a two-level rubric in `docs/skill-evaluation-rubric.md`: L1 for low-friction admission, L2 for promotion review.
+- Community note absorption has a four-section template in `docs/note-absorption-template.md`.
+
+Acceptance bar:
+
+- A workflow can explain why it exists before it starts.
+- A worker cannot fan out before the planning gate passes.
+- Visual work cannot complete from chat claims alone.
+- New skills/workflows have a promotion rubric instead of subjective approval.
+- Public workflows remain usable by one agent unless they explicitly declare a dual-stack requirement.
 
 ## Contributor Onramp Track
 

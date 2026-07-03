@@ -73,6 +73,19 @@ mco workflow advance "$TASK_ID" --workspace .mco-workspace \
 
 `mco workflow loop` is intentionally bounded. It calls `observe`, advances only when `recommended_action=advance`, and stops immediately on `wait`, `escalate`, or `complete`. `--max-steps` must be between 1 and 24.
 
+Current public workflow templates:
+
+| Template | Purpose |
+| --- | --- |
+| `hello-multi-cli` | Minimal starter workflow |
+| `strict-self-closing` | Plan -> execute -> verify -> close |
+| `documentation-release-loop` | Documentation and release material workflow |
+| `frontend-review-loop` | Prototype brief -> plan review -> implementation -> browser/visual evidence -> visual review -> close |
+| `prototype-brief-loop` | Spec-first product prototype workflow |
+| `adapter-onboarding-loop` | Safe new adapter review workflow |
+
+Templates may persist manifest metadata into `plan.json`, including `stack`, `evidence_level`, and token `budget`. Public workflows should default to `stack: single`; multi-CLI fanout is an enhancement after plan review, not a prerequisite.
+
 `mco dispatch queue <task_id> --agent kimi-code --title "Work" --instructions "..." --require-ready` is the queueing mode intended for auto-dispatch. It probes the adapter matrix and only writes an inbox file when readiness is `READY_SUPERVISED`. If the adapter is disabled, unknown, manual-only, or blocked, the dispatch is written as `status=blocked` with gate evidence and no inbox file.
 
 `mco dispatch wave <task_id> --spec wave.json --require-ready` queues a bounded batch of worker dispatches. The wave spec must contain one to six workers:

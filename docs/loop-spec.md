@@ -13,6 +13,17 @@ It answers:
 - What evidence must be written?
 - When must the system escalate to a human?
 
+For humans, the shortest useful loop brief is:
+
+```text
+Goal:
+Verification:
+Stop condition:
+Escalation:      # optional
+```
+
+The JSON schema keeps richer fields for compatibility, safety review, and automation. Users should not need to hand-fill every field for lightweight work.
+
 Minimum schema:
 
 ```json
@@ -30,4 +41,3 @@ Minimum schema:
 ```
 
 The loop spec exists to prevent vague autonomous execution. If the stop condition cannot be checked, the task is not ready for autonomous orchestration.
-

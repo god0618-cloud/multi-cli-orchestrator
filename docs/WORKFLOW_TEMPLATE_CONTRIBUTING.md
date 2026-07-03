@@ -8,6 +8,7 @@ Each template must:
 
 - use schema `mco.workflow.v0.2`,
 - include a clear `name` and `description`,
+- include a manifest when the workflow is intended for public reuse,
 - define non-empty `phases`,
 - give every phase `id`, `role`, `gates`, and `on_pass`,
 - use machine-checkable gates,
@@ -21,10 +22,35 @@ Each template must:
 - `artifact_registered:<label-or-filename>`
 - `ledger_event:<event-type>`
 - `user_decision:<decision-id>`
+- `prototype_brief_exists`
+- `plan_review_passed`
+- `browser_visual_evidence_registered`
+- `skill_evaluation_rubric_exists`
 - `all_dispatches_terminal`
 - `no_failed_dispatches`
 - `no_blocked_dispatches`
 - `dispatch_status_count:<status>:<minimum>`
+
+## Public Manifest Guidance
+
+Reusable templates should include:
+
+- `trigger`
+- `scope`
+- `required_inputs`
+- `artifacts`
+- `verification`
+- `stop_conditions`
+- `failure_modes`
+- `stack`
+- `evidence_level`
+- `budget`
+
+Defaults should be friendly:
+
+- `stack: single` unless the workflow truly needs two CLI workstations.
+- `evidence_level: L1` unless the workflow is audit-heavy.
+- token budget fields should describe when to defer detail into artifacts or workers.
 
 ## Add a Template
 
@@ -68,4 +94,3 @@ For real promotion, prove the workflow can reach a terminal recommendation:
 - Hiding user decisions inside prose.
 - Requiring real provider calls for basic template validation.
 - Writing generated task workspaces into the repository root.
-

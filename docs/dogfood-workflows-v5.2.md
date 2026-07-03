@@ -1,13 +1,14 @@
-# Dogfood Workflows v5.2
+# Dogfood Workflows
 
-v5.2 adds three realistic workflow templates so the project is no longer demonstrated only through `hello-multi-cli`.
+MCO includes realistic workflow templates so the project is no longer demonstrated only through `hello-multi-cli`.
 
 ## Templates
 
 | Template | Scenario | Close condition |
 | --- | --- | --- |
 | `documentation-release-loop` | Documentation, release notes, public launch materials | draft, verification report, verification ledger event, dashboard, close report |
-| `frontend-review-loop` | Frontend implementation or UI review | implementation report, screenshot index, visual verification, dashboard, close report |
+| `frontend-review-loop` | Frontend implementation or UI review | prototype brief, plan review, implementation report, browser/visual evidence, visual verification, dashboard, close report |
+| `prototype-brief-loop` | Spec-first product/UI prototype | prototype brief, plan review, prototype implementation report, browser/visual evidence, visual verification, close report |
 | `adapter-onboarding-loop` | New CLI adapter review | validation report, smoke review, verification event, dashboard, close report |
 
 ## Verification Run
@@ -24,6 +25,7 @@ Observed output:
 ```text
 documentation-release-loop complete workflow completed
 frontend-review-loop complete workflow completed
+prototype-brief-loop complete workflow completed
 adapter-onboarding-loop complete workflow completed
 ```
 
@@ -33,6 +35,7 @@ adapter-onboarding-loop complete workflow completed
 - Their gates can advance through bounded `mco workflow loop` calls.
 - They can produce a dashboard and replay artifact.
 - They do not require provider CLI execution authority.
+- Public templates default to a single-agent path unless they explicitly declare otherwise.
 - They create a better dogfood base for future real tasks.
 
 ## What This Does Not Prove
@@ -42,4 +45,3 @@ adapter-onboarding-loop complete workflow completed
 - It does not add automatic execution authority.
 
 Those remain separate adapter-readiness and safety-gate concerns.
-

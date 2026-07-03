@@ -601,7 +601,17 @@ class WorkspaceTests(unittest.TestCase):
             {
                 "template": "frontend-review-loop",
                 "steps": [
-                    {"artifacts": ["implementation-report.md", "screenshot-index.md"]},
+                    {"artifacts": ["prototype-brief.md", "plan-review-report.md"], "plan_review_event": True},
+                    {"artifacts": ["implementation-report.md", "browser-visual-evidence.json"]},
+                    {"artifacts": ["visual-verification-report.md"], "verification_event": True, "dashboard": True},
+                    {"artifacts": ["close-report.md"]},
+                ],
+            },
+            {
+                "template": "prototype-brief-loop",
+                "steps": [
+                    {"artifacts": ["prototype-brief.md", "plan-review-report.md"], "plan_review_event": True},
+                    {"artifacts": ["prototype-implementation-report.md", "browser-visual-evidence.json"]},
                     {"artifacts": ["visual-verification-report.md"], "verification_event": True, "dashboard": True},
                     {"artifacts": ["close-report.md"]},
                 ],
@@ -651,6 +661,19 @@ class WorkspaceTests(unittest.TestCase):
                                 str(workspace),
                             )
                             self.assertEqual(event.returncode, 0, event.stdout + event.stderr)
+                        if step.get("plan_review_event"):
+                            event = run_mco(
+                                "task",
+                                "event",
+                                task_id,
+                                "--type",
+                                "plan_review_passed",
+                                "--message",
+                                "Plan review passed before worker fanout.",
+                                "--workspace",
+                                str(workspace),
+                            )
+                            self.assertEqual(event.returncode, 0, event.stdout + event.stderr)
                         if step.get("dashboard"):
                             dashboard = run_mco("dashboard", task_id, "--workspace", str(workspace))
                             self.assertEqual(dashboard.returncode, 0, dashboard.stdout + dashboard.stderr)
@@ -663,6 +686,167 @@ class WorkspaceTests(unittest.TestCase):
                     self.assertEqual(payload["status"], "completed")
                     self.assertEqual(payload["recommended_action"], "complete")
                     self.assertTrue((task_dir / "dashboard.html").exists())
+
+    def test_prototype_brief_loop_blocks_until_plan_review_and_browser_evidence_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            started = run_mco(
+                "orchestrate-start",
+                "Prototype Gate Task",
+                "--template",
+                "prototype-brief-loop",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(started.returncode, 0, started.stdout + started.stderr)
+            task_id = created_task_id(started.stdout)
+            task_dir = workspace / "tasks" / task_id
+
+            first = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            self.assertEqual(json.loads(first.stdout)["advances"][0]["next_phase"], "plan_review")
+
+            waiting = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(waiting.returncode, 0, waiting.stdout + waiting.stderr)
+            waiting_payload = json.loads(waiting.stdout)
+            self.assertEqual(waiting_payload["recommended_action"], "wait")
+            self.assertIn("prototype_brief_exists", [item["gate"] for item in waiting_payload["gate_results"] if not item["ok"]])
+
+            register_text_artifact(workspace, task_id, task_dir, "prototype-brief.md")
+            register_text_artifact(workspace, task_id, task_dir, "plan-review-report.md")
+            still_waiting = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(still_waiting.returncode, 0, still_waiting.stdout + still_waiting.stderr)
+            self.assertEqual(json.loads(still_waiting.stdout)["recommended_action"], "wait")
+
+            event = run_mco(
+                "task",
+                "event",
+                task_id,
+                "--type",
+                "plan_review_passed",
+                "--message",
+                "Plan review passed.",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(event.returncode, 0, event.stdout + event.stderr)
+            ready = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(ready.returncode, 0, ready.stdout + ready.stderr)
+            self.assertEqual(json.loads(ready.stdout)["recommended_action"], "advance")
+
+            second = run_mco("workflow", "loop", task_id, "--max-steps", "1", "--workspace", str(workspace))
+            self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+            self.assertEqual(json.loads(second.stdout)["advances"][0]["next_phase"], "prototype")
+
+            register_text_artifact(workspace, task_id, task_dir, "prototype-implementation-report.md")
+            missing_browser = run_mco("workflow", "observe", task_id, "--workspace", str(workspace))
+            self.assertEqual(missing_browser.returncode, 0, missing_browser.stdout + missing_browser.stderr)
+            missing_payload = json.loads(missing_browser.stdout)
+            self.assertEqual(missing_payload["recommended_action"], "wait")
+            self.assertIn("browser_visual_evidence_registered", [item["gate"] for item in missing_payload["gate_results"] if not item["ok"]])
+
+    def test_workflow_manifest_is_persisted_in_plan(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            started = run_mco(
+                "orchestrate-start",
+                "Manifest Task",
+                "--template",
+                "prototype-brief-loop",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(started.returncode, 0, started.stdout + started.stderr)
+            task_id = created_task_id(started.stdout)
+            plan_payload = json.loads((workspace / "tasks" / task_id / "plan.json").read_text(encoding="utf-8"))
+            self.assertTrue(plan_payload["manifest"]["plan_review_required"])
+            self.assertEqual(plan_payload["manifest"]["fanout_policy"]["max_workers_before_review"], 0)
+            self.assertIn("browser_visual_evidence_registered", plan_payload["manifest"]["verification"])
+            self.assertEqual(plan_payload["manifest"]["stack"], "single")
+            self.assertEqual(plan_payload["manifest"]["evidence_level"], "L1")
+            self.assertEqual(plan_payload["manifest"]["budget"]["hard_cap"], 12000)
+
+    def test_workflow_manifest_rejects_invalid_budget_stack_and_evidence_level(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            template_dir = Path(tmp)
+            base = json.loads((ROOT / "templates" / "workflows" / "prototype-brief-loop.json").read_text(encoding="utf-8"))
+
+            invalid_stack = dict(base)
+            invalid_stack["name"] = "invalid-stack"
+            invalid_stack["manifest"] = dict(base["manifest"])
+            invalid_stack["manifest"]["stack"] = "triple"
+            (template_dir / "invalid-stack.json").write_text(json.dumps(invalid_stack), encoding="utf-8")
+
+            env = {"PYTHONPATH": str(ROOT / "src")}
+            stack_check = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    (
+                        "from pathlib import Path; "
+                        "from mco.workflow.templates import load_workflow_template; "
+                        f"load_workflow_template('invalid-stack', Path({str(template_dir)!r}))"
+                    ),
+                ],
+                cwd=ROOT,
+                env={**os.environ, **env},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(stack_check.returncode, 0)
+            self.assertIn("stack must be one of single, dual", stack_check.stderr)
+
+            invalid_evidence = dict(base)
+            invalid_evidence["name"] = "invalid-evidence"
+            invalid_evidence["manifest"] = dict(base["manifest"])
+            invalid_evidence["manifest"]["evidence_level"] = "L4"
+            (template_dir / "invalid-evidence.json").write_text(json.dumps(invalid_evidence), encoding="utf-8")
+
+            check = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    (
+                        "from pathlib import Path; "
+                        "from mco.workflow.templates import load_workflow_template; "
+                        f"load_workflow_template('invalid-evidence', Path({str(template_dir)!r}))"
+                    ),
+                ],
+                cwd=ROOT,
+                env={**os.environ, **env},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(check.returncode, 0)
+            self.assertIn("evidence_level must be one of L1, L2, L3", check.stderr)
+
+            invalid_budget = dict(base)
+            invalid_budget["name"] = "invalid-budget"
+            invalid_budget["manifest"] = dict(base["manifest"])
+            invalid_budget["manifest"]["budget"] = {"avg_token_cost": -1}
+            (template_dir / "invalid-budget.json").write_text(json.dumps(invalid_budget), encoding="utf-8")
+            budget_check = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    (
+                        "from pathlib import Path; "
+                        "from mco.workflow.templates import load_workflow_template; "
+                        f"load_workflow_template('invalid-budget', Path({str(template_dir)!r}))"
+                    ),
+                ],
+                cwd=ROOT,
+                env={**os.environ, **env},
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(budget_check.returncode, 0)
+            self.assertIn("avg_token_cost must be a non-negative integer", budget_check.stderr)
 
     def test_workflow_advance_fail_stops_plan(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

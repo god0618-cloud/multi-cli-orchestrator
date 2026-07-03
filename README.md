@@ -4,6 +4,8 @@ Local-first Agent OS for coordinating multiple AI coding CLIs as supervised work
 
 Multi-CLI Orchestrator is not another single-runtime agent framework. It is a coordination layer for people who already use multiple AI coding CLIs and want them to share task state, workflow gates, evidence artifacts, run replay, and a boss dashboard.
 
+It is also useful with one CLI. Single-agent workflows are the default path; multiple CLIs are an enhancement when the task justifies fanout.
+
 ![Multi-CLI Orchestrator dashboard demo](docs/assets/demo-dashboard-v5.9-en.png)
 
 ## What It Gives You
@@ -11,12 +13,15 @@ Multi-CLI Orchestrator is not another single-runtime agent framework. It is a co
 - A local task workspace with `LOOP_SPEC.json`, `RUN_LEDGER.json`, `plan.json`, dispatch inboxes, and artifact evidence.
 - Supervised CLI workstations instead of hidden subagents: Claude Code and Kimi Code can run through bounded adapters when installed and authenticated.
 - Fail-stop workflow gates so phases advance only after evidence is written.
+- Expert workflow templates with manifests, plan-review gates, prototype briefs, and browser/visual evidence contracts.
 - A dependency-free boss dashboard for status, adapter readiness, dispatch gates, usage snapshots, artifacts, timeline, and Chinese/English viewing.
 - Disabled-by-default adapter kits for adding new CLIs without pretending they are production-ready on day one.
 
 ## Status
 
-This repository is at v5.9.0rc1 public Alpha release-candidate status. The v5 core is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, dynamic workflow gates, bounded observe/advance loops, a strict self-closing workflow template, end-to-end tutorials, adapter extension planning, trial feedback intake, and contributor-ready adapter kits.
+This repository is at v6.0.0a1 public Alpha status. The v5 core is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, dynamic workflow gates, bounded observe/advance loops, a strict self-closing workflow template, end-to-end tutorials, adapter extension planning, trial feedback intake, and contributor-ready adapter kits.
+
+The v6 Alpha track adds expert-workflow productization and lower-friction onboarding: workflow manifests, single-agent-first metadata, token budgets, evidence levels, a `prototype-brief-loop`, plan review before fanout, browser/visual evidence gates, a two-level skill evaluation rubric, and a compact note absorption template.
 
 ## Start Here
 
@@ -24,6 +29,8 @@ This repository is at v5.9.0rc1 public Alpha release-candidate status. The v5 co
 - Want the shortest setup path? Run the [Quick Start](#quick-start).
 - Want a shareable demo narrative? Open [`docs/demo-story-v5.1.md`](docs/demo-story-v5.1.md).
 - Want a concrete end-to-end case? Start with [`docs/end-to-end-cases-v5.5.md`](docs/end-to-end-cases-v5.5.md).
+- Want a spec-first prototype loop? Read [`docs/prototype-brief-loop.md`](docs/prototype-brief-loop.md).
+- Want to absorb community notes without over-structuring them? Use [`docs/note-absorption-template.md`](docs/note-absorption-template.md).
 - Want to see the operator surface? Generate a dashboard with `mco dashboard <task_id>`.
 - Want to add a CLI? Start from [`docs/adapter-contributor-guide.md`](docs/adapter-contributor-guide.md).
 - Want to contribute? Start with [`docs/GOOD_FIRST_ISSUES.md`](docs/GOOD_FIRST_ISSUES.md).
@@ -55,7 +62,10 @@ Do not use it when:
 ## Core Ideas
 
 - **CLIs are workstations**: Codex, Claude Code, Kimi Code, and generic CLIs can all become supervised workers.
+- **Single agent first**: every public workflow should make sense with one agent before it asks users to coordinate several.
 - **Loops beat prompts**: every orchestrated task needs a `LOOP_SPEC.json`.
+- **Briefs before fanout**: product and UI work should pass a prototype brief and plan review before workers start implementing.
+- **Budget is a gate**: token/context budget belongs in workflow metadata, not in hindsight.
 - **Sandboxes before parallelism**: every worker needs an explicit `SANDBOX_CONTRACT.json` before parallel work.
 - **Evidence before claims**: tasks close through artifacts, tests, screenshots, reports, or other durable evidence.
 - **Replay before memory**: `RUN_LEDGER.json` preserves what happened before any long-term summary is promoted.
@@ -131,12 +141,13 @@ mco status --workspace .mco-workspace
 mco task list --workspace .mco-workspace
 mco orchestrate-start "Hello orchestrated task" --template hello-multi-cli --workspace .mco-workspace
 mco orchestrate-start "Strict product task" --template strict-self-closing --workspace .mco-workspace
+mco orchestrate-start "Prototype a mobile flow" --template prototype-brief-loop --workspace .mco-workspace
 mco demo hello-multi-cli --workspace .mco-demo
 mco audit .
 mco release check .
 ```
 
-## v5.9 RC Command Matrix
+## v6.0 Alpha Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -168,6 +179,7 @@ mco release check .
 | `mco usage snapshot` | task-local usage/quota evidence rollup |
 | `mco orchestrate-start` | bounded initializer |
 | `mco workflow status/observe/loop/advance` | phase state, machine next-action recommendation, bounded self-closing loop, and fail-stop advancement |
+| workflow manifest metadata | `stack`, `evidence_level`, and token `budget` are persisted into `plan.json` |
 | `mco schema validate` | implemented |
 | `mco serve` | implemented |
 | `mco audit` | implemented |
@@ -177,6 +189,7 @@ mco release check .
 | `mco release check` | implemented |
 | arbitrary shell execution | intentionally not implemented |
 | strict self-closing workflow | `strict-self-closing` template with plan -> execute -> verify -> close evidence gates |
+| prototype brief workflow | `prototype-brief-loop` template with brief -> plan review -> prototype -> visual verify -> close |
 | first-party CLI adapters | Claude Code and Kimi Code implemented; Mimo/CodeWhale still manual-only/disabled for auto-dispatch |
 | real concurrent provider execution | intentionally not implemented; v5 keeps execution bounded by adapter gates, workflow gates, and explicit loop caps |
 
@@ -198,8 +211,12 @@ Useful docs:
 - `docs/adapter-contributor-guide.md`
 - `docs/ADAPTER_MATURITY_MODEL.md`
 - `docs/WORKFLOW_TEMPLATE_CONTRIBUTING.md`
+- `docs/prototype-brief-loop.md`
+- `docs/skill-evaluation-rubric.md`
+- `docs/note-absorption-template.md`
 - `docs/GOOD_FIRST_ISSUES.md`
 - `docs/launch-playbook.md`
+- `docs/release-notes-v6.0.md`
 - `docs/release-notes-v5.9.md`
 - `docs/release-notes-v5.0.md`
 - `docs/release-notes-v3.0.md`

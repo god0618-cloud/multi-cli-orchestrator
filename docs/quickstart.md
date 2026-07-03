@@ -1,6 +1,6 @@
 # Quickstart
 
-This baseline proves the project can initialize a clean local workspace, create an evidence-backed task, run a sanitized hello workflow, validate adapter/sandbox gates, run a narrowly allowed safe command, run one supervised Claude Code prompt when Claude Code is installed and authenticated, replay a run ledger, and render a local dashboard without relying on private machine paths.
+This baseline proves the project can initialize a clean local workspace, create an evidence-backed task, run a sanitized hello workflow, start a single-agent-first prototype workflow, validate adapter/sandbox gates, run a narrowly allowed safe command, run one supervised Claude Code prompt when Claude Code is installed and authenticated, replay a run ledger, and render a local dashboard without relying on private machine paths.
 
 ```bash
 python -m venv .venv
@@ -11,6 +11,7 @@ mco doctor --workspace .mco-workspace
 mco task create "Hello multi-CLI" --workspace .mco-workspace
 mco task list --workspace .mco-workspace
 mco orchestrate-start "Hello orchestrated task" --template hello-multi-cli --workspace .mco-workspace
+mco orchestrate-start "Prototype a mobile flow" --template prototype-brief-loop --workspace .mco-workspace
 mco demo hello-multi-cli --workspace .mco-demo
 DEMO_TASK_ID="$(find .mco-demo/tasks -mindepth 1 -maxdepth 1 -type d -exec basename {} \\; | head -1)"
 mco run replay ".mco-demo/tasks/$DEMO_TASK_ID/RUN_LEDGER.json"
@@ -40,6 +41,21 @@ python .mco-walkthrough-output/adapter-kit-demo-cli/test_demo_cli_adapter_contra
 
 The walkthrough includes a demo task, replay transcript, dashboard, generated adapter kit, and summary JSON.
 Open `.mco-walkthrough-output/RUN_REPLAY.html` for a static replay page.
+
+Run a spec-first prototype workflow:
+
+```bash
+TASK_ID="$(
+  mco orchestrate-start "Prototype mobile settings page" \
+    --template prototype-brief-loop \
+    --workspace .mco-workspace \
+    | awk -F': ' '/created task:/ {print $2}'
+)"
+TASK_DIR=".mco-workspace/tasks/$TASK_ID"
+mco workflow observe "$TASK_ID" --workspace .mco-workspace
+```
+
+The generated `plan.json` includes manifest metadata such as `stack: single`, `evidence_level: L1`, and token budget guidance. This workflow can be run by one agent; multi-CLI fanout is optional after plan review.
 
 Run one supervised safe command:
 

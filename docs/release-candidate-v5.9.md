@@ -1,5 +1,7 @@
 # Release Candidate v5.9.0rc1
 
+Historical note: v5.9.0rc1 has been superseded by the v6.0.0a1 Alpha track. Keep this file as the v5 release-candidate record.
+
 This document records the v5.9 release-candidate scope and stop conditions.
 
 ## Scope

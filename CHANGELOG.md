@@ -1,5 +1,18 @@
 # Changelog
 
+## 6.0.0a1
+
+- Added workflow template manifests with trigger, scope, required inputs, artifacts, verification, stop conditions, and failure modes.
+- Added manifest metadata for `stack`, `evidence_level`, and token `budget` so public workflows can stay single-agent-first and cost-aware.
+- Added semantic workflow gates for prototype briefs, plan-review pass evidence, browser/visual evidence, and skill-evaluation rubric evidence.
+- Added the `prototype-brief-loop` workflow template for brief -> plan review -> prototype -> visual verification -> close.
+- Upgraded `frontend-review-loop` to require a prototype brief and plan review before implementation.
+- Replaced loose screenshot-index gating with `browser-visual-evidence.json` for visual work.
+- Added L1/L2 skill evaluation guidance so new skills can start lightweight and promote only after usage or risk evidence.
+- Added a compact four-section community-note absorption template.
+- Updated README, Roadmap, workflow schema, tutorials, and release docs for the v6.0 Alpha posture.
+- Added regression coverage for manifest persistence, invalid manifest metadata, plan-review gates, and browser/visual evidence gates.
+
 ## 5.9.0rc1
 
 - Promoted the v5 public Alpha track to a release-candidate package version.

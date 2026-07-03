@@ -1,14 +1,48 @@
 {
   "schema": "mco.workflow.v0.2",
   "name": "frontend-review-loop",
-  "description": "Dogfood workflow for frontend implementation review: spec, implementation, visual verification, close.",
+  "description": "Dogfood workflow for frontend implementation review: prototype brief, plan review, implementation, browser/visual evidence, close.",
+  "manifest": {
+    "trigger": "A frontend page, flow, or visual polish task needs implementation evidence before acceptance.",
+    "scope": "Mobile or web UI changes where user-facing quality matters. It verifies a bounded change; it does not replace product decisions.",
+    "required_inputs": ["target route or screen", "business goal", "design-system constraints", "acceptance criteria"],
+    "artifacts": ["prototype-brief.md", "plan-review-report.md", "implementation-report.md", "browser-visual-evidence.json", "visual-verification-report.md", "close-report.md"],
+    "verification": ["plan_review_passed", "browser_visual_evidence_registered", "ledger_event:verification", "dashboard_exists"],
+    "stop_conditions": ["user_decision gate is required", "dispatch failed or blocked", "visual evidence is missing", "plan review rejects scope"],
+    "failure_modes": ["implementation starts before prototype brief", "screenshots are provided without browser action evidence", "visual verification is a chat claim only"],
+    "stack": "single",
+    "evidence_level": "L1",
+    "budget": {
+      "avg_token_cost": 4000,
+      "hard_cap": 10000,
+      "defer_policy": "Keep the controller thread compact; push implementation detail, screenshots, and visual review notes into artifacts."
+    },
+    "plan_review_required": true,
+    "fanout_policy": {
+      "requires_plan_review": true,
+      "max_workers_before_review": 0,
+      "max_workers_after_review": 2
+    }
+  },
   "phases": [
     {
       "id": "spec",
       "role": "designer",
       "preferred_agent": "generic-cli",
       "gates": ["loop_spec_exists"],
-      "outputs": ["frontend-review-spec.md"],
+      "outputs": ["prototype-brief.md"],
+      "on_pass": "plan_review",
+      "on_fail": "human_review"
+    },
+    {
+      "id": "plan_review",
+      "role": "reviewer",
+      "preferred_agent": "generic-cli",
+      "gates": [
+        "prototype_brief_exists",
+        "plan_review_passed"
+      ],
+      "outputs": ["plan-review-report.md"],
       "on_pass": "implement",
       "on_fail": "human_review"
     },
@@ -18,12 +52,12 @@
       "preferred_agent": "generic-cli",
       "gates": [
         "artifact_registered:implementation-report.md",
-        "artifact_registered:screenshot-index.md",
+        "browser_visual_evidence_registered",
         "all_dispatches_terminal",
         "no_failed_dispatches",
         "no_blocked_dispatches"
       ],
-      "outputs": ["implementation-report.md", "screenshot-index.md"],
+      "outputs": ["implementation-report.md", "browser-visual-evidence.json"],
       "on_pass": "visual_verify",
       "on_fail": "human_review"
     },

@@ -1,5 +1,7 @@
 # Release Notes v5.9.0rc1
 
+Historical note: v5.9.0rc1 has been superseded by the v6.0.0a1 Alpha track. Keep this file as the v5 release-candidate record.
+
 v5.9.0rc1 is the public Alpha release candidate for Multi-CLI Orchestrator.
 
 It does not add broader automation authority. It packages the v5 control-plane work into something easier to understand, try, contribute to, and give feedback on.
