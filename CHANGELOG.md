@@ -8,6 +8,7 @@
 - Added `dispatch_lease_acquired`, `dispatch_heartbeat`, `dispatch_reclaimed`, and `dispatch_attempts_exhausted` run-ledger events.
 - Added a dashboard Runtime Resilience panel that surfaces lease state, attempts, reclaims, lease expiry, and heartbeat timestamps.
 - Added regression coverage for stale lease recovery and max-attempt exhaustion.
+- Added a GPT-Image generated v6.1 Runtime Resilience share image for README and social sharing.
 
 ## 6.0.0a1
 
