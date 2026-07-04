@@ -24,6 +24,8 @@ Command surface:
 | `mco dispatch wave` | Queue a bounded multi-worker dispatch wave |
 | `mco dispatch list` | List task dispatches |
 | `mco dispatch claim` | Claim a queued dispatch |
+| `mco dispatch heartbeat` | Extend the lease for a claimed dispatch |
+| `mco dispatch reclaim` | Requeue stale claimed dispatches or block exhausted retries |
 | `mco dispatch complete` | Complete a dispatch |
 | `mco dispatch execute` | Validate adapter/sandbox gates, dry-run, run a safe command, or run a bounded Claude Code/Kimi Code prompt |
 | `mco dashboard` | Render a static task dashboard |
@@ -87,6 +89,14 @@ Current public workflow templates:
 Templates may persist manifest metadata into `plan.json`, including `stack`, `evidence_level`, and token `budget`. Public workflows should default to `stack: single`; multi-CLI fanout is an enhancement after plan review, not a prerequisite.
 
 `mco dispatch queue <task_id> --agent kimi-code --title "Work" --instructions "..." --require-ready` is the queueing mode intended for auto-dispatch. It probes the adapter matrix and only writes an inbox file when readiness is `READY_SUPERVISED`. If the adapter is disabled, unknown, manual-only, or blocked, the dispatch is written as `status=blocked` with gate evidence and no inbox file.
+
+`mco dispatch queue --max-attempts 3` controls how many times a dispatch can be claimed before stale-lease recovery blocks it. Queued dispatches start with `attempt=0`; each successful claim increments the attempt count.
+
+`mco dispatch claim <task_id> <dispatch_id> --lease-seconds 900` claims a queued dispatch, writes `claimed_at`, increments `attempt`, sets `lease_expires_at`, and records `dispatch_lease_acquired` in `RUN_LEDGER.json`.
+
+`mco dispatch heartbeat <task_id> <dispatch_id> --lease-seconds 900` extends the lease for claimed work and records `dispatch_heartbeat`.
+
+`mco dispatch reclaim <task_id>` inspects claimed dispatches. Expired leases are returned to `queued` while attempts remain; once `attempt >= max_attempts`, the dispatch becomes `blocked` and records `dispatch_attempts_exhausted`. This is a bounded recovery command, not an infinite daemon.
 
 `mco dispatch wave <task_id> --spec wave.json --require-ready` queues a bounded batch of worker dispatches. The wave spec must contain one to six workers:
 

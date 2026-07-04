@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.1.0a1
+
+- Added dispatch leases with `attempt`, `max_attempts`, `lease_expires_at`, `last_heartbeat_at`, and `reclaim_count` fields.
+- Added `mco dispatch heartbeat` to extend a claimed dispatch lease and write durable run-ledger evidence.
+- Added `mco dispatch reclaim` to return stale claimed dispatches to the queue or block exhausted retries.
+- Added `dispatch_lease_acquired`, `dispatch_heartbeat`, `dispatch_reclaimed`, and `dispatch_attempts_exhausted` run-ledger events.
+- Added a dashboard Runtime Resilience panel that surfaces lease state, attempts, reclaims, lease expiry, and heartbeat timestamps.
+- Added regression coverage for stale lease recovery and max-attempt exhaustion.
+
 ## 6.0.0a1
 
 - Added workflow template manifests with trigger, scope, required inputs, artifacts, verification, stop conditions, and failure modes.

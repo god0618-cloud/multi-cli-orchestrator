@@ -1514,6 +1514,8 @@ class WorkspaceTests(unittest.TestCase):
             ("adapter", "smoke", "--help"),
             ("dispatch", "--help"),
             ("dispatch", "queue", "--help"),
+            ("dispatch", "heartbeat", "--help"),
+            ("dispatch", "reclaim", "--help"),
             ("schema", "--help"),
             ("orchestrate-start", "--help"),
             ("demo", "--help"),
@@ -1592,6 +1594,119 @@ class WorkspaceTests(unittest.TestCase):
             dashboard_html = (workspace / "tasks" / task_id / "dashboard.html").read_text(encoding="utf-8")
             self.assertIn("Dispatches", dashboard_html)
             self.assertIn(dispatch_id, dashboard_html)
+
+    def test_dispatch_lease_heartbeat_and_reclaim(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            self.assertEqual(run_mco("init", "--workspace", str(workspace)).returncode, 0)
+            created = run_mco("task", "create", "Resilient Dispatch", "--workspace", str(workspace))
+            task_id = next(line.split(": ", 1)[1] for line in created.stdout.splitlines() if line.startswith("created task:"))
+            task_dir = workspace / "tasks" / task_id
+
+            queued = run_mco(
+                "dispatch",
+                "queue",
+                task_id,
+                "--agent",
+                "generic-cli",
+                "--title",
+                "Recoverable Work",
+                "--instructions",
+                "Simulate a stale worker.",
+                "--max-attempts",
+                "2",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(queued.returncode, 0, queued.stdout + queued.stderr)
+            dispatch_id = json.loads(queued.stdout)["dispatch_id"]
+            dispatch_path = task_dir / "dispatch" / "dispatches" / f"{dispatch_id}.json"
+
+            claimed = run_mco(
+                "dispatch",
+                "claim",
+                task_id,
+                dispatch_id,
+                "--agent",
+                "generic-cli",
+                "--lease-seconds",
+                "30",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(claimed.returncode, 0, claimed.stdout + claimed.stderr)
+            claimed_payload = json.loads(claimed.stdout)
+            self.assertEqual(claimed_payload["attempt"], 1)
+            self.assertEqual(claimed_payload["status"], "claimed")
+            self.assertIsNotNone(claimed_payload["lease_expires_at"])
+
+            heartbeat = run_mco(
+                "dispatch",
+                "heartbeat",
+                task_id,
+                dispatch_id,
+                "--agent",
+                "generic-cli",
+                "--lease-seconds",
+                "30",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(heartbeat.returncode, 0, heartbeat.stdout + heartbeat.stderr)
+            heartbeat_payload = json.loads(heartbeat.stdout)
+            self.assertIsNotNone(heartbeat_payload["last_heartbeat_at"])
+
+            stale_payload = json.loads(dispatch_path.read_text(encoding="utf-8"))
+            stale_payload["lease_expires_at"] = "2000-01-01T00:00:00+00:00"
+            dispatch_path.write_text(json.dumps(stale_payload, indent=2) + "\n", encoding="utf-8")
+
+            reclaimed = run_mco("dispatch", "reclaim", task_id, "--workspace", str(workspace))
+            self.assertEqual(reclaimed.returncode, 0, reclaimed.stdout + reclaimed.stderr)
+            reclaim_payload = json.loads(reclaimed.stdout)
+            self.assertEqual(reclaim_payload["reclaimed_count"], 1)
+            requeued = json.loads(dispatch_path.read_text(encoding="utf-8"))
+            self.assertEqual(requeued["status"], "queued")
+            self.assertEqual(requeued["attempt"], 1)
+            self.assertEqual(requeued["reclaim_count"], 1)
+
+            second_claim = run_mco(
+                "dispatch",
+                "claim",
+                task_id,
+                dispatch_id,
+                "--agent",
+                "generic-cli",
+                "--lease-seconds",
+                "30",
+                "--workspace",
+                str(workspace),
+            )
+            self.assertEqual(second_claim.returncode, 0, second_claim.stdout + second_claim.stderr)
+            second_payload = json.loads(second_claim.stdout)
+            self.assertEqual(second_payload["attempt"], 2)
+            second_payload["lease_expires_at"] = "2000-01-01T00:00:00+00:00"
+            dispatch_path.write_text(json.dumps(second_payload, indent=2) + "\n", encoding="utf-8")
+
+            exhausted = run_mco("dispatch", "reclaim", task_id, "--workspace", str(workspace))
+            self.assertNotEqual(exhausted.returncode, 0)
+            exhausted_payload = json.loads(exhausted.stdout)
+            self.assertEqual(exhausted_payload["exhausted_count"], 1)
+            blocked = json.loads(dispatch_path.read_text(encoding="utf-8"))
+            self.assertEqual(blocked["status"], "blocked")
+            self.assertIn("max attempts exhausted", blocked["completion"]["error"])
+
+            dashboard = run_mco("dashboard", task_id, "--workspace", str(workspace))
+            self.assertEqual(dashboard.returncode, 0, dashboard.stdout + dashboard.stderr)
+            dashboard_html = (task_dir / "dashboard.html").read_text(encoding="utf-8")
+            self.assertIn("Runtime Resilience", dashboard_html)
+            self.assertIn("2 / 2", dashboard_html)
+            self.assertIn("max attempts exhausted", dashboard_html)
+
+            ledger = json.loads((task_dir / "RUN_LEDGER.json").read_text(encoding="utf-8"))
+            event_types = [event["type"] for event in ledger["events"]]
+            self.assertIn("dispatch_heartbeat", event_types)
+            self.assertIn("dispatch_reclaimed", event_types)
+            self.assertIn("dispatch_attempts_exhausted", event_types)
 
     def test_adapter_doctor_and_dispatch_execute_dry_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

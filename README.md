@@ -19,9 +19,11 @@ It is also useful with one CLI. Single-agent workflows are the default path; mul
 
 ## Status
 
-This repository is at v6.0.0a1 public Alpha status. The v5 core is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, dynamic workflow gates, bounded observe/advance loops, a strict self-closing workflow template, end-to-end tutorials, adapter extension planning, trial feedback intake, and contributor-ready adapter kits.
+This repository is at v6.1.0a1 public Alpha status. The v5 core is clean of private paths and private business data, installable from a public clone, covered by CI smoke gates, and backed by release checks. It includes a runnable hello workflow, generic dispatch primitives, bounded multi-worker dispatch waves, replayable evidence, adapter sandbox gates, scriptable CLI output, disabled adapter scaffolding, a deliberately narrow real-execution path for safe commands, two supervised first-party prompt adapters, adapter gate visibility, compact operator status, explicit doctor probing, bounded monitor snapshots, dynamic workflow gates, bounded observe/advance loops, a strict self-closing workflow template, end-to-end tutorials, adapter extension planning, trial feedback intake, and contributor-ready adapter kits.
 
 The v6 Alpha track adds expert-workflow productization and lower-friction onboarding: workflow manifests, single-agent-first metadata, token budgets, evidence levels, a `prototype-brief-loop`, plan review before fanout, browser/visual evidence gates, a two-level skill evaluation rubric, and a compact note absorption template.
+
+The v6.1 Alpha track adds runtime resilience: claimed dispatches now carry leases, heartbeats, retry attempts, and reclaim evidence, so stale worker claims can be returned to the queue or blocked after retry exhaustion.
 
 ## Start Here
 
@@ -90,6 +92,9 @@ mco usage snapshot <task_id>
 mco adapter matrix --doctor --output adapter-matrix.json --html adapter-matrix.html
 mco dispatch queue <task_id> --agent kimi-code --title "Frontend pass" --instructions "..." --require-ready
 mco dispatch wave <task_id> --spec wave.json --require-ready
+mco dispatch claim <task_id> <dispatch_id> --agent generic-cli --lease-seconds 900
+mco dispatch heartbeat <task_id> <dispatch_id> --agent generic-cli
+mco dispatch reclaim <task_id>
 mco adapter smoke claude-code --workspace .mco-workspace --max-budget-usd 0.05
 mco adapter smoke kimi-code --workspace .mco-workspace
 mco adapter scaffold kimi-code --output-dir adapter-kits/kimi-code
@@ -116,7 +121,7 @@ Current command coverage:
 - `mco adapter scaffold`
 - `mco adapter validate-kit`
 - `mco adapter smoke`
-- `mco dispatch queue/list/claim/complete`
+- `mco dispatch queue/list/claim/heartbeat/reclaim/complete`
 - `mco dispatch wave`
 - `mco dispatch execute --dry-run`
 - `mco dispatch execute --command-json`
@@ -147,7 +152,7 @@ mco audit .
 mco release check .
 ```
 
-## v6.0 Alpha Command Matrix
+## v6.1 Alpha Command Matrix
 
 | Command | Status |
 | --- | --- |
@@ -167,8 +172,12 @@ mco release check .
 | `mco adapter scaffold` | disabled adapter onboarding kit with README, fake CLI fixture, and unittest template |
 | `mco adapter validate-kit` | CI-friendly validation for generated adapter contributor kits |
 | `mco adapter smoke` | explicit opt-in real Claude Code or Kimi Code smoke test |
-| `mco dispatch queue/list/claim/complete` | generic local queue |
+| `mco dispatch queue/list/claim/heartbeat/reclaim/complete` | generic local queue with lease, heartbeat, and stale-claim recovery |
 | `mco dispatch queue --require-ready` | blocks auto-dispatch unless adapter readiness is `READY_SUPERVISED` |
+| `mco dispatch queue --max-attempts 3` | caps retry attempts before stale work is blocked |
+| `mco dispatch claim --lease-seconds 900` | claims work and records a lease expiry in the dispatch record and run ledger |
+| `mco dispatch heartbeat` | extends a claimed dispatch lease and records heartbeat evidence |
+| `mco dispatch reclaim` | returns stale claimed dispatches to the queue or blocks exhausted retries |
 | `mco dispatch wave` | bounded multi-worker dispatch wave; queues up to six worker dispatches and writes a wave manifest |
 | `mco dispatch wave --require-ready` | applies adapter readiness gates to every worker and records blocked workers as evidence |
 | `mco dispatch execute --dry-run` | sandbox/capability gate validation |
@@ -217,6 +226,7 @@ Useful docs:
 - `docs/GOOD_FIRST_ISSUES.md`
 - `docs/launch-playbook.md`
 - `docs/release-notes-v6.0.md`
+- `docs/release-notes-v6.1.md`
 - `docs/release-notes-v5.9.md`
 - `docs/release-notes-v5.0.md`
 - `docs/release-notes-v3.0.md`

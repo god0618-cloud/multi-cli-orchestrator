@@ -1,3 +1,3 @@
 """Multi-CLI Orchestrator package."""
 
-__version__ = "6.0.0a1"
+__version__ = "6.1.0a1"

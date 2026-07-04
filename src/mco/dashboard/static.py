@@ -61,11 +61,35 @@ def _status_class(status: str) -> str:
     normalized = status.lower()
     if normalized in {"advance", "complete", "completed", "ready", "ready_supervised", "pass"}:
         return "ok"
-    if normalized in {"queued", "claimed", "running", "unknown", "wait"}:
+    if normalized in {"queued", "claimed", "running", "unknown", "wait", "reclaimed"}:
         return "warn"
-    if normalized in TERMINAL_PROBLEM_STATUSES or normalized == "escalate":
+    if normalized in TERMINAL_PROBLEM_STATUSES or normalized in {"escalate", "stale"}:
         return "bad"
     return "muted"
+
+
+def _parse_time(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        text = str(value)
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _is_stale_dispatch(dispatch: dict[str, Any], now: datetime | None = None) -> bool:
+    if dispatch.get("status") != "claimed":
+        return False
+    lease_expires_at = _parse_time(dispatch.get("lease_expires_at"))
+    if lease_expires_at is None:
+        return False
+    return lease_expires_at <= (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
 
 
 def _latest(items: list[dict[str, Any]], *keys: str) -> dict[str, Any] | None:
@@ -197,6 +221,7 @@ def _owner_brief(
     workflow_observation: dict[str, Any],
     problem_dispatches: list[dict[str, Any]],
     pending_dispatches: list[dict[str, Any]],
+    stale_dispatches: list[dict[str, Any]],
     task_id: str,
 ) -> dict[str, str]:
     action = str(workflow_observation.get("recommended_action", "wait"))
@@ -210,6 +235,14 @@ def _owner_brief(
             "headline": "A dispatch is blocked or failed.",
             "detail": "Review Owner Escalations before advancing the workflow.",
             "next_command": f"mco workflow observe {task_id}",
+        }
+    if stale_dispatches:
+        return {
+            "status": "Review required",
+            "class": "bad",
+            "headline": "A claimed dispatch lease has expired.",
+            "detail": "Run dispatch reclaim before assigning more work.",
+            "next_command": f"mco dispatch reclaim {task_id}",
         }
     if pending_dispatches:
         return {
@@ -479,19 +512,37 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
     adapters = _summarize_adapters(dispatches, reports)
     problem_dispatches = [item for item in dispatches if item.get("status") in TERMINAL_PROBLEM_STATUSES]
     pending_dispatches = [item for item in dispatches if item.get("status") in {"queued", "claimed"}]
+    stale_dispatches = [item for item in dispatches if _is_stale_dispatch(item)]
     completed_dispatches = [item for item in dispatches if item.get("status") == "completed"]
     latest_event = events[-1] if events else {}
-    owner_brief = _owner_brief(workflow_observation, problem_dispatches, pending_dispatches, task_id)
+    owner_brief = _owner_brief(workflow_observation, problem_dispatches, pending_dispatches, stale_dispatches, task_id)
 
     control_cards = "\n".join(
         [
             f"<div class=\"metric\"><span data-i18n=\"task_status\">Task status</span><strong>{html.escape(task.get('status', 'unknown'))}</strong></div>",
             f"<div class=\"metric\"><span data-i18n=\"dispatches\">Dispatches</span><strong>{len(completed_dispatches)}/{len(dispatches)} <span data-i18n=\"done\">done</span></strong></div>",
             f"<div class=\"metric\"><span data-i18n=\"artifacts\">Artifacts</span><strong>{len(artifacts)}</strong></div>",
-            f"<div class=\"metric {_status_class('failed' if problem_dispatches else 'completed')}\"><span data-i18n=\"owner_action\">Owner action</span><strong data-i18n=\"{'required' if problem_dispatches else 'none'}\">{'Required' if problem_dispatches else 'None'}</strong></div>",
+            f"<div class=\"metric {_status_class('failed' if problem_dispatches or stale_dispatches else 'completed')}\"><span data-i18n=\"owner_action\">Owner action</span><strong data-i18n=\"{'required' if problem_dispatches or stale_dispatches else 'none'}\">{'Required' if problem_dispatches or stale_dispatches else 'None'}</strong></div>",
             f"<div class=\"metric {_status_class(str(workflow_observation.get('recommended_action', 'wait')))}\"><span data-i18n=\"workflow_action\">Workflow action</span><strong>{html.escape(str(workflow_observation.get('recommended_action', 'wait')))}</strong></div>",
         ]
     )
+
+    resilience_rows = ""
+    for item in dispatches:
+        lease_state = "stale" if _is_stale_dispatch(item) else str(item.get("status", "unknown"))
+        resilience_rows += (
+            "<tr>"
+            f"<td><strong>{html.escape(str(item.get('dispatch_id', 'dispatch')))}</strong><br><span>{html.escape(str(item.get('title', '')))}</span></td>"
+            f"<td>{html.escape(str(item.get('agent', 'unknown')))}</td>"
+            f"<td><span class=\"pill {_status_class(lease_state)}\">{html.escape(lease_state)}</span></td>"
+            f"<td>{html.escape(str(item.get('attempt', 0)))} / {html.escape(str(item.get('max_attempts', 3)))}</td>"
+            f"<td>{html.escape(str(item.get('reclaim_count', 0)))}</td>"
+            f"<td>{html.escape(str(item.get('lease_expires_at') or 'n/a'))}</td>"
+            f"<td>{html.escape(str(item.get('last_heartbeat_at') or 'n/a'))}</td>"
+            "</tr>"
+        )
+    if not resilience_rows:
+        resilience_rows = "<tr><td colspan=\"7\">No dispatch leases yet.</td></tr>"
 
     adapter_rows = "\n".join(
         f"""
@@ -543,6 +594,12 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
             f"<strong>{html.escape(dispatch.get('dispatch_id', 'dispatch'))}</strong> "
             f"<span class=\"pill bad\">{html.escape(dispatch.get('status', 'unknown'))}</span>"
             f"<p>{html.escape(dispatch.get('agent', 'unknown'))}: {html.escape(str(reason))}</p>"
+        )
+    for dispatch in stale_dispatches:
+        escalation_items.append(
+            f"<strong>{html.escape(dispatch.get('dispatch_id', 'dispatch'))}</strong> "
+            f"<span class=\"pill bad\">stale lease</span>"
+            f"<p>{html.escape(dispatch.get('agent', 'unknown'))}: lease expired at {html.escape(str(dispatch.get('lease_expires_at')))}</p>"
         )
     for adapter in adapters:
         if adapter["latest_report"].get("success") is False and adapter["problem"]:
@@ -690,6 +747,16 @@ def render_dashboard(config: WorkspaceConfig, task_id: str) -> Path:
         <tr><th data-i18n="dispatch">Dispatch</th><th data-i18n="agent">Agent</th><th data-i18n="status">Status</th><th data-i18n="readiness">Readiness</th><th data-i18n="reason">Reason</th></tr>
       </thead>
       <tbody>{_render_gate_rows(dispatches)}</tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2>Runtime Resilience</h2>
+    <p class="small">Lease, heartbeat, reclaim, and retry exhaustion visibility for long-running dispatches.</p>
+    <table>
+      <thead>
+        <tr><th data-i18n="dispatch">Dispatch</th><th data-i18n="agent">Agent</th><th data-i18n="status">Lease state</th><th>Attempt</th><th>Reclaims</th><th>Lease expires</th><th>Last heartbeat</th></tr>
+      </thead>
+      <tbody>{resilience_rows}</tbody>
     </table>
   </section>
   <section class="card">

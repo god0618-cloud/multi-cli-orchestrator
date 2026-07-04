@@ -16,7 +16,7 @@ from .config import init_workspace, read_workspace_config, resolve_workspace
 from .dashboard.static import render_dashboard
 from .demo.hello import run_hello_demo
 from .demo.walkthrough import run_walkthrough_demo
-from .dispatch.queue import claim_dispatch, complete_dispatch, list_dispatches, queue_dispatch
+from .dispatch.queue import claim_dispatch, complete_dispatch, heartbeat_dispatch, list_dispatches, queue_dispatch, reclaim_stale_dispatches
 from .dispatch.execute import execute_dispatch_claude_prompt, execute_dispatch_command, execute_dispatch_dry_run, execute_dispatch_kimi_prompt
 from .dispatch.wave import load_wave_spec, queue_dispatch_wave
 from .monitor import run_monitor
@@ -214,6 +214,7 @@ def cmd_dispatch_queue(args: argparse.Namespace) -> int:
         args.instructions,
         require_ready=args.require_ready,
         sandbox_path=sandbox_path,
+        max_attempts=args.max_attempts,
     )
     print(json.dumps(dispatch, indent=2))
     return 1 if args.require_ready and dispatch["status"] == "blocked" else 0
@@ -242,9 +243,27 @@ def cmd_dispatch_claim(args: argparse.Namespace) -> int:
     config = resolve_workspace(args.workspace)
     read_workspace_config(config)
     directory = task_dir(config, args.task_id)
-    dispatch = claim_dispatch(directory, args.dispatch_id, args.agent)
+    dispatch = claim_dispatch(directory, args.dispatch_id, args.agent, lease_seconds=args.lease_seconds)
     print(json.dumps(dispatch, indent=2))
     return 0
+
+
+def cmd_dispatch_heartbeat(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    directory = task_dir(config, args.task_id)
+    dispatch = heartbeat_dispatch(directory, args.dispatch_id, args.agent, lease_seconds=args.lease_seconds)
+    print(json.dumps(dispatch, indent=2))
+    return 0
+
+
+def cmd_dispatch_reclaim(args: argparse.Namespace) -> int:
+    config = resolve_workspace(args.workspace)
+    read_workspace_config(config)
+    directory = task_dir(config, args.task_id)
+    result = reclaim_stale_dispatches(directory, limit=args.limit)
+    print(json.dumps(result, indent=2))
+    return 1 if result["exhausted_count"] else 0
 
 
 def cmd_dispatch_complete(args: argparse.Namespace) -> int:
@@ -601,6 +620,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_dispatch_queue.add_argument("--instructions", required=True)
     p_dispatch_queue.add_argument("--require-ready", action="store_true", help="block queueing unless adapter matrix readiness is READY_SUPERVISED")
     p_dispatch_queue.add_argument("--sandbox", help="optional sandbox contract reference for gate context")
+    p_dispatch_queue.add_argument("--max-attempts", type=int, default=3, help="maximum claim attempts before stale work is blocked; 1-10")
     p_dispatch_queue.add_argument("--workspace", default=".", help="workspace root")
     p_dispatch_queue.set_defaults(func=cmd_dispatch_queue)
 
@@ -620,8 +640,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_dispatch_claim.add_argument("task_id")
     p_dispatch_claim.add_argument("dispatch_id")
     p_dispatch_claim.add_argument("--agent", default="generic-cli")
+    p_dispatch_claim.add_argument("--lease-seconds", type=int, default=900, help="lease duration for this claim; 30-86400")
     p_dispatch_claim.add_argument("--workspace", default=".", help="workspace root")
     p_dispatch_claim.set_defaults(func=cmd_dispatch_claim)
+
+    p_dispatch_heartbeat = dispatch_sub.add_parser("heartbeat", help="extend the lease for a claimed dispatch")
+    p_dispatch_heartbeat.add_argument("task_id")
+    p_dispatch_heartbeat.add_argument("dispatch_id")
+    p_dispatch_heartbeat.add_argument("--agent", default="generic-cli")
+    p_dispatch_heartbeat.add_argument("--lease-seconds", type=int, default=900, help="lease extension duration; 30-86400")
+    p_dispatch_heartbeat.add_argument("--workspace", default=".", help="workspace root")
+    p_dispatch_heartbeat.set_defaults(func=cmd_dispatch_heartbeat)
+
+    p_dispatch_reclaim = dispatch_sub.add_parser("reclaim", help="return stale claimed dispatches to the queue or block exhausted retries")
+    p_dispatch_reclaim.add_argument("task_id")
+    p_dispatch_reclaim.add_argument("--limit", type=int, default=100, help="maximum dispatch records to inspect; 1-1000")
+    p_dispatch_reclaim.add_argument("--workspace", default=".", help="workspace root")
+    p_dispatch_reclaim.set_defaults(func=cmd_dispatch_reclaim)
 
     p_dispatch_complete = dispatch_sub.add_parser("complete", help="complete a dispatch")
     p_dispatch_complete.add_argument("task_id")
